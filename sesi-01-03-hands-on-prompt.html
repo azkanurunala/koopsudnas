@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 1.3 | Hands-On: Prompt untuk Analisis Situasi Taktis</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#10b981',
+            'accent-light': '#34d399',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              blue: '#3b82f6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    /* Background Effects */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 600px; height: 600px; 
+      top: -200px; left: -100px; 
+      background: var(--accent); 
+      opacity: 0.12; 
+    }
+    .blob-2 { 
+      width: 400px; height: 400px; 
+      bottom: -100px; right: -50px; 
+      background: #059669; 
+      opacity: 0.1; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    /* Glass Cards */
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset,
+                  0 32px 64px -16px rgba(0,0,0,0.5);
+    }
+    
+    /* Slide Section */
+    .slide-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 24px;
+      position: relative;
+    }
+    
+    .slide-section:nth-child(even) {
+      background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.03) 50%, transparent 100%);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #34d399);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Slide Navigation */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .slide-nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .slide-nav-dot.active {
+      background: var(--accent);
+      border-color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    /* Typography */
+    .slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+    
+    .slide-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+    }
+    
+    /* Code Block */
+    .code-block {
+      background: #0a0f1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+    }
+    
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+    
+    .data-table th {
+      background: rgba(16, 185, 129, 0.2);
+      padding: 8px 12px;
+      text-align: left;
+      color: var(--accent);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .data-table tr:hover td {
+      background: rgba(255,255,255,0.03);
+    }
+    
+    .data-table tr.anomaly td {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+    }
+    
+    /* Scenario Card */
+    .scenario-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .scenario-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
+    }
+    
+    .scenario-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    
+    /* Timer */
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    /* Checklist */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .checklist-item:hover {
+      background: rgba(255,255,255,0.06);
+    }
+    
+    .checklist-item.checked {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .checklist-item.checked .check-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    
+    .check-box {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    
+    /* Prompt Builder */
+    .prompt-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .prompt-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+    
+    .prompt-input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    
+    /* Copy Button */
+    .copy-btn {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.5); }
+    
+    /* Mobile Nav */
+    @media (max-width: 768px) {
+      .slide-nav { display: none; }
+    }
+    
+    /* Step indicator */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .step-dot.active {
+      background: var(--accent);
+      color: #050810;
+    }
+    
+    .step-dot.completed {
+      background: var(--accent);
+      color: #050810;
+    }
+    
+    .step-dot.pending {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+    }
+    
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .step-line.completed {
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0, 
+  totalSlides: 12,
+  progress: 0,
+  activeScenario: 'a',
+  exerciseStep: 1,
+  promptBuilder: {
+    role: '',
+    instructions: '',
+    steps: '',
+    endGoal: '',
+    narrowing: ''
+  },
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  },
+  getFullPrompt() {
+    let prompt = '';
+    if (this.promptBuilder.role) prompt += '[ROLE] ' + this.promptBuilder.role + '\n\n';
+    if (this.promptBuilder.instructions) prompt += '[INSTRUCTIONS] ' + this.promptBuilder.instructions + '\n\n';
+    if (this.promptBuilder.steps) prompt += '[STEPS] ' + this.promptBuilder.steps + '\n\n';
+    if (this.promptBuilder.endGoal) prompt += '[END GOAL] ' + this.promptBuilder.endGoal + '\n\n';
+    if (this.promptBuilder.narrowing) prompt += '[NARROWING] ' + this.promptBuilder.narrowing;
+    return prompt.trim();
+  }
+}">
+
+  <!-- Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <!-- Slide Navigation Dots -->
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" 
+           :class="currentSlide === i-1 ? 'active' : ''"
+           @click="scrollToSlide(i-1)"
+           :title="'Slide ' + i">
+      </div>
+    </template>
+  </div>
+  
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-01-ai-fundamentals.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Modul 01</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 1.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-01-02-framework-risen.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 1.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-01-04-etika-ai.html" class="text-xs text-white/40 hover:text-white/60">Sesi 1.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 01 • SESI 3 • PRAKTIK</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        HANDS-ON PROMPTING<br>
+        <span class="text-accent">ANALISIS SITUASI TAKTIS</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Praktik langsung menerapkan framework RISEN untuk menganalisis 
+        <strong class="text-white">skenario operasional</strong> dengan data simulasi.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">60</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3</div>
+          <div class="text-xs text-white/50">SKENARIO</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">1</div>
+          <div class="text-xs text-white/50">EXERCISE</div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl inline-flex items-center gap-3 mb-8">
+        <span class="text-2xl">🎯</span>
+        <span class="text-white/70">Fokus: <strong class="text-white">Learning by Doing</strong></span>
+      </div>
+      
+      <div class="block">
+        <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+          <span>Mulai Praktik</span>
+          <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: LEARNING OBJECTIVES ==================== -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TUJUAN PEMBELAJARAN</div>
+        <h2 class="slide-subtitle">
+          SETELAH SESI INI, ANDA AKAN MAMPU:
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🔧</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menerapkan RISEN dalam Skenario Nyata</h3>
+          <p class="text-white/60 text-sm">
+            Menggunakan framework yang dipelajari di Sesi 1.2 untuk menganalisis 
+            situasi operasional dengan data simulasi.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📊</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menganalisis Data Multi-Source</h3>
+          <p class="text-white/60 text-sm">
+            Menyusun prompt yang dapat memproses dan mensintesis data 
+            dari berbagai sumber (radar, field report, OSINT).
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🔄</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Praktik Iterative Prompting</h3>
+          <p class="text-white/60 text-sm">
+            Menyempurnakan output melalui iterasi — memperbaiki prompt 
+            berdasarkan hasil yang diperoleh.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📋</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menghasilkan Intelligence Brief</h3>
+          <p class="text-white/60 text-sm">
+            Membuat output yang actionable dan siap dipresentasikan 
+            kepada komandan.
+          </p>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-6 rounded-2xl">
+        <div class="flex items-center gap-4">
+          <div class="text-3xl">⏱️</div>
+          <div>
+            <div class="font-semibold text-accent mb-1">Alokasi Waktu Sesi</div>
+            <div class="flex flex-wrap gap-4 text-sm text-white/60">
+              <span><strong class="text-white">20 menit</strong> — Guided Demo</span>
+              <span><strong class="text-white">5 menit</strong> — Review Data</span>
+              <span><strong class="text-white">30 menit</strong> — Latihan Mandiri</span>
+              <span><strong class="text-white">5 menit</strong> — Peer Review</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: SCENARIO OVERVIEW ==================== -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">GUIDED DEMO • 20 MENIT</div>
+        <h2 class="slide-title">
+          3 SKENARIO<br>
+          <span class="text-accent">YANG SERING DITEMUI</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6" x-data="{ active: 'a' }">
+        <div class="scenario-card glass-lit p-6 rounded-2xl text-center" 
+             :class="active === 'a' ? 'active' : ''"
+             @click="active = 'a'">
+          <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">📝</span>
+          </div>
+          <div class="text-xs text-accent font-mono mb-2">SKENARIO A</div>
+          <h3 class="font-semibold mb-2">Merangkum Laporan Panjang</h3>
+          <p class="text-white/50 text-sm">50+ halaman → Executive Summary 1 halaman</p>
+        </div>
+        
+        <div class="scenario-card glass-lit p-6 rounded-2xl text-center"
+             :class="active === 'b' ? 'active' : ''"
+             @click="active = 'b'">
+          <div class="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🔍</span>
+          </div>
+          <div class="text-xs text-blue-400 font-mono mb-2">SKENARIO B</div>
+          <h3 class="font-semibold mb-2">Deteksi Anomali</h3>
+          <p class="text-white/50 text-sm">100+ data points → Anomali yang perlu perhatian</p>
+        </div>
+        
+        <div class="scenario-card glass-lit p-6 rounded-2xl text-center"
+             :class="active === 'c' ? 'active' : ''"
+             @click="active = 'c'">
+          <div class="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🔗</span>
+          </div>
+          <div class="text-xs text-purple-400 font-mono mb-2">SKENARIO C</div>
+          <h3 class="font-semibold mb-2">Multi-Source SITREP</h3>
+          <p class="text-white/50 text-sm">3+ sumber intel → SITREP koheren</p>
+        </div>
+      </div>
+      
+      <div class="mt-8 text-center text-white/50 text-sm">
+        Klik setiap skenario untuk detail → atau scroll ke bawah untuk melihat semua
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: SCENARIO A - SUMMARIZING ==================== -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+          <span class="text-2xl">📝</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm mb-1">SKENARIO A</div>
+          <h2 class="slide-subtitle">MERANGKUM LAPORAN INTELIJEN PANJANG</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Situasi</h3>
+            <p class="text-white/70 mb-4">
+              Anda menerima laporan intelijen <strong class="text-white">15 halaman</strong> dari berbagai sumber. 
+              Komandan membutuhkan ringkasan untuk <strong class="text-white">morning briefing dalam 5 menit</strong>.
+            </p>
+            <div class="p-4 bg-white/5 rounded-xl">
+              <div class="text-sm text-white/50 mb-2">Tantangan:</div>
+              <ul class="space-y-1 text-sm text-white/60">
+                <li>• Informasi tersebar di banyak halaman</li>
+                <li>• Waktu terbatas untuk membaca semua</li>
+                <li>• Perlu prioritas informasi yang relevan</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Prompt dengan RISEN</h3>
+            <div class="code-block p-4 text-xs">
+              <div class="space-y-2">
+                <div><span class="text-tactical-cyan">[R]</span> <span class="text-white/70">Analis intelijen senior TNI AU</span></div>
+                <div><span class="text-blue-400">[I]</span> <span class="text-white/70">Rangkum laporan intelijen berikut untuk briefing 5 menit</span></div>
+                <div><span class="text-purple-400">[S]</span> <span class="text-white/70">1) Identifikasi 3-5 key points, 2) Highlight ancaman prioritas, 3) Note intelligence gaps</span></div>
+                <div><span class="text-amber-400">[E]</span> <span class="text-white/70">Executive summary maksimal 150 kata</span></div>
+                <div><span class="text-green-400">[N]</span> <span class="text-white/70">Format: BLUF + Key Points + Gaps. Bahasa Indonesia formal.</span></div>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-accent/10 rounded-lg">
+              <div class="text-xs text-accent font-semibold mb-1">💡 TIP</div>
+              <div class="text-xs text-white/60">BLUF = Bottom Line Up Front. Kesimpulan utama di awal, detail menyusul.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 glass p-6 rounded-2xl">
+        <div class="text-sm text-accent font-mono mb-3">CONTOH OUTPUT</div>
+        <div class="p-4 bg-navy-800 rounded-xl text-sm">
+          <div class="font-semibold text-accent mb-2">BLUF:</div>
+          <p class="text-white/70 mb-3">Aktivitas pesawat asing meningkat 40% di sektor utara dalam 48 jam terakhir. Tingkat ancaman: <span class="text-amber-400">MEDIUM</span>. Rekomendasi: Tingkatkan frekuensi patroli.</p>
+          
+          <div class="font-semibold text-accent mb-2">Key Points:</div>
+          <ul class="text-white/70 space-y-1 mb-3">
+            <li>• 12 intercept tercatat (vs rata-rata 7/minggu)</li>
+            <li>• Pola baru: pendekatan dari arah NE (sebelumnya dominan NW)</li>
+            <li>• 2 pesawat belum teridentifikasi jenisnya</li>
+          </ul>
+          
+          <div class="font-semibold text-accent mb-2">Intelligence Gaps:</div>
+          <p class="text-white/60">Perlu konfirmasi: Apakah ada perubahan deployment di pangkalan negara X?</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: SCENARIO B - ANOMALY DETECTION ==================== -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+          <span class="text-2xl">🔍</span>
+        </div>
+        <div>
+          <div class="text-blue-400 font-mono text-sm mb-1">SKENARIO B</div>
+          <h2 class="slide-subtitle">MENGIDENTIFIKASI ANOMALI DALAM DATA</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-blue-400">Situasi</h3>
+            <p class="text-white/70 mb-4">
+              Data radar menunjukkan <strong class="text-white">100+ track</strong> dalam 48 jam. 
+              Anda perlu mengidentifikasi mana yang <strong class="text-white">anomali dan memerlukan perhatian</strong>.
+            </p>
+            <div class="p-4 bg-white/5 rounded-xl">
+              <div class="text-sm text-white/50 mb-2">Tantangan:</div>
+              <ul class="space-y-1 text-sm text-white/60">
+                <li>• Volume data besar</li>
+                <li>• Perlu pattern recognition</li>
+                <li>• Tidak semua deviasi adalah ancaman</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-blue-400">Prompt dengan RISEN</h3>
+            <div class="code-block p-4 text-xs">
+              <div class="space-y-2">
+                <div><span class="text-tactical-cyan">[R]</span> <span class="text-white/70">Radar analyst dengan expertise pattern recognition</span></div>
+                <div><span class="text-blue-400">[I]</span> <span class="text-white/70">Identifikasi anomali dari data radar berikut</span></div>
+                <div><span class="text-purple-400">[S]</span> <span class="text-white/70">1) Bandingkan dengan baseline normal, 2) Flag deviasi >20%, 3) Prioritaskan berdasarkan risk</span></div>
+                <div><span class="text-amber-400">[E]</span> <span class="text-white/70">Daftar anomali dengan severity rating</span></div>
+                <div><span class="text-green-400">[N]</span> <span class="text-white/70">Tabel: Track ID | Anomali | Severity | Action Required</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 glass p-6 rounded-2xl">
+        <div class="text-sm text-blue-400 font-mono mb-3">CONTOH OUTPUT</div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Track ID</th>
+                <th>Anomali Terdeteksi</th>
+                <th>Severity</th>
+                <th>Action Required</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="anomaly">
+                <td>TR-047</td>
+                <td>Altitude drop 5000ft dalam 30 detik</td>
+                <td><span class="text-red-400 font-semibold">HIGH</span></td>
+                <td>Immediate verification required</td>
+              </tr>
+              <tr class="anomaly">
+                <td>TR-089</td>
+                <td>No transponder, unusual flight path</td>
+                <td><span class="text-red-400 font-semibold">HIGH</span></td>
+                <td>Dispatch intercept</td>
+              </tr>
+              <tr>
+                <td>TR-112</td>
+                <td>Speed inconsistent with aircraft type</td>
+                <td><span class="text-amber-400 font-semibold">MEDIUM</span></td>
+                <td>Continue monitoring</td>
+              </tr>
+              <tr>
+                <td>TR-156</td>
+                <td>Minor deviation from flight plan</td>
+                <td><span class="text-green-400 font-semibold">LOW</span></td>
+                <td>Log only</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: SCENARIO C - MULTI-SOURCE ==================== -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+          <span class="text-2xl">🔗</span>
+        </div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm mb-1">SKENARIO C</div>
+          <h2 class="slide-subtitle">MENYUSUN SITREP DARI MULTIPLE INPUTS</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-2xl mb-2">📡</div>
+          <div class="font-semibold text-sm">Radar Data</div>
+          <div class="text-xs text-white/50">Track records 48 jam</div>
+        </div>
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-2xl mb-2">👁️</div>
+          <div class="font-semibold text-sm">HUMINT Report</div>
+          <div class="text-xs text-white/50">Field observation</div>
+        </div>
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-2xl mb-2">🌐</div>
+          <div class="font-semibold text-sm">OSINT</div>
+          <div class="text-xs text-white/50">Media monitoring</div>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-purple-400">Prompt dengan RISEN</h3>
+            <div class="code-block p-4 text-xs">
+              <div class="space-y-2">
+                <div><span class="text-tactical-cyan">[R]</span> <span class="text-white/70">Staff officer Koopsudnas</span></div>
+                <div><span class="text-blue-400">[I]</span> <span class="text-white/70">Susun SITREP dari 3 sumber intel berikut</span></div>
+                <div><span class="text-purple-400">[S]</span> <span class="text-white/70">1) Cross-reference semua sumber, 2) Identifikasi corroborating info, 3) Note contradictions, 4) Assess overall picture</span></div>
+                <div><span class="text-amber-400">[E]</span> <span class="text-white/70">SITREP format standar untuk Panglima</span></div>
+                <div><span class="text-green-400">[N]</span> <span class="text-white/70">Format: Situation + Assessment + Recommendation. Max 300 kata.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-purple-400">Iterative Prompting</h3>
+            <div class="space-y-3">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-accent font-mono mb-1">ITERATION 1</div>
+                <div class="text-sm text-white/60">"Bagus, tapi tolong tambahkan confidence level untuk setiap assessment"</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-accent font-mono mb-1">ITERATION 2</div>
+                <div class="text-sm text-white/60">"Highlight contradictions antara HUMINT dan OSINT"</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-accent font-mono mb-1">ITERATION 3</div>
+                <div class="text-sm text-white/60">"Tambahkan recommended actions yang lebih spesifik"</div>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-xs text-purple-400 font-semibold">💡 KEY INSIGHT</div>
+              <div class="text-xs text-white/60">Prompt pertama jarang sempurna. Iterasi adalah bagian normal dari proses.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: SIMULATION DATA ==================== -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DATA SIMULASI • 5 MENIT REVIEW</div>
+        <h2 class="slide-title">
+          DATA UNTUK<br>
+          <span class="text-accent">LATIHAN MANDIRI</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Radar Data -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+              <span class="text-xl">📡</span>
+            </div>
+            <div>
+              <div class="font-semibold">DATA SET A: Radar Tracking</div>
+              <div class="text-xs text-white/50">48 jam terakhir</div>
+            </div>
+          </div>
+          
+          <div class="code-block p-4 max-h-64 overflow-y-auto text-xs">
+            <pre class="text-white/60">
+TRACK_ID | TIME_UTC      | LAT    | LON     | ALT_FT | SPD_KT | HDG
+---------|---------------|--------|---------|--------|--------|----
+TR-001   | 11-APR 08:15  | -2.15  | 117.45  | 35000  | 450    | 270
+TR-002   | 11-APR 08:17  | -2.18  | 117.42  | 34500  | 455    | 268
+TR-003   | 11-APR 08:22  | -2.21  | 117.38  | 34000  | 460    | 265
+TR-004   | 11-APR 09:45  | -1.85  | 118.20  | 28000  | 380    | 185
+TR-005   | 11-APR 09:47  | -1.82  | 118.18  | 27500  | 385    | 183
+
+<span class="text-red-400">[ANOMALY]</span>
+TR-006   | 11-APR 10:30  | -2.05  | 117.90  | 15000  | 250    | 090
+         | Catatan: Altitude unusually low, speed inconsistent
+
+TR-007   | 11-APR 11:00  | -2.10  | 117.85  | 33000  | 440    | 275
+
+<span class="text-red-400">[ANOMALY]</span>
+TR-008   | 11-APR 14:22  | -1.95  | 118.05  | NO_DATA| 0      | ---
+         | Catatan: Transponder off, visual contact lost
+
+TR-009   | 11-APR 15:30  | -2.25  | 117.55  | 36000  | 460    | 265
+TR-010   | 11-APR 16:45  | -1.90  | 118.10  | 32000  | 420    | 180
+
+... (Total: 87 tracks, 6 flagged anomalies)</pre>
+          </div>
+        </div>
+        
+        <!-- Field Report -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-xl">👁️</span>
+            </div>
+            <div>
+              <div class="font-semibold">DATA SET B: Field Report</div>
+              <div class="text-xs text-white/50">Unit Patroli Sektor Utara</div>
+            </div>
+          </div>
+          
+          <div class="code-block p-4 max-h-64 overflow-y-auto text-sm">
+            <div class="space-y-3 text-white/70">
+              <div>
+                <span class="text-accent font-semibold">FROM:</span> Unit Patroli Sektor Utara<br>
+                <span class="text-accent font-semibold">DTG:</span> 112230Z APR 2026<br>
+                <span class="text-accent font-semibold">SUBJ:</span> Laporan Aktivitas Tidak Biasa
+              </div>
+              
+              <div class="border-t border-white/10 pt-3">
+                <span class="text-accent font-semibold">1.</span> Pada 112100Z, teramati pesawat tidak dikenal melintas di grid reference XY-4532. Estimasi ketinggian 15.000 ft.<br><br>
+                <span class="text-accent font-semibold">2.</span> Pesawat tidak merespons komunikasi radio pada frekuensi standar.<br><br>
+                <span class="text-accent font-semibold">3.</span> Durasi pengamatan: 4 menit sebelum hilang dari visual.<br><br>
+                <span class="text-accent font-semibold">4.</span> Cuaca cerah, visibility >10km.
+              </div>
+              
+              <div class="border-t border-white/10 pt-3">
+                <span class="text-amber-400 font-semibold">ASSESSMENT:</span><br>
+                Kemungkinan surveillance flight. Pola approach berbeda dari traffic komersial normal.
+              </div>
+              
+              <div class="border-t border-white/10 pt-3">
+                <span class="text-green-400 font-semibold">RECOMMENDATION:</span><br>
+                Tingkatkan kewaspadaan sektor utara. Request air asset untuk patroli tambahan.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 glass p-4 rounded-xl text-center">
+        <div class="text-white/60 text-sm">
+          <strong class="text-white">Catatan:</strong> Data di atas adalah simulasi untuk keperluan training. 
+          Gunakan data ini untuk latihan di slide berikutnya.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: EXERCISE INTRO ==================== -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-6">
+          <span class="text-accent font-mono text-sm">LATIHAN MANDIRI • 30 MENIT</span>
+        </div>
+        <h2 class="slide-title">
+          EXERCISE:<br>
+          <span class="text-accent">GARUDA ALERT</span>
+        </h2>
+        <p class="text-white/60 mt-4">
+          Buat Threat Assessment Brief dari data simulasi yang tersedia
+        </p>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+            <span class="text-3xl">🎯</span>
+          </div>
+          <div>
+            <div class="font-semibold text-xl">Misi Anda</div>
+            <div class="text-white/60">Menghasilkan Intelligence Brief untuk Panglima</div>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-accent mb-3">📋 Instruksi</h4>
+            <ol class="space-y-3 text-sm text-white/70">
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs flex-shrink-0">1</span>
+                <span>Gunakan <strong class="text-white">Data Set A</strong> (Radar) dan <strong class="text-white">Data Set B</strong> (Field Report)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs flex-shrink-0">2</span>
+                <span>Susun prompt menggunakan <strong class="text-white">framework RISEN</strong></span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs flex-shrink-0">3</span>
+                <span>Generate <strong class="text-white">Threat Assessment Brief</strong> (1 halaman)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs flex-shrink-0">4</span>
+                <span>Iterate <strong class="text-white">minimal 2x</strong> untuk menyempurnakan output</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs flex-shrink-0">5</span>
+                <span>Presentasikan hasil ke kelompok (2 menit)</span>
+              </li>
+            </ol>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold text-accent mb-3">✅ Kriteria Sukses</h4>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm text-white/70">Prompt menggunakan RISEN lengkap</span>
+                <span class="text-xs text-accent font-mono">20%</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm text-white/70">Output mencakup semua data sources</span>
+                <span class="text-xs text-accent font-mono">25%</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm text-white/70">Threat level dengan justifikasi</span>
+                <span class="text-xs text-accent font-mono">20%</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm text-white/70">Actionable recommendations</span>
+                <span class="text-xs text-accent font-mono">20%</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm text-white/70">Evidence of iteration</span>
+                <span class="text-xs text-accent font-mono">15%</span>
+              </div>
+            </div>
+            <div class="mt-4 p-3 bg-accent/20 rounded-lg text-center">
+              <span class="text-accent font-semibold">Passing Score: 70%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: PROMPT BUILDER ==================== -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">INTERACTIVE TOOL</div>
+        <h2 class="slide-title">
+          PROMPT<br>
+          <span class="text-accent">BUILDER</span>
+        </h2>
+        <p class="text-white/60 mt-2">Susun prompt Anda menggunakan form di bawah</p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Input Form -->
+        <div class="space-y-4">
+          <div class="glass-lit p-4 rounded-xl">
+            <label class="flex items-center gap-2 text-sm font-semibold text-tactical-cyan mb-2">
+              <span class="w-8 h-8 rounded-lg bg-tactical-cyan/20 flex items-center justify-center font-display text-lg">R</span>
+              Role
+            </label>
+            <textarea 
+              x-model="promptBuilder.role"
+              class="prompt-input" 
+              placeholder="Contoh: Sebagai analis intelijen senior TNI AU dengan spesialisasi air defense..."
+              rows="2"></textarea>
+          </div>
+          
+          <div class="glass-lit p-4 rounded-xl">
+            <label class="flex items-center gap-2 text-sm font-semibold text-blue-400 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center font-display text-lg">I</span>
+              Instructions
+            </label>
+            <textarea 
+              x-model="promptBuilder.instructions"
+              class="prompt-input" 
+              placeholder="Contoh: Analisis data radar dan field report berikut, identifikasi anomali dan nilai tingkat ancaman..."
+              rows="2"></textarea>
+          </div>
+          
+          <div class="glass-lit p-4 rounded-xl">
+            <label class="flex items-center gap-2 text-sm font-semibold text-purple-400 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center font-display text-lg">S</span>
+              Steps
+            </label>
+            <textarea 
+              x-model="promptBuilder.steps"
+              class="prompt-input" 
+              placeholder="Contoh: 1) Review data radar, 2) Cross-reference dengan field report, 3) Identifikasi pola anomali..."
+              rows="3"></textarea>
+          </div>
+          
+          <div class="glass-lit p-4 rounded-xl">
+            <label class="flex items-center gap-2 text-sm font-semibold text-amber-400 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center font-display text-lg">E</span>
+              End Goal
+            </label>
+            <textarea 
+              x-model="promptBuilder.endGoal"
+              class="prompt-input" 
+              placeholder="Contoh: Hasilkan Threat Assessment Brief 1 halaman untuk morning briefing Panglima..."
+              rows="2"></textarea>
+          </div>
+          
+          <div class="glass-lit p-4 rounded-xl">
+            <label class="flex items-center gap-2 text-sm font-semibold text-green-400 mb-2">
+              <span class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center font-display text-lg">N</span>
+              Narrowing
+            </label>
+            <textarea 
+              x-model="promptBuilder.narrowing"
+              class="prompt-input" 
+              placeholder="Contoh: Format: BLUF + Key Findings + Threat Assessment + Recommendations. Max 400 kata..."
+              rows="2"></textarea>
+          </div>
+        </div>
+        
+        <!-- Preview -->
+        <div class="glass-lit p-6 rounded-2xl" x-data="{ copied: false }">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-accent">Preview Prompt</h3>
+            <button 
+              class="copy-btn"
+              :class="copied ? 'copied' : ''"
+              @click="
+                navigator.clipboard.writeText(getFullPrompt());
+                copied = true;
+                setTimeout(() => copied = false, 2000);
+              "
+              :disabled="!getFullPrompt()">
+              <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          
+          <div class="code-block p-4 min-h-[400px] max-h-[500px] overflow-y-auto">
+            <template x-if="getFullPrompt()">
+              <pre class="text-sm text-white/70 whitespace-pre-wrap" x-text="getFullPrompt()"></pre>
+            </template>
+            <template x-if="!getFullPrompt()">
+              <div class="text-white/30 text-sm italic">
+                Isi form di sebelah kiri untuk melihat preview prompt...
+              </div>
+            </template>
+          </div>
+          
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg">
+            <div class="text-xs text-accent font-semibold mb-1">💡 NEXT STEP</div>
+            <div class="text-xs text-white/60">
+              Copy prompt ini, paste ke AI (ChatGPT/Claude/Gemini), tambahkan data simulasi, dan generate output.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: EXAMPLE OUTPUT ==================== -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT YANG BAIK</div>
+        <h2 class="slide-title">
+          THREAT ASSESSMENT<br>
+          <span class="text-accent">BRIEF</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+              <span class="text-xl">📋</span>
+            </div>
+            <div>
+              <div class="font-semibold">GARUDA ALERT: Threat Assessment Brief</div>
+              <div class="text-xs text-white/50">DTG: 122000Z APR 2026</div>
+            </div>
+          </div>
+          <div class="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-mono rounded-full">
+            THREAT LEVEL: MEDIUM
+          </div>
+        </div>
+        
+        <div class="space-y-6 text-sm">
+          <!-- BLUF -->
+          <div class="p-4 bg-accent/10 border-l-4 border-accent rounded-r-xl">
+            <div class="font-semibold text-accent mb-2">BOTTOM LINE UP FRONT (BLUF)</div>
+            <p class="text-white/80">
+              Aktivitas pesawat tidak teridentifikasi terdeteksi di sektor utara dengan pola yang mengindikasikan 
+              <strong class="text-white">kemungkinan surveillance operation</strong>. Korelasi data radar dan field report 
+              menunjukkan <strong class="text-white">2 high-priority anomalies</strong> yang memerlukan respons dalam 24 jam.
+            </p>
+          </div>
+          
+          <!-- Key Findings -->
+          <div>
+            <div class="font-semibold text-accent mb-3">KEY FINDINGS</div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50 mb-1">Finding 1</div>
+                <div class="text-white/70">TR-006 dan TR-008 menunjukkan perilaku tidak konsisten dengan traffic normal</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50 mb-1">Finding 2</div>
+                <div class="text-white/70">Field report mengkonfirmasi visual contact di lokasi yang sesuai dengan TR-006</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50 mb-1">Finding 3</div>
+                <div class="text-white/70">Pola approach dari arah NE — berbeda dari traffic pattern normal</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50 mb-1">Finding 4</div>
+                <div class="text-white/70">Total 6 anomali dari 87 tracks (7%) — di atas baseline 3%</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Threat Assessment -->
+          <div>
+            <div class="font-semibold text-accent mb-3">THREAT ASSESSMENT</div>
+            <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-amber-400 font-semibold">MEDIUM</span>
+                <span class="text-xs text-white/50">(Confidence: HIGH)</span>
+              </div>
+              <p class="text-white/70 text-sm">
+                Pola aktivitas mengindikasikan deliberate intelligence gathering, bukan incidental violation. 
+                Namun tidak ada indikasi hostile intent atau immediate threat to assets.
+              </p>
+            </div>
+          </div>
+          
+          <!-- Recommendations -->
+          <div>
+            <div class="font-semibold text-accent mb-3">RECOMMENDED ACTIONS</div>
+            <div class="space-y-2">
+              <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                <span class="text-accent font-bold">1.</span>
+                <span class="text-white/70"><strong class="text-white">Immediate:</strong> Tingkatkan patroli sektor utara untuk 48 jam ke depan</span>
+              </div>
+              <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                <span class="text-accent font-bold">2.</span>
+                <span class="text-white/70"><strong class="text-white">Short-term:</strong> Koordinasi dengan radar site untuk enhanced tracking</span>
+              </div>
+              <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                <span class="text-accent font-bold">3.</span>
+                <span class="text-white/70"><strong class="text-white">Follow-up:</strong> Request SIGINT support untuk identifikasi lebih lanjut</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 11: PEER REVIEW ==================== -->
+  <section class="slide-section" id="slide-11">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PEER REVIEW • 5 MENIT</div>
+        <h2 class="slide-title">
+          REVIEW &<br>
+          <span class="text-accent">FEEDBACK</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-3 gap-6 mb-8">
+        <div class="glass-lit p-6 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Share Prompt</h3>
+          <p class="text-white/50 text-sm">Bagikan prompt yang Anda gunakan dengan partner</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Review Output</h3>
+          <p class="text-white/50 text-sm">Evaluasi berdasarkan kriteria sukses</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Give Feedback</h3>
+          <p class="text-white/50 text-sm">Berikan 1 strength & 1 improvement area</p>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-4">Checklist Review</h3>
+        <div class="grid sm:grid-cols-2 gap-3" x-data="{ checks: {} }">
+          <div class="checklist-item" :class="checks[1] ? 'checked' : ''" @click="checks[1] = !checks[1]">
+            <div class="check-box">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Prompt menggunakan semua komponen RISEN?</span>
+          </div>
+          <div class="checklist-item" :class="checks[2] ? 'checked' : ''" @click="checks[2] = !checks[2]">
+            <div class="check-box">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Output mencakup data dari kedua sources?</span>
+          </div>
+          <div class="checklist-item" :class="checks[3] ? 'checked' : ''" @click="checks[3] = !checks[3]">
+            <div class="check-box">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Ada threat level dengan justifikasi?</span>
+          </div>
+          <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
+            <div class="check-box">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Recommendations actionable dan spesifik?</span>
+          </div>
+          <div class="checklist-item" :class="checks[5] ? 'checked' : ''" @click="checks[5] = !checks[5]">
+            <div class="check-box">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Ada bukti iteration (minimal 2x)?</span>
+          </div>
+          <div class="checklist-item" :class="checks[6] ? 'checked' : ''" @click="checks[6] = !checks[6]">
+            <div class="check-box">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-white/70">Siap dipresentasikan ke Panglima?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 12: KEY TAKEAWAYS ==================== -->
+  <section class="slide-section" id="slide-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 1.3
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Praktik Langsung adalah Kunci</div>
+              <div class="text-sm text-white/60">Tidak ada cara lain untuk mahir prompting selain terus mencoba</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Iterasi itu Normal</div>
+              <div class="text-sm text-white/60">Prompt pertama jarang sempurna — refine berdasarkan output</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Data Context Matters</div>
+              <div class="text-sm text-white/60">Sertakan data yang relevan untuk hasil yang akurat</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Peer Review Helps</div>
+              <div class="text-sm text-white/60">Perspektif orang lain membantu menemukan blind spots</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-6 rounded-2xl mb-8">
+        <div class="flex items-center gap-4">
+          <div class="text-4xl">🎯</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Praktik Setelah Training</div>
+            <p class="text-white/60 text-sm">
+              Simpan prompt yang berhasil dalam <strong class="text-white">personal prompt library</strong>. 
+              Bagikan dengan tim untuk membangun <strong class="text-white">knowledge base bersama</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-01-02-framework-risen.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 1.2: Framework RISEN
+        </a>
+        <a href="sesi-01-04-etika-ai.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 1.4: Etika AI →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

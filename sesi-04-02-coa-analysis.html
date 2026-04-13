@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 4.2 | Course of Action (COA) Analysis</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#10b981',
+            'accent-light': '#34d399',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #10b981; --accent-glow: rgba(16,185,129,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #059669; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(16,185,129,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #34d399); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .coa-card { transition: all 0.3s ease; border-left: 4px solid var(--coa-color, var(--accent)); }
+    .coa-card:hover { transform: translateX(4px); }
+    
+    .matrix-table { width: 100%; border-collapse: collapse; }
+    .matrix-table th, .matrix-table td { padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+    .matrix-table th { background: rgba(255,255,255,0.05); font-weight: 600; }
+    .matrix-table td { font-size: 0.875rem; }
+    
+    .score-high { color: #10b981; }
+    .score-mid { color: #f59e0b; }
+    .score-low { color: #ef4444; }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(16,185,129,0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(16,185,129,0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 04</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 4.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">50 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">TEKNIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-04-01-deep-thinking.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 4.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-04-03-risk-wargaming.html" class="text-xs text-white/40 hover:text-white/60">Sesi 4.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 04 • SESI 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        COURSE OF ACTION<br>
+        <span class="text-accent">(COA) ANALYSIS</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Teknik untuk <strong class="text-white">generate multiple options</strong> dan 
+        <strong class="text-accent">compare secara objektif</strong> menggunakan AI.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">50</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">STEPS</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3+</div>
+          <div class="text-xs text-white/50">COA OPTIONS</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHAT IS COA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KONSEP</div>
+        <h2 class="slide-title">
+          WHAT IS<br>
+          <span class="text-accent">COA ANALYSIS?</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <p class="text-lg text-white/70 text-center mb-8">
+          <strong class="text-white">Course of Action (COA)</strong> adalah opsi tindakan yang dapat diambil 
+          untuk mencapai objective. COA Analysis adalah proses <strong class="text-accent">systematic comparison</strong> 
+          antar opsi untuk memilih yang terbaik.
+        </p>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">🎯</span>
+            </div>
+            <div class="font-semibold text-blue-400 mb-2">Define Objective</div>
+            <div class="text-sm text-white/50">Apa yang ingin dicapai?</div>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">📊</span>
+            </div>
+            <div class="font-semibold text-amber-400 mb-2">Generate Options</div>
+            <div class="text-sm text-white/50">Apa saja cara mencapainya?</div>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">✅</span>
+            </div>
+            <div class="font-semibold text-accent mb-2">Compare & Select</div>
+            <div class="text-sm text-white/50">Mana yang paling optimal?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 4-STEP PROCESS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROCESS</div>
+        <h2 class="slide-subtitle">4-STEP COA DEVELOPMENT</h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #3b82f6;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-blue-400">1</span>
+            </div>
+            <div>
+              <div class="font-semibold text-blue-400">Define Objective</div>
+              <div class="text-xs text-white/50">Tetapkan tujuan yang jelas</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            "Neutralize reconnaissance activity in NE-7 within 72 hours while minimizing escalation risk"
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #10b981;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-green-400">2</span>
+            </div>
+            <div>
+              <div class="font-semibold text-green-400">Identify Constraints</div>
+              <div class="text-xs text-white/50">Batasan yang harus dipatuhi</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Resources, time limits, rules of engagement, political considerations
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #f59e0b;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-amber-400">3</span>
+            </div>
+            <div>
+              <div class="font-semibold text-amber-400">Generate Options</div>
+              <div class="text-xs text-white/50">Brainstorm 3-5 distinct COAs</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Opsi harus MECE: Mutually Exclusive, Collectively Exhaustive
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #a855f7;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-purple-400">4</span>
+            </div>
+            <div>
+              <div class="font-semibold text-purple-400">Evaluate & Compare</div>
+              <div class="text-xs text-white/50">Score against criteria</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Weighted matrix comparison untuk objektif decision
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: EVALUATION CRITERIA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KRITERIA</div>
+        <h2 class="slide-subtitle">STANDARD EVALUATION CRITERIA</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Military/Operational Criteria</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Effectiveness</span>
+                <span class="text-xs text-white/40">Will it achieve the objective?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Feasibility</span>
+                <span class="text-xs text-white/40">Can we actually do this?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Risk Level</span>
+                <span class="text-xs text-white/40">What could go wrong?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Speed</span>
+                <span class="text-xs text-white/40">How fast can we execute?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Resource & Strategic Criteria</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Resource Cost</span>
+                <span class="text-xs text-white/40">Personnel, equipment, budget</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Flexibility</span>
+                <span class="text-xs text-white/40">Can we adapt if needed?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Escalation Risk</span>
+                <span class="text-xs text-white/40">Political/diplomatic impact</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Sustainability</span>
+                <span class="text-xs text-white/40">Can we maintain this?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: COMPARISON MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK</div>
+        <h2 class="slide-subtitle">WEIGHTED COMPARISON MATRIX</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl overflow-x-auto">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th class="text-left">Criteria</th>
+              <th>Weight</th>
+              <th class="text-green-400">COA A<br><span class="text-xs font-normal text-white/50">Aggressive</span></th>
+              <th class="text-amber-400">COA B<br><span class="text-xs font-normal text-white/50">Balanced</span></th>
+              <th class="text-purple-400">COA C<br><span class="text-xs font-normal text-white/50">Conservative</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left text-white/70">Effectiveness</td>
+              <td class="text-accent font-semibold">30%</td>
+              <td class="score-high">9</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">6</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Risk Level (lower=better)</td>
+              <td class="text-accent font-semibold">25%</td>
+              <td class="score-low">4</td>
+              <td class="score-mid">7</td>
+              <td class="score-high">9</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Resource Cost (lower=better)</td>
+              <td class="text-accent font-semibold">20%</td>
+              <td class="score-low">3</td>
+              <td class="score-mid">6</td>
+              <td class="score-high">8</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Speed</td>
+              <td class="text-accent font-semibold">15%</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">7</td>
+              <td class="score-low">5</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Flexibility</td>
+              <td class="text-accent font-semibold">10%</td>
+              <td class="score-low">4</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">7</td>
+            </tr>
+            <tr class="font-bold bg-white/5">
+              <td class="text-left">WEIGHTED SCORE</td>
+              <td>100%</td>
+              <td class="text-green-400">5.95</td>
+              <td class="text-amber-400">7.25</td>
+              <td class="text-purple-400">7.05</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="mt-6 p-4 bg-accent/20 rounded-xl">
+          <div class="flex items-center gap-3">
+            <span class="text-accent font-semibold">📊 RECOMMENDATION:</span>
+            <span class="text-white">COA B (Balanced) — Highest weighted score with optimal risk-reward balance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: COA GENERATION PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">COA GENERATION PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('coa-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 COA GENERATION TEMPLATE</div>
+        
+        <div class="code-block p-4" id="coa-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai <span class="text-accent">[strategic military planner]</span>, 
+generate 3-4 distinct Courses of Action untuk situasi berikut:
+
+OBJECTIVE:
+[State clear objective - e.g., "Neutralize reconnaissance in NE-7 within 72h"]
+
+CONSTRAINTS:
+- Resources: [Available assets]
+- Time: [Deadline]
+- Rules of Engagement: [Any limitations]
+- Other: [Political, diplomatic considerations]
+
+CURRENT SITUATION:
+[Brief situation summary]
+
+REQUIREMENTS:
+For EACH COA, provide:
+1. NAME: Descriptive label (e.g., "Aggressive Intercept")
+2. DESCRIPTION: 2-3 sentence summary
+3. KEY ACTIONS: What specific steps
+4. RESOURCE REQUIREMENTS: What we need
+5. TIMELINE: How long to execute
+6. PROS: Main advantages
+7. CONS: Main disadvantages
+8. RISK LEVEL: HIGH/MEDIUM/LOW
+
+Ensure COAs are:
+- DISTINCT (genuinely different approaches)
+- FEASIBLE (can actually be executed)
+- COMPLETE (addresses the full objective)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: COA COMPARISON PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">COA COMPARISON PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('compare-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 COA COMPARISON TEMPLATE</div>
+        
+        <div class="code-block p-4" id="compare-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Compare the following COAs using weighted criteria analysis:
+
+COA A: [Name]
+[Brief description]
+
+COA B: [Name]
+[Brief description]
+
+COA C: [Name]
+[Brief description]
+
+EVALUATION CRITERIA (with weights):
+1. Effectiveness (30%) - Will it achieve objective?
+2. Risk Level (25%) - What could go wrong? (lower risk = higher score)
+3. Resource Cost (20%) - Personnel, equipment (lower cost = higher score)
+4. Speed (15%) - Time to execute
+5. Flexibility (10%) - Ability to adapt
+
+INSTRUCTIONS:
+1. Score each COA 1-10 for each criterion
+2. Calculate weighted score
+3. Create comparison matrix
+4. Provide RECOMMENDATION with justification
+
+OUTPUT FORMAT:
+| Criteria | Weight | COA A | COA B | COA C |
+|----------|--------|-------|-------|-------|
+| ... | ... | ... | ... | ... |
+| WEIGHTED TOTAL | 100% | X.XX | X.XX | X.XX |
+
+RECOMMENDATION: [COA X]
+JUSTIFICATION: [Why this COA is optimal]
+CAVEATS: [What to watch out for]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: SAMPLE OUTPUT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT</div>
+        <h2 class="slide-subtitle">AI-GENERATED COA ANALYSIS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #ef4444;">
+          <div class="text-xs text-red-400 font-mono mb-2">COA A: AGGRESSIVE INTERCEPT</div>
+          <div class="font-semibold mb-2">Full CAP deployment + SIGINT surge</div>
+          <div class="text-xs text-white/60 mb-3">
+            Deploy all available CAP to NE-7 with aggressive intercept ROE. 
+            Maximum deterrent effect.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">High Effect</span>
+            <span class="px-2 py-0.5 bg-red-500/20 text-red-400 rounded">High Risk</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #f59e0b;">
+          <div class="text-xs text-amber-400 font-mono mb-2">COA B: BALANCED RESPONSE</div>
+          <div class="font-semibold mb-2">Increased patrols + diplomatic channel</div>
+          <div class="text-xs text-white/60 mb-3">
+            Double patrol frequency, enhance SIGINT, open back-channel communication. 
+            Measured escalation.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Med Effect</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Med Risk</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #3b82f6;">
+          <div class="text-xs text-blue-400 font-mono mb-2">COA C: OBSERVE & REPORT</div>
+          <div class="font-semibold mb-2">Enhanced surveillance only</div>
+          <div class="text-xs text-white/60 mb-3">
+            Increase ISR coverage, document activity, build intelligence picture. 
+            No direct engagement.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Low Effect</span>
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Low Risk</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-2">AI RECOMMENDATION</div>
+        <div class="text-sm text-white/70">
+          <strong class="text-amber-400">COA B (Balanced Response)</strong> is recommended. 
+          It achieves 80% of the deterrent effect of COA A while maintaining escalation control. 
+          The diplomatic back-channel provides an off-ramp if tensions rise. 
+          <em class="text-white/50">Caveat: Requires coordination with diplomatic corps within 24h.</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam COA development, apa yang dimaksud dengan opsi yang <strong class="text-white">MECE</strong>?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. Most Effective, Cost Efficient</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. Mutually Exclusive, Collectively Exhaustive</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. Military Evaluation, Criteria Examination</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. Minimum Effort, Complete Execution</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true">
+          <span x-text="submitted ? (answer === 'b' ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="answer === 'b' ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="answer === 'b' ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B (Mutually Exclusive, Collectively Exhaustive).</strong> 
+            MECE artinya setiap COA berbeda satu sama lain (tidak overlap) dan secara bersama mencakup semua kemungkinan pendekatan yang reasonable.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 4.2
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">4-Step Process</div>
+              <div class="text-sm text-white/60">Objective → Constraints → Generate → Evaluate</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">3-5 Distinct Options</div>
+              <div class="text-sm text-white/60">COAs harus MECE — berbeda dan komprehensif</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Weighted Matrix</div>
+              <div class="text-sm text-white/60">Objektif comparison dengan criteria scoring</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">AI Generates, Human Decides</div>
+              <div class="text-sm text-white/60">AI membantu analisis, keputusan tetap di tangan manusia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-04-01-deep-thinking.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 4.1: Chain of Thought
+        </a>
+        <a href="sesi-04-03-risk-wargaming.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 4.3 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

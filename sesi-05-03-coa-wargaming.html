@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 5.3 | COA Development & Wargaming</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#f59e0b',
+            'accent-light': '#fbbf24',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #f59e0b; --accent-glow: rgba(245,158,11,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #d97706; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fbbf24); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .coa-card { border-left: 4px solid var(--coa-color, var(--accent)); transition: all 0.3s ease; }
+    .coa-card:hover { transform: translateX(4px); }
+    
+    .wargame-move { transition: all 0.3s ease; }
+    .blue-move { border-left: 4px solid #3b82f6; background: rgba(59,130,246,0.1); }
+    .red-move { border-left: 4px solid #ef4444; background: rgba(239,68,68,0.1); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-05-capstone.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 05</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">PHASE 3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CAPSTONE</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-05-02-visual-package.html" class="text-xs text-white/40 hover:text-white/60">← Phase 2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-05-04-decision-brief.html" class="text-xs text-white/40 hover:text-white/60">Phase 4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-full mb-4">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        <span class="text-red-400 font-mono text-sm">OPERATION GARUDA SHIELD</span>
+      </div>
+      
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8 ml-4">
+        <span class="text-accent font-mono text-sm">MODUL 05 • PHASE 3</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        COA DEVELOPMENT &<br>
+        <span class="text-accent">WARGAMING</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Develop <strong class="text-white">3 courses of action</strong>, assess risks, 
+        dan run <strong class="text-accent">AI wargaming simulation</strong>.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">🎯</div>
+          <div class="text-xs text-green-400">3 COAs</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">⚠️</div>
+          <div class="text-xs text-red-400">Risk Matrix</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">🎮</div>
+          <div class="text-xs text-purple-400">Wargame</div>
+        </div>
+        <div class="flex items-center text-accent text-xl px-2">→</div>
+        <div class="glass px-6 py-3 rounded-xl text-center bg-accent/20 border-accent">
+          <div class="text-lg">✅</div>
+          <div class="text-xs text-accent font-semibold">RECOMMEND</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Phase 3</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TIME BREAKDOWN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TIME MANAGEMENT</div>
+        <h2 class="slide-subtitle">60 MINUTES BREAKDOWN</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="grid sm:grid-cols-4 gap-4">
+          <div class="p-4 bg-green-500/10 rounded-xl text-center">
+            <div class="text-2xl font-display text-green-400">20</div>
+            <div class="text-xs text-white/40">min</div>
+            <div class="font-semibold text-sm mt-2">COA Development</div>
+            <div class="text-xs text-white/50">Generate 3 distinct options</div>
+          </div>
+          <div class="p-4 bg-red-500/10 rounded-xl text-center">
+            <div class="text-2xl font-display text-red-400">15</div>
+            <div class="text-xs text-white/40">min</div>
+            <div class="font-semibold text-sm mt-2">Risk Assessment</div>
+            <div class="text-xs text-white/50">Top 5 risks per COA</div>
+          </div>
+          <div class="p-4 bg-purple-500/10 rounded-xl text-center">
+            <div class="text-2xl font-display text-purple-400">15</div>
+            <div class="text-xs text-white/40">min</div>
+            <div class="font-semibold text-sm mt-2">Wargaming</div>
+            <div class="text-xs text-white/50">AI Red Team simulation</div>
+          </div>
+          <div class="p-4 bg-accent/10 rounded-xl text-center">
+            <div class="text-2xl font-display text-accent">10</div>
+            <div class="text-xs text-white/40">min</div>
+            <div class="font-semibold text-sm mt-2">Compare & Recommend</div>
+            <div class="text-xs text-white/50">Decision matrix</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: OBJECTIVE & CONSTRAINTS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTEXT</div>
+        <h2 class="slide-subtitle">OBJECTIVE & CONSTRAINTS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400 text-xl">🎯</span>
+            </div>
+            <h3 class="font-semibold text-green-400">Objective</h3>
+          </div>
+          <div class="p-4 bg-green-500/10 rounded-xl text-sm text-white/70">
+            <strong class="text-white">Deter foreign reconnaissance operations</strong> in sectors NE-7 to NE-9 
+            while <strong class="text-white">avoiding escalation</strong> to armed confrontation.
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 text-xl">⚠️</span>
+            </div>
+            <h3 class="font-semibold text-red-400">Constraints</h3>
+          </div>
+          <div class="space-y-2 text-sm">
+            <div class="p-2 bg-white/5 rounded flex items-center gap-2">
+              <span class="text-red-400">•</span>
+              <span class="text-white/70">ROE: No first use of force</span>
+            </div>
+            <div class="p-2 bg-white/5 rounded flex items-center gap-2">
+              <span class="text-red-400">•</span>
+              <span class="text-white/70">Political: Avoid international incident</span>
+            </div>
+            <div class="p-2 bg-white/5 rounded flex items-center gap-2">
+              <span class="text-red-400">•</span>
+              <span class="text-white/70">Resources: 2 corvettes, 4 MPA available</span>
+            </div>
+            <div class="p-2 bg-white/5 rounded flex items-center gap-2">
+              <span class="text-red-400">•</span>
+              <span class="text-white/70">Timeline: Exercise ends 22 APR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: THREE COAs -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">DEVELOP</div>
+        <h2 class="slide-subtitle">3 COURSES OF ACTION</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #ef4444;">
+          <div class="text-xs text-red-400 font-mono mb-2">COA A: ASSERTIVE PRESENCE</div>
+          <div class="font-semibold mb-2">Maximum deterrence posture</div>
+          <div class="text-sm text-white/60 mb-3">
+            Deploy both corvettes + all 4 MPA to NE-7. Active intercept ROE. Continuous air patrol.
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">High Deterrent</span>
+            <span class="px-2 py-0.5 bg-red-500/20 text-red-400 rounded">High Escalation</span>
+          </div>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #f59e0b;">
+          <div class="text-xs text-amber-400 font-mono mb-2">COA B: GRADUATED RESPONSE</div>
+          <div class="font-semibold mb-2">Layered presence + diplomacy</div>
+          <div class="text-sm text-white/60 mb-3">
+            1 corvette on station, 1 reserve. 2 MPA active, 2 standby. Diplomatic note sent.
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Balanced</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Flexible</span>
+          </div>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #3b82f6;">
+          <div class="text-xs text-blue-400 font-mono mb-2">COA C: STRATEGIC PATIENCE</div>
+          <div class="font-semibold mb-2">Monitor and document only</div>
+          <div class="text-sm text-white/60 mb-3">
+            Enhanced SIGINT/radar coverage. Document all violations. Formal diplomatic protest.
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Low Risk</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Low Deterrent</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: RISK ASSESSMENT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">ASSESS</div>
+        <h2 class="slide-subtitle">RISK MATRIX — COA B</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Escalation to armed incident</div>
+              <div class="text-xs text-white/50">Mitigation: Clear ROE, de-escalation protocols</div>
+            </div>
+            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-semibold">MEDIUM</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Foreign forces ignore presence</div>
+              <div class="text-xs text-white/50">Mitigation: Prepared escalation to COA A</div>
+            </div>
+            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-semibold">MEDIUM</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Diplomatic channel fails</div>
+              <div class="text-xs text-white/50">Mitigation: Multi-track approach, regional partners</div>
+            </div>
+            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-semibold">MEDIUM</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Equipment failure during ops</div>
+              <div class="text-xs text-white/50">Mitigation: Reserve corvette on standby</div>
+            </div>
+            <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded font-semibold">LOW</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Weather disrupts operations</div>
+              <div class="text-xs text-white/50">Mitigation: Forecast favorable, contingency plans</div>
+            </div>
+            <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded font-semibold">LOW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: WARGAMING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">SIMULATE</div>
+        <h2 class="slide-subtitle">AI WARGAMING — COA B</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="wargame-move blue-move p-4 rounded-r-xl">
+            <div class="text-xs text-blue-400 font-mono mb-1">TURN 1 — BLUE (You)</div>
+            <div class="text-sm text-white/70">Deploy 1 corvette to NE-7 perimeter. 2 MPA commence patrol. Diplomatic note sent to foreign MFA.</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <div class="text-white/30 text-sm">↓ AI Red Team Response ↓</div>
+          </div>
+          
+          <div class="wargame-move red-move p-4 rounded-r-xl">
+            <div class="text-xs text-red-400 font-mono mb-1">TURN 2 — RED (Adversary MLR)</div>
+            <div class="text-sm text-white/70">Acknowledge diplomatic note, cite "routine exercise." Maintain air reconnaissance but shift primary activity to NE-8. Test our coverage gaps.</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <div class="text-white/30 text-sm">↓ Your Counter ↓</div>
+          </div>
+          
+          <div class="wargame-move blue-move p-4 rounded-r-xl">
+            <div class="text-xs text-blue-400 font-mono mb-1">TURN 3 — BLUE (Counter)</div>
+            <div class="text-sm text-white/70">Extend MPA coverage to include NE-8. Position reserve corvette to respond if needed. Share intel with regional partners.</div>
+          </div>
+        </div>
+        
+        <div class="mt-6 grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="text-amber-400 font-semibold text-sm mb-2">📊 MLR Outcome</div>
+            <div class="text-xs text-white/60">Adversary completes exercise with reduced scope. No EEZ violation. Deterrence achieved.</div>
+          </div>
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="text-red-400 font-semibold text-sm mb-2">⚠️ MDR Scenario</div>
+            <div class="text-xs text-white/60">Adversary tests response with brief EEZ incursion. Requires immediate escalation to COA A.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: COMPARISON MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">COMPARE</div>
+        <h2 class="slide-subtitle">DECISION MATRIX</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left py-3 text-white/40">Criteria</th>
+              <th class="text-center py-3 text-white/40">Weight</th>
+              <th class="text-center py-3 text-red-400">COA A</th>
+              <th class="text-center py-3 text-amber-400">COA B</th>
+              <th class="text-center py-3 text-blue-400">COA C</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-white/5">
+              <td class="py-2 text-white/70">Effectiveness</td>
+              <td class="text-center text-accent">30%</td>
+              <td class="text-center text-green-400">9</td>
+              <td class="text-center text-green-400">8</td>
+              <td class="text-center text-amber-400">5</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-2 text-white/70">Escalation Risk (lower=better)</td>
+              <td class="text-center text-accent">25%</td>
+              <td class="text-center text-red-400">3</td>
+              <td class="text-center text-amber-400">7</td>
+              <td class="text-center text-green-400">9</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-2 text-white/70">Resource Efficiency</td>
+              <td class="text-center text-accent">20%</td>
+              <td class="text-center text-red-400">3</td>
+              <td class="text-center text-amber-400">7</td>
+              <td class="text-center text-green-400">9</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-2 text-white/70">Flexibility</td>
+              <td class="text-center text-accent">15%</td>
+              <td class="text-center text-amber-400">5</td>
+              <td class="text-center text-green-400">9</td>
+              <td class="text-center text-amber-400">6</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-2 text-white/70">Political Acceptability</td>
+              <td class="text-center text-accent">10%</td>
+              <td class="text-center text-red-400">4</td>
+              <td class="text-center text-green-400">8</td>
+              <td class="text-center text-green-400">9</td>
+            </tr>
+            <tr class="font-bold bg-white/5">
+              <td class="py-3">WEIGHTED SCORE</td>
+              <td class="text-center">100%</td>
+              <td class="text-center text-red-400">5.35</td>
+              <td class="text-center text-amber-400">7.60</td>
+              <td class="text-center text-blue-400">7.05</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="mt-4 p-4 bg-accent/20 rounded-xl">
+          <div class="text-accent font-semibold">📊 RECOMMENDATION: COA B (Graduated Response)</div>
+          <div class="text-sm text-white/60 mt-1">Highest score with optimal balance of deterrence and risk management</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: DELIVERABLES -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">DELIVERABLES</div>
+        <h2 class="slide-subtitle">PHASE 3 OUTPUTS</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-4 mb-6">
+          <div class="p-4 bg-green-500/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[1] = !checks[1]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[1] ? 'bg-green-500 border-green-500' : 'border-white/30'">
+                <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-green-400">📑 COA Analysis Document</div>
+                <div class="text-xs text-white/50">3 distinct COAs with description, pros, cons</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[2] = !checks[2]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[2] ? 'bg-red-500 border-red-500' : 'border-white/30'">
+                <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-red-400">⚠️ Risk Assessment Matrix</div>
+                <div class="text-xs text-white/50">Top 5 risks with likelihood, impact, mitigations</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-purple-500/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[3] = !checks[3]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[3] ? 'bg-purple-500 border-purple-500' : 'border-white/30'">
+                <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-purple-400">🎮 Wargaming Summary</div>
+                <div class="text-xs text-white/50">MLR, MDR, Blue counter-moves</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[4] = !checks[4]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[4] ? 'bg-accent border-accent' : 'border-white/30'">
+                <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-accent">📊 Comparison Matrix + Recommendation</div>
+                <div class="text-xs text-white/50">Weighted scoring, justified selection</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 4 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 4">
+            <div class="text-green-400 font-semibold">✓ Phase 3 Complete — Ready for Final Brief!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 4">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/4 deliverables complete'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: EVALUATION -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EVALUATION</div>
+        <h2 class="slide-subtitle">PHASE 3 SCORING</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">COA Distinctness</div>
+              <div class="text-xs text-white/50">3 genuinely different approaches</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Risk Assessment Quality</div>
+              <div class="text-xs text-white/50">Realistic risks with mitigations</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Wargaming Depth</div>
+              <div class="text-xs text-white/50">MLR + MDR + counter-moves</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Recommendation Justification</div>
+              <div class="text-xs text-white/50">Clear reasoning, matrix-supported</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+        </div>
+        <div class="mt-4 p-3 bg-accent/20 rounded-lg text-center">
+          <span class="text-accent font-semibold">Passing: 70%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: TRANSITION -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PHASE 3 COMPLETE</div>
+        <h2 class="slide-title">
+          <span class="text-accent">FINAL PHASE:</span><br>
+          DECISION BRIEF
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="text-center mb-6">
+          <div class="text-lg text-white/70">Semua komponen siap untuk Commander's Decision Brief</div>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3 mb-6">
+          <div class="glass p-2 rounded-lg text-center">
+            <div class="text-sm">📋 Intel</div>
+          </div>
+          <div class="text-white/30">+</div>
+          <div class="glass p-2 rounded-lg text-center">
+            <div class="text-sm">📊 Visuals</div>
+          </div>
+          <div class="text-white/30">+</div>
+          <div class="glass p-2 rounded-lg text-center">
+            <div class="text-sm">🎯 COA</div>
+          </div>
+          <div class="text-orange-400 text-xl">=</div>
+          <div class="glass p-2 rounded-lg text-center bg-orange-500/20 border border-orange-500/30">
+            <div class="text-sm text-orange-400 font-semibold">📋 BRIEF</div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-orange-500/10 rounded-xl">
+          <div class="font-semibold text-orange-400 mb-2">Phase 4: Commander's Decision Brief (30 min)</div>
+          <div class="text-sm text-white/60">
+            Compile all deliverables → Write BLUF → Format decision brief → Present to commander
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-05-02-visual-package.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Kembali ke Phase 2
+        </a>
+        <a href="sesi-05-04-decision-brief.html" class="flex-1 py-3 px-6 bg-orange-500 rounded-xl text-center text-navy-900 font-semibold hover:bg-orange-400 transition-colors">
+          Lanjut ke Phase 4 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

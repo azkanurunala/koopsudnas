@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.3 | Gemini Visual Generation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#f43f5e',
+            'accent-light': '#fb7185',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #f43f5e; --accent-glow: rgba(244,63,94,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #6366f1; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(244,63,94,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(244,63,94,0.03) 50%, transparent 100%); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fb7185); z-index: 100; transition: width 0.3s ease; }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+    .prompt-block .label { color: #fb7185; font-weight: 600; }
+
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 7, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">40 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">VISUAL</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-02-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-04-multi-tool-workflow.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 3 • VISUAL GENERATION</span>
+      </div>
+
+      <h1 class="slide-title mb-6">
+        GEMINI<br>
+        <span class="text-accent">VISUAL GENERATION</span>
+      </h1>
+
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Imagen, Canvas, dan Veo — tiga kapabilitas visual Gemini untuk produce <strong class="text-white">sitrep infografis, dashboard interaktif, dan video brief</strong> yang tidak bisa dilakukan Claude.
+      </p>
+
+      <div class="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-3xl mb-2">🖼️</div>
+          <div class="text-accent font-mono text-xs mb-1">IMAGEN 4</div>
+          <div class="text-sm text-white/70">Photorealistic + infografis</div>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-3xl mb-2">📊</div>
+          <div class="text-accent font-mono text-xs mb-1">CANVAS</div>
+          <div class="text-sm text-white/70">Interactive dashboard & doc</div>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-3xl mb-2">🎬</div>
+          <div class="text-accent font-mono text-xs mb-1">VEO</div>
+          <div class="text-sm text-white/70">Video brief generation</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: IMAGEN -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">IMAGEN 4</div>
+        <h2 class="slide-title">STATIC <span class="text-accent">IMAGE GENERATION</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <p class="text-white/70 mb-6">
+          Imagen 4 adalah model image generation Google — <strong class="text-white">built-in di gemini.google.com</strong>, tidak perlu tool terpisah. Cocok untuk:
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="p-5 bg-white/5 rounded-xl">
+            <h3 class="font-semibold text-accent mb-3">✓ Untuk Ops Koopsudnas</h3>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Sitrep visual</strong> — map-style situational overview</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Schematic diagram</strong> — force disposition, chain of command</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Infografis</strong> — statistik threat assessment</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Training visuals</strong> — ilustrasi untuk briefing</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Icon/symbol</strong> — unit marker, equipment silhouette</li>
+            </ul>
+          </div>
+
+          <div class="p-5 bg-white/5 rounded-xl">
+            <h3 class="font-semibold text-red-400 mb-3">❌ Bukan untuk</h3>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-red-400">•</span> Faithful reproduction dari foto nyata (bisa halusinate detail)</li>
+              <li class="flex items-start gap-2"><span class="text-red-400">•</span> Personel identifiable (wajah spesifik)</li>
+              <li class="flex items-start gap-2"><span class="text-red-400">•</span> Real-world deception / disinformation</li>
+              <li class="flex items-start gap-2"><span class="text-red-400">•</span> Sensitive location dengan detail akurat</li>
+              <li class="flex items-start gap-2"><span class="text-red-400">•</span> Classified equipment dengan spec yang leak</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+          <div class="font-semibold text-accent mb-2">⚠ OPSEC Gate sebelum prompt</div>
+          <p class="text-sm text-white/70">Setiap request image generation harus lewat pertanyaan: "Jika orang luar melihat output ini, apakah membocorkan informasi operasional?" Kalau YA → jangan generate, atau generalize.</p>
+        </div>
+      </div>
+
+      <!-- Prompting Framework -->
+      <div class="glass-lit p-8 rounded-2xl">
+        <h3 class="text-xl font-semibold mb-4">🎯 Prompting Framework: <span class="text-accent">SUBJECT + STYLE + COMPOSITION + CONSTRAINT</span></h3>
+        <p class="text-sm text-white/60 mb-4">Prompt image harus 4 komponen untuk reproducible, professional output.</p>
+
+        <div class="prompt-block mb-4">
+          <div class="mb-2"><span class="label">SUBJECT:</span> Tactical situational awareness infographic</div>
+          <div class="mb-2"><span class="label">STYLE:</span> Modern military briefing, dark navy background, amber + cyan accent colors, flat vector illustration style</div>
+          <div class="mb-2"><span class="label">COMPOSITION:</span> Top-down map view, 16:9 landscape, labeled zones with callout lines, legend in bottom-right corner</div>
+          <div><span class="label">CONSTRAINT:</span> No specific country names, generic aircraft silhouettes only, no identifiable personnel, no classified markings. Professional, non-sensationalized tone.</div>
+        </div>
+
+        <div class="grid sm:grid-cols-4 gap-3">
+          <div class="p-3 glass rounded-lg text-center">
+            <div class="text-accent font-mono text-xs mb-1">16:9</div>
+            <div class="text-xs text-white/60">Briefing slide</div>
+          </div>
+          <div class="p-3 glass rounded-lg text-center">
+            <div class="text-accent font-mono text-xs mb-1">1:1</div>
+            <div class="text-xs text-white/60">Social / chat</div>
+          </div>
+          <div class="p-3 glass rounded-lg text-center">
+            <div class="text-accent font-mono text-xs mb-1">4:3</div>
+            <div class="text-xs text-white/60">Document insert</div>
+          </div>
+          <div class="p-3 glass rounded-lg text-center">
+            <div class="text-accent font-mono text-xs mb-1">9:16</div>
+            <div class="text-xs text-white/60">Mobile vertical</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: CANVAS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">GEMINI CANVAS</div>
+        <h2 class="slide-title">INTERACTIVE <span class="text-accent">DASHBOARDS</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <p class="text-white/70 mb-6">
+          Canvas adalah fitur <strong class="text-white">live editor</strong> di gemini.google.com — Gemini generate HTML/CSS/JS interactive di sebelah chat, Anda bisa iterate tanpa switch tool. Cocok untuk:
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="p-5 bg-white/5 rounded-xl">
+            <div class="text-2xl mb-3">📊</div>
+            <h3 class="font-semibold text-accent mb-2">Interactive Dashboard</h3>
+            <p class="text-sm text-white/60 mb-3">Upload CSV data (threat indicators, sortie counts, equipment status) → "buatkan dashboard dengan chart trend + summary cards"</p>
+            <div class="text-xs text-white/50 font-mono">Output: HTML file self-contained, bisa di-host di local</div>
+          </div>
+
+          <div class="p-5 bg-white/5 rounded-xl">
+            <div class="text-2xl mb-3">📝</div>
+            <h3 class="font-semibold text-accent mb-2">Live Document</h3>
+            <p class="text-sm text-white/60 mb-3">Generate dokumen briefing — formal TNI format, tabel, heading auto. Lebih baik dari chat-to-doc karena live preview.</p>
+            <div class="text-xs text-white/50 font-mono">Output: Google Docs / PDF export langsung</div>
+          </div>
+
+          <div class="p-5 bg-white/5 rounded-xl">
+            <div class="text-2xl mb-3">🌐</div>
+            <h3 class="font-semibold text-accent mb-2">Web App Prototype</h3>
+            <p class="text-sm text-white/60 mb-3">Quick prototype untuk tools internal — threat tracker, intel log viewer, rapid form. No coding skill needed.</p>
+            <div class="text-xs text-white/50 font-mono">Output: functional HTML prototype</div>
+          </div>
+
+          <div class="p-5 bg-white/5 rounded-xl">
+            <div class="text-2xl mb-3">🎨</div>
+            <h3 class="font-semibold text-accent mb-2">Infographic Builder</h3>
+            <p class="text-sm text-white/60 mb-3">Generate infografis dengan SVG — lebih crisp dari Imagen untuk data viz yang butuh teks akurat</p>
+            <div class="text-xs text-white/50 font-mono">Output: SVG export, editable</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-3">💡 Canvas vs NotebookLM vs Claude</h3>
+        <div class="text-sm text-white/70 space-y-2">
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">Canvas:</strong><span>Live interactive output — user klik, iterate, export. Ideal untuk dashboard & prototype.</span></div>
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">NotebookLM:</strong><span>Source-grounded research. Bukan untuk build interactive output.</span></div>
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">Claude Artifacts:</strong><span>Serupa Canvas — juga bisa build interactive HTML. Claude Artifacts umumnya lebih kuat di reasoning code-nya, Canvas lebih cepat iterate.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: VEO -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">VEO</div>
+        <h2 class="slide-title">VIDEO <span class="text-accent">GENERATION</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="flex items-start gap-6 mb-6">
+          <div class="text-5xl">🎬</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Veo 3 — Google's Video Model</h3>
+            <p class="text-sm text-white/60 mb-3">Generate video 8-60 detik dari text prompt atau image-to-video. Audio integration (dialogue, ambient) built-in sejak Veo 3.</p>
+            <p class="text-xs text-amber-400">⚠ Tersedia di Gemini Advanced (paid tier) dan AI Studio dengan quota terbatas.</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="p-5 bg-accent/10 rounded-xl border border-accent/20">
+            <h4 class="font-semibold text-accent mb-3">✓ Legitimate Ops Use</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li>• <strong class="text-white">Training video</strong> — generic battlefield scenario untuk doctrine class</li>
+              <li>• <strong class="text-white">Public affairs clip</strong> — hari TNI AU, ceremonial b-roll</li>
+              <li>• <strong class="text-white">Concept visualization</strong> — show komandan "kira-kira seperti ini" untuk konsep operasi baru</li>
+              <li>• <strong class="text-white">Recruitment material</strong> — visual appeal untuk generasi muda</li>
+            </ul>
+          </div>
+
+          <div class="p-5 bg-red-500/10 rounded-xl border border-red-500/20">
+            <h4 class="font-semibold text-red-400 mb-3">❌ Red Flags</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li>• <strong class="text-white">Deepfake</strong> tokoh politik/militer — dilarang by policy</li>
+              <li>• <strong class="text-white">Reconstruct</strong> insiden nyata — bisa dianggap disinformation</li>
+              <li>• <strong class="text-white">Fake news</strong> narrative video — etis dan legal problem</li>
+              <li>• <strong class="text-white">Classified visualization</strong> — equipment/facility yang bocor</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="p-5 glass rounded-xl">
+          <h4 class="font-semibold mb-3">🎯 Contoh Prompt Veo (acceptable)</h4>
+          <div class="prompt-block">
+            <div class="mb-2"><span class="label">SUBJECT:</span> Generic military aircraft silhouette at sunset</div>
+            <div class="mb-2"><span class="label">CAMERA:</span> Slow aerial tracking shot, cinematic, 24fps</div>
+            <div class="mb-2"><span class="label">MOOD:</span> Professional, inspiring, not sensationalized</div>
+            <div class="mb-2"><span class="label">DURATION:</span> 8 seconds, loop-ready</div>
+            <div><span class="label">CONSTRAINT:</span> No specific country markings, no identifiable squadron insignia, no real-world locations. Training material only.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: OPSEC -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OPSEC CRITICAL</div>
+        <h2 class="slide-title">VISUAL GENERATION <span class="text-red-400">RISKS</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <p class="text-white/70 mb-6">Visual generation tools <strong class="text-white">lebih berbahaya</strong> dari text generation untuk OPSEC. Output visual bisa viral, di-screenshot, dan sulit di-retract. Sebelum generate <strong class="text-accent">apapun</strong>:</p>
+
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">1</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Classification Check</div>
+              <div class="text-sm text-white/60">Apakah ada detail dalam visual yang jika dilihat publik akan membocorkan klasifikasi operasional? Contoh: aircraft spec, sensor package, facility layout.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">2</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Attribution Check</div>
+              <div class="text-sm text-white/60">Jika visual keluar dari organisasi, apakah bisa diattribute ke Koopsudnas/TNI AU? Jika ya, pastikan ada watermark/disclaimer "ILUSTRASI — AI GENERATED".</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">3</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Deception Check</div>
+              <div class="text-sm text-white/60">Apakah visual bisa digunakan orang jahat untuk deceive atau spread disinformation? Terutama video Veo — generic sunset aircraft OK, tapi "reenactment" insiden spesifik berbahaya.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">4</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Retention Check</div>
+              <div class="text-sm text-white/60">Output visual akan di-store di Google cloud. Cek kebijakan retention + data handling akun Anda. Data sensitif → jangan generate di akun personal.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">5</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Watermark Mandatory</div>
+              <div class="text-sm text-white/60">Gemini menyisipkan SynthID watermark otomatis di semua output Imagen/Veo. Jangan crop/edit untuk hilangkan. Sebagai operator, tambahkan label "AI GENERATED • ILUSTRASI • [TANGGAL]" di setiap visual yang keluar organisasi.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: EXERCISE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">EXERCISE</div>
+        <h2 class="slide-title">HANDS-ON <span class="text-accent">15 MENIT</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Tasking</div>
+          <p class="text-sm text-white/70">
+            Generate <strong class="text-white">infografis sitrep</strong> sederhana untuk brief komandan — visualisasi "Air Situation Awareness Indo-Pasifik Q1 2026" (generic, non-classified). Gunakan Imagen dulu, lalu coba rebuild dengan Canvas untuk perbandingan.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">1</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Tulis prompt 4-komponen (3 min)</div>
+              <p class="text-sm text-white/60">Pakai framework Subject + Style + Composition + Constraint. Subject harus <strong class="text-white">generic</strong> — tidak boleh country name, squadron, atau specific aircraft type.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">2</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Generate via Imagen (3 min)</div>
+              <p class="text-sm text-white/60">Di gemini.google.com, paste prompt, select Imagen model. Generate 4 variant. Pick best one.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">3</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Rebuild di Canvas (5 min)</div>
+              <p class="text-sm text-white/60">Prompt baru: "buatkan infografis SVG tentang [topic] dengan Gemini Canvas". Bandingkan hasil — mana yang lebih professional untuk slide briefing?</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">4</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">OPSEC Review (2 min)</div>
+              <p class="text-sm text-white/60">Jalankan 5 OPSEC checks di slide sebelumnya. Apakah output Anda lolos? Jika tidak, iterate prompt untuk generalize lebih jauh.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">5</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Reflect (2 min)</div>
+              <p class="text-sm text-white/60">Mana lebih cocok untuk produk Koopsudnas: Imagen (photoreal/ilustrasi) atau Canvas (SVG/structured)? Kenapa?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">3 Tools, 3 Purposes</div>
+              <div class="text-sm text-white/60">Imagen = ilustrasi / infografis • Canvas = interactive / SVG • Veo = video</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">4-Part Prompt</div>
+              <div class="text-sm text-white/60">Subject + Style + Composition + Constraint — reproducible output</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">OPSEC Mandatory</div>
+              <div class="text-sm text-white/60">5 checks sebelum generate — classification, attribution, deception, retention, watermark</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Label AI-Generated</div>
+              <div class="text-sm text-white/60">Selalu tambahkan disclaimer "AI GENERATED • ILUSTRASI" di produk yang keluar organisasi</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Capstone Modul 06: <strong class="text-white">Multi-Tool Workflow</strong> — gabungkan NotebookLM + Claude/Gemini + Imagen dalam 1 pipeline end-to-end</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-02-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 6.2: NotebookLM
+        </a>
+        <a href="sesi-06-04-multi-tool-workflow.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">
+          Sesi 6.4: Multi-Tool Workflow →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

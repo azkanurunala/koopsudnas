@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 5.1 | Intelligence Fusion & Assessment</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#14b8a6',
+            'accent-light': '#2dd4bf',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #14b8a6; --accent-glow: rgba(20,184,166,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #0d9488; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(20,184,166,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(20,184,166,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(20,184,166,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #2dd4bf); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .intel-source { transition: all 0.3s ease; }
+    .intel-source:hover { transform: translateY(-2px); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-05-capstone.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 05</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">PHASE 1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CAPSTONE</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-04-04-decision-support.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 4.4</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-05-02-visual-package.html" class="text-xs text-white/40 hover:text-white/60">Phase 2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-full mb-4">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        <span class="text-red-400 font-mono text-sm">OPERATION GARUDA SHIELD</span>
+      </div>
+      
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8 ml-4">
+        <span class="text-accent font-mono text-sm">MODUL 05 • PHASE 1</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        INTELLIGENCE FUSION &<br>
+        <span class="text-accent">ASSESSMENT</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Analisis <strong class="text-white">4 intelligence sources</strong> dan produksi 
+        <strong class="text-accent">unified threat assessment</strong> dengan confidence levels.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">📡</div>
+          <div class="text-xs text-cyan-400">SIGINT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">📊</div>
+          <div class="text-xs text-teal-400">RADAR</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">👤</div>
+          <div class="text-xs text-amber-400">HUMINT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">🌐</div>
+          <div class="text-xs text-purple-400">OSINT</div>
+        </div>
+        <div class="flex items-center text-accent text-xl px-2">→</div>
+        <div class="glass px-6 py-3 rounded-xl text-center bg-accent/20 border-accent">
+          <div class="text-lg">📋</div>
+          <div class="text-xs text-accent font-semibold">UNIFIED</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Phase 1</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SCENARIO BRIEF -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-red-400 font-mono text-sm mb-4">CLASSIFIED BRIEF</div>
+        <h2 class="slide-title">
+          OPERATION<br>
+          <span class="text-accent">GARUDA SHIELD</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-accent mb-4">📋 Situation Overview</h3>
+            <div class="text-sm text-white/70 space-y-3">
+              <p>
+                Dalam 72 jam terakhir, <strong class="text-white">multiple intelligence sources</strong> 
+                melaporkan increased activity di sektor operasional utara.
+              </p>
+              <p>
+                SIGINT mendeteksi anomalous communication patterns, radar tracking menunjukkan 
+                unidentified aircraft movements, dan HUMINT reports mengkonfirmasi unusual ground activities.
+              </p>
+              <p class="text-amber-400">
+                ⚠️ Anda ditugaskan memberikan complete intelligence assessment kepada Panglima.
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-accent mb-4">📊 Your Task</h3>
+            <div class="space-y-2">
+              <div class="p-3 bg-accent/10 rounded-lg flex items-center gap-3">
+                <span class="w-6 h-6 rounded bg-accent/30 flex items-center justify-center text-accent text-xs font-bold">1</span>
+                <span class="text-sm">Analyze all 4 intelligence sources</span>
+              </div>
+              <div class="p-3 bg-accent/10 rounded-lg flex items-center gap-3">
+                <span class="w-6 h-6 rounded bg-accent/30 flex items-center justify-center text-accent text-xs font-bold">2</span>
+                <span class="text-sm">Identify patterns & correlations</span>
+              </div>
+              <div class="p-3 bg-accent/10 rounded-lg flex items-center gap-3">
+                <span class="w-6 h-6 rounded bg-accent/30 flex items-center justify-center text-accent text-xs font-bold">3</span>
+                <span class="text-sm">Produce unified threat assessment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">⏱️ Time Limit: 45 Minutes</div>
+        <div class="text-sm text-white/60">Deliverable: Intelligence Assessment Report</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: INTELLIGENCE SOURCE 1 - SIGINT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
+          <span class="text-2xl">📡</span>
+        </div>
+        <div>
+          <div class="text-cyan-400 font-mono text-sm">SOURCE 1</div>
+          <h2 class="slide-subtitle">SIGINT REPORT</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="mb-4 p-3 bg-cyan-500/10 rounded-lg">
+          <div class="text-xs text-cyan-400 font-mono">CLASSIFICATION: SECRET // REL TO KOOPSUDNAS</div>
+          <div class="text-xs text-white/50">DTG: 121200Z APR 2026 | Reliability: A-2</div>
+        </div>
+        
+        <div class="space-y-4 text-sm text-white/70">
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="font-semibold text-cyan-400 mb-2">Key Finding 1: Communication Surge</div>
+            <p>Detected <strong class="text-white">340% increase</strong> in encrypted communications from grid reference NE-7 to NE-9 over past 48 hours. Pattern consistent with command-and-control traffic.</p>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="font-semibold text-cyan-400 mb-2">Key Finding 2: New Frequencies</div>
+            <p>Three previously unidentified frequencies now active: <strong class="text-white">142.5 MHz, 156.8 MHz, 243.0 MHz</strong>. First detected 72 hours ago. Emission pattern suggests military-grade equipment.</p>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="font-semibold text-cyan-400 mb-2">Key Finding 3: Timing Pattern</div>
+            <p>Communication bursts concentrated <strong class="text-white">0400-0600 local</strong> and <strong class="text-white">1800-2000 local</strong>. Consistent with operational planning cycles.</p>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-amber-500/10 rounded-lg">
+          <div class="text-xs text-amber-400 font-semibold">ANALYST NOTE:</div>
+          <div class="text-xs text-white/60">Pattern strongly suggests coordinated activity. Unable to decrypt content. Recommend cross-reference with HUMINT.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: INTELLIGENCE SOURCE 2 - RADAR -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-teal-500/20 flex items-center justify-center">
+          <span class="text-2xl">📊</span>
+        </div>
+        <div>
+          <div class="text-teal-400 font-mono text-sm">SOURCE 2</div>
+          <h2 class="slide-subtitle">RADAR TRACKING DATA</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="mb-4 p-3 bg-teal-500/10 rounded-lg">
+          <div class="text-xs text-teal-400 font-mono">CLASSIFICATION: SECRET</div>
+          <div class="text-xs text-white/50">Period: 48 hours | 127 data points | Reliability: A-1</div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-2xl font-display text-teal-400 mb-1">47</div>
+            <div class="text-sm text-white/60">Unidentified Aircraft Contacts</div>
+            <div class="text-xs text-red-400">↑ 280% vs baseline</div>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-2xl font-display text-teal-400 mb-1">NE-7</div>
+            <div class="text-sm text-white/60">Primary Activity Sector</div>
+            <div class="text-xs text-amber-400">23 contacts concentrated</div>
+          </div>
+        </div>
+        
+        <div class="space-y-3 text-sm text-white/70">
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="font-semibold text-teal-400 mb-2">Flight Pattern Analysis</div>
+            <p>Contacts display <strong class="text-white">racetrack patterns</strong> at 15,000-25,000 ft. Duration: 2-4 hours per sortie. Consistent with <strong class="text-white">reconnaissance operations</strong>.</p>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="font-semibold text-teal-400 mb-2">Peak Activity Windows</div>
+            <p>Highest concentration: <strong class="text-white">0500-0700 local</strong> (dawn) and <strong class="text-white">1700-1900 local</strong> (dusk). Suggests tactical timing for low-visibility operations.</p>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-amber-500/10 rounded-lg">
+          <div class="text-xs text-amber-400 font-semibold">ANALYST NOTE:</div>
+          <div class="text-xs text-white/60">Activity correlates with SIGINT timing windows. Pattern suggests deliberate intelligence collection.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: INTELLIGENCE SOURCE 3 - HUMINT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+          <span class="text-2xl">👤</span>
+        </div>
+        <div>
+          <div class="text-amber-400 font-mono text-sm">SOURCE 3</div>
+          <h2 class="slide-subtitle">HUMINT REPORTS</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="mb-4 p-3 bg-amber-500/10 rounded-lg">
+          <div class="text-xs text-amber-400 font-mono">CLASSIFICATION: SECRET // NOFORN</div>
+          <div class="text-xs text-white/50">2 Reports | Sources: ECHO-7, FOXTROT-3 | Reliability: B-2, C-3</div>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="flex items-center justify-between mb-2">
+              <div class="font-semibold text-amber-400">Report ECHO-7</div>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">B-2 (Usually Reliable)</span>
+            </div>
+            <div class="text-sm text-white/70">
+              <p class="mb-2">Source reports observing <strong class="text-white">unusual vehicle movements</strong> near coastal area grid NE-8 over past 5 days. Vehicles appear to be <strong class="text-white">mobile radar units</strong> and <strong class="text-white">communications equipment</strong>.</p>
+              <p>Personnel wearing <strong class="text-white">non-standard uniforms</strong>. Estimated strength: 40-60 personnel.</p>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="flex items-center justify-between mb-2">
+              <div class="font-semibold text-amber-400">Report FOXTROT-3</div>
+              <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">C-3 (Fairly Reliable)</span>
+            </div>
+            <div class="text-sm text-white/70">
+              <p class="mb-2">Source heard from local contact that <strong class="text-white">"something big happening next week"</strong> in northern sector. Contact claimed to have seen <strong class="text-white">foreign naval vessels</strong> beyond visual range from shore.</p>
+              <p class="text-white/50 italic">Note: Single-source, uncorroborated. Treat with caution.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-amber-500/10 rounded-lg">
+          <div class="text-xs text-amber-400 font-semibold">ANALYST NOTE:</div>
+          <div class="text-xs text-white/60">ECHO-7 report corroborates SIGINT location (NE-7/8 area). FOXTROT-3 requires additional verification but suggests escalation timeline.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: INTELLIGENCE SOURCE 4 - OSINT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+          <span class="text-2xl">🌐</span>
+        </div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm">SOURCE 4</div>
+          <h2 class="slide-subtitle">OSINT COLLECTION</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="mb-4 p-3 bg-purple-500/10 rounded-lg">
+          <div class="text-xs text-purple-400 font-mono">CLASSIFICATION: UNCLASS // OSINT</div>
+          <div class="text-xs text-white/50">Sources: Social Media, Regional News, Maritime Tracking</div>
+        </div>
+        
+        <div class="space-y-4 text-sm">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-purple-400 mb-2">🗞️ Regional News</div>
+            <div class="text-white/70">
+              <p>State media of neighboring country announced <strong class="text-white">"routine maritime exercise"</strong> in international waters beginning 15 APR. Duration: 7 days. Exercise area overlaps with sectors NE-6 through NE-9.</p>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-purple-400 mb-2">📱 Social Media</div>
+            <div class="text-white/70">
+              <p>Multiple posts from coastal fishing communities report <strong class="text-white">being warned to avoid</strong> certain areas. One post (since deleted) mentioned seeing <strong class="text-white">"large gray ships"</strong> near horizon.</p>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-purple-400 mb-2">🚢 Maritime Tracking (AIS)</div>
+            <div class="text-white/70">
+              <p>Three vessels <strong class="text-white">turned off AIS transponders</strong> 72 hours ago after departing foreign naval base. Last known heading: toward our sector NE-7.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-purple-500/10 rounded-lg">
+          <div class="text-xs text-purple-400 font-semibold">ANALYST NOTE:</div>
+          <div class="text-xs text-white/60">OSINT strongly corroborates other sources. "Routine exercise" announcement provides cover story. AIS blackout indicates deliberate concealment.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: FUSION FRAMEWORK -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">METHODOLOGY</div>
+        <h2 class="slide-subtitle">INTELLIGENCE FUSION FRAMEWORK</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-center text-white/70 mb-6">Gunakan framework ini untuk mengintegrasikan semua 4 sources menjadi unified assessment:</p>
+        
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="font-semibold text-accent mb-3">1. CORRELATION MATRIX</div>
+            <div class="text-sm text-white/60">
+              Identify apa yang <strong class="text-white">dikonfirmasi oleh multiple sources</strong>:<br>
+              • Location (NE-7/8) — SIGINT + Radar + HUMINT ✓<br>
+              • Timing (dawn/dusk) — SIGINT + Radar ✓<br>
+              • Naval presence — HUMINT + OSINT ✓
+            </div>
+          </div>
+          
+          <div class="p-4 bg-cyan-500/10 rounded-xl">
+            <div class="font-semibold text-cyan-400 mb-3">2. GAP ANALYSIS</div>
+            <div class="text-sm text-white/60">
+              Identify apa yang <strong class="text-white">belum diketahui</strong>:<br>
+              • Exact force composition?<br>
+              • Intent (reconnaissance vs pre-positioning)?<br>
+              • Duration beyond "7 days"?
+            </div>
+          </div>
+          
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="font-semibold text-amber-400 mb-3">3. CONFIDENCE LEVELS</div>
+            <div class="text-sm text-white/60">
+              Assign confidence per assessment:<br>
+              • <strong class="text-green-400">HIGH</strong>: Multi-source corroboration<br>
+              • <strong class="text-amber-400">MEDIUM</strong>: 2 sources agree<br>
+              • <strong class="text-red-400">LOW</strong>: Single source only
+            </div>
+          </div>
+          
+          <div class="p-4 bg-purple-500/10 rounded-xl">
+            <div class="font-semibold text-purple-400 mb-3">4. THREAT PICTURE</div>
+            <div class="text-sm text-white/60">
+              Synthesize into unified assessment:<br>
+              • WHO is involved?<br>
+              • WHAT are they doing?<br>
+              • WHERE is the activity?<br>
+              • WHEN is the timeline?<br>
+              • WHY (assessed intent)?
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: FUSION PROMPT TEMPLATE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">INTELLIGENCE FUSION PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('fusion-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 MULTI-SOURCE FUSION TEMPLATE</div>
+        
+        <div class="code-block p-4 max-h-64 overflow-y-auto" id="fusion-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai <span class="text-accent">intelligence analyst</span>, fuse the following sources into a unified assessment:
+
+=== SOURCE 1: SIGINT ===
+[Paste SIGINT findings]
+
+=== SOURCE 2: RADAR ===
+[Paste radar data]
+
+=== SOURCE 3: HUMINT ===
+[Paste HUMINT reports with reliability ratings]
+
+=== SOURCE 4: OSINT ===
+[Paste open source findings]
+
+PRODUCE:
+1. EXECUTIVE SUMMARY (100 words max)
+   - BLUF: What's happening?
+   - Overall threat level: LOW/MEDIUM/HIGH/CRITICAL
+   
+2. SOURCE-BY-SOURCE ANALYSIS
+   - Key finding from each source
+   - Reliability assessment
+   
+3. CORRELATION MATRIX
+   - What multiple sources confirm
+   - What remains single-source
+   
+4. UNIFIED THREAT PICTURE
+   - WHO: Actor identification
+   - WHAT: Activity description
+   - WHERE: Geographic focus
+   - WHEN: Timeline assessment
+   - WHY: Assessed intent (with confidence)
+   
+5. INTELLIGENCE GAPS
+   - Critical unknowns
+   - Collection recommendations
+   
+6. CONFIDENCE ASSESSMENT
+   - Overall confidence: HIGH/MEDIUM/LOW
+   - Justify the rating</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: DELIVERABLE CHECKLIST -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">DELIVERABLE</div>
+        <h2 class="slide-subtitle">INTELLIGENCE ASSESSMENT REPORT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-3 mb-6">
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[1] = !checks[1]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[1] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Executive Summary dengan BLUF & threat level</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[2] = !checks[2]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[2] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Source-by-source analysis (all 4 sources)</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[3] = !checks[3]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[3] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Correlation matrix showing multi-source confirmation</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[4] = !checks[4]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[4] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Unified threat picture (WHO/WHAT/WHERE/WHEN/WHY)</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[5] = !checks[5]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[5] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Intelligence gaps & collection recommendations</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer" @click="checks[6] = !checks[6]">
+            <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[6] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Overall confidence assessment with justification</span>
+          </div>
+        </div>
+        
+        <div class="p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 6 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 6">
+            <div class="text-green-400 font-semibold">✓ Ready for Phase 2!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 6">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/6 components complete'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: TRANSITION TO PHASE 2 -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PHASE 1 COMPLETE</div>
+        <h2 class="slide-title">
+          <span class="text-accent">PROCEED TO</span><br>
+          PHASE 2
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="text-center mb-6">
+          <div class="text-lg text-white/70">Phase 1 Output akan digunakan untuk:</div>
+        </div>
+        
+        <div class="flex items-center justify-center gap-4 mb-6">
+          <div class="glass p-4 rounded-xl text-center">
+            <div class="text-2xl mb-2">📋</div>
+            <div class="text-sm text-accent">Intel Report</div>
+            <div class="text-xs text-white/40">Phase 1</div>
+          </div>
+          <div class="text-accent text-2xl">→</div>
+          <div class="glass p-4 rounded-xl text-center bg-blue-500/20 border border-blue-500/30">
+            <div class="text-2xl mb-2">📊</div>
+            <div class="text-sm text-blue-400">Visual Package</div>
+            <div class="text-xs text-white/40">Phase 2</div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-blue-500/10 rounded-xl">
+          <div class="font-semibold text-blue-400 mb-2">Phase 2 akan menghasilkan:</div>
+          <div class="grid sm:grid-cols-3 gap-2 text-sm text-white/60">
+            <div>• Situational Dashboard</div>
+            <div>• Threat Map</div>
+            <div>• SITREP Visual</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-05-capstone.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Kembali ke Overview
+        </a>
+        <a href="sesi-05-02-visual-package.html" class="flex-1 py-3 px-6 bg-blue-500 rounded-xl text-center text-navy-900 font-semibold hover:bg-blue-400 transition-colors">
+          Lanjut ke Phase 2 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

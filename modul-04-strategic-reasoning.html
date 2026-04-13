@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 04 | Strategic Reasoning & Decision Support</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+              blue: '#3b82f6',
+              orange: '#f97316',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-bg-2: #0a0f1a;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-surface-hover: rgba(255, 255, 255, 0.06);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-bright: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(20px);
+      --module-color: #f59e0b;
+      --color-text: rgba(255, 255, 255, 0.92);
+      --color-muted: rgba(255, 255, 255, 0.55);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 700px; height: 700px; 
+      top: -250px; left: -150px; 
+      background: var(--module-color); 
+      opacity: 0.1; 
+    }
+    .blob-2 { 
+      width: 500px; height: 500px; 
+      bottom: -150px; right: -100px; 
+      background: #d97706; 
+      opacity: 0.08; 
+      animation-delay: -3s; 
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      top: 40%; left: 30%;
+      background: #fbbf24;
+      opacity: 0.04;
+      animation-delay: -5s;
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(40px, -30px) scale(1.08); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .glass:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-bright);
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 32px 64px -16px rgba(0,0,0,0.6);
+    }
+    
+    .module-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #f59e0b;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 24px rgba(245, 158, 11, 0.3);
+      text-decoration: none;
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+    }
+    
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-bright);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-smooth);
+      text-decoration: none;
+    }
+    
+    .cta-secondary:hover {
+      background: var(--color-surface);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    /* Prompt Template Styling */
+    .prompt-template {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.05) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .prompt-header {
+      background: rgba(245, 158, 11, 0.15);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .prompt-content {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      white-space: pre-wrap;
+    }
+    
+    .prompt-var {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    /* Decision Matrix */
+    .decision-matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 4px;
+      aspect-ratio: 1;
+      max-width: 200px;
+    }
+    
+    .matrix-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 4px;
+    }
+    
+    /* COA Card */
+    .coa-card {
+      position: relative;
+      padding-left: 16px;
+    }
+    
+    .coa-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--coa-color, #f59e0b);
+      border-radius: 2px;
+    }
+    
+    /* Session Card */
+    .session-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .session-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--session-color, #f59e0b);
+    }
+    
+    /* Timeline */
+    .session-timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .session-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: linear-gradient(180deg, #f59e0b 0%, rgba(245, 158, 11, 0.2) 100%);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 3px solid var(--session-color, #f59e0b);
+    }
+    
+    /* Accordion */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+    }
+    
+    .accordion-content.open {
+      max-height: 4000px;
+    }
+    
+    /* Thinking Steps */
+    .thinking-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(245, 158, 11, 0.05);
+      border-left: 3px solid var(--step-color, #f59e0b);
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--step-color, #f59e0b);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    /* Risk Level Badge */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .risk-high {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .risk-medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    
+    .risk-low {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.5); }
+    
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+  </style>
+</head>
+<body x-data="{ activeSession: 1, copiedPrompt: null }">
+  
+  <!-- Scene Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Kembali</span>
+        </a>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="module-badge">
+          <span class="status-dot"></span>
+          MODUL 04
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#sessions" class="text-sm text-white/60 hover:text-white transition-colors">Sesi</a>
+        <a href="#templates" class="text-sm text-white/60 hover:text-white transition-colors">Templates</a>
+        <a href="#exercises" class="text-sm text-white/60 hover:text-white transition-colors">Latihan</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex items-center pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-start">
+        <div class="lg:col-span-3">
+          <div class="flex items-center gap-4 mb-6" data-reveal>
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center">
+              <span class="font-display text-3xl text-white">04</span>
+            </div>
+            <div>
+              <div class="text-sm text-amber-400 font-mono">ADVANCED • 3 JAM</div>
+              <div class="text-white/40 text-sm">Sesi 4 dari 5 Modul</div>
+            </div>
+          </div>
+          
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl tracking-wide leading-none mb-6" data-reveal>
+            STRATEGIC<br>
+            <span class="text-amber-400">REASONING</span><br>
+            & DECISION SUPPORT
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-2xl mb-8 leading-relaxed" data-reveal>
+            Deep Thinking dan Chain of Thought untuk analisis strategis kompleks. 
+            Gunakan AI sebagai <strong class="text-white">strategic advisor</strong> untuk 
+            Course of Action analysis, wargaming, dan risk assessment.
+          </p>
+          
+          <div class="flex flex-wrap gap-4" data-reveal>
+            <a href="#sessions" class="cta-primary">
+              Mulai Pembelajaran
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#templates" class="cta-secondary">
+              COA Analysis Templates
+            </a>
+          </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="lg:col-span-2" data-reveal>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Ringkasan Modul
+            </h3>
+            
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Durasi Total</span>
+                <span class="font-semibold">3 Jam</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Jumlah Sesi</span>
+                <span class="font-semibold">4 Sesi</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Frameworks</span>
+                <span class="font-semibold text-amber-400">5 Frameworks</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Decision Tools</span>
+                <span class="font-semibold text-amber-400">4 Tools</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-white/60">Prerequisite</span>
+                <span class="font-semibold">Modul 01-03</span>
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/10">
+              <div class="text-sm text-white/40 mb-3">Output Modul:</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg text-amber-400 text-sm">COA Analysis Document</span>
+                <span class="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg text-amber-400 text-sm">Risk Assessment Matrix</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Strategic Decision Framework -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          DECISION SUPPORT FRAMEWORK
+        </div>
+        <h2 class="section-title">
+          AI SEBAGAI<br>
+          <span class="text-amber-400">STRATEGIC ADVISOR</span>
+        </h2>
+      </div>
+      
+      <!-- Deep Thinking Concept -->
+      <div class="grid lg:grid-cols-2 gap-8 mb-12">
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </span>
+            Apa itu Deep Thinking?
+          </h3>
+          <p class="text-white/60 mb-4">
+            Deep Thinking (atau Chain of Thought) adalah teknik prompting yang memaksa AI untuk 
+            "berpikir step-by-step" sebelum memberikan jawaban. Ini menghasilkan reasoning yang 
+            lebih mendalam dan keputusan yang lebih justified.
+          </p>
+          <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div class="text-xs text-amber-400 font-mono mb-2">KEY INSIGHT</div>
+            <p class="text-sm text-white/70">
+              "Think before you answer" — dengan Deep Thinking, AI akan menunjukkan 
+              reasoning process-nya, bukan hanya memberikan conclusion.
+            </p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <h3 class="font-semibold mb-4">Standard vs Deep Thinking</h3>
+          <div class="space-y-4">
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div class="text-xs text-red-400 font-mono mb-2">❌ STANDARD PROMPT</div>
+              <p class="text-sm text-white/60 italic">"Apa COA terbaik untuk situasi ini?"</p>
+              <p class="text-xs text-white/40 mt-2">→ Output: Jawaban langsung tanpa reasoning</p>
+            </div>
+            <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div class="text-xs text-green-400 font-mono mb-2">✓ DEEP THINKING PROMPT</div>
+              <p class="text-sm text-white/60 italic">"Analisis situasi ini step-by-step. Identifikasi opsi yang tersedia, evaluasi pro/con masing-masing, lalu rekomendasikan COA terbaik dengan justifikasi."</p>
+              <p class="text-xs text-white/40 mt-2">→ Output: Full reasoning chain + justified recommendation</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Decision Support Tools -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl text-center" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">COA Analysis</h3>
+          <p class="text-white/50 text-sm">Evaluasi Course of Action dengan multi-criteria assessment</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Risk Assessment</h3>
+          <p class="text-white/50 text-sm">Identifikasi dan mitigasi risks per COA</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Wargaming</h3>
+          <p class="text-white/50 text-sm">Simulasi adversary response dan counter-moves</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Decision Matrix</h3>
+          <p class="text-white/50 text-sm">Weighted scoring untuk objektif comparison</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Sessions Section -->
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-amber-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          BREAKDOWN SESI
+        </div>
+        <h2 class="section-title">
+          4 SESI PEMBELAJARAN<br>
+          <span class="text-amber-400">180 MENIT TOTAL</span>
+        </h2>
+      </div>
+      
+      <div class="session-timeline space-y-8">
+        <!-- Session 4.1 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f59e0b; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f59e0b;"
+               x-data="{ open: true }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <span class="font-display text-amber-400 text-xl">4.1</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-amber-400 mb-1">SESI 1 • 40 MENIT</div>
+                  <h3 class="text-xl font-semibold">Deep Thinking: Chain of Thought Methodology</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-04-01-deep-thinking.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-amber-500/15 rounded-full text-amber-400 text-xs font-mono">KONSEP</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Chain of Thought Steps</h4>
+                    <div class="space-y-3">
+                      <div class="thinking-step" style="--step-color: #f59e0b;">
+                        <div class="step-number">1</div>
+                        <div>
+                          <div class="font-medium text-sm">UNDERSTAND</div>
+                          <div class="text-xs text-white/50">Restate the problem in own words</div>
+                        </div>
+                      </div>
+                      <div class="thinking-step" style="--step-color: #fbbf24;">
+                        <div class="step-number">2</div>
+                        <div>
+                          <div class="font-medium text-sm">DECOMPOSE</div>
+                          <div class="text-xs text-white/50">Break into sub-problems</div>
+                        </div>
+                      </div>
+                      <div class="thinking-step" style="--step-color: #d97706;">
+                        <div class="step-number">3</div>
+                        <div>
+                          <div class="font-medium text-sm">ANALYZE</div>
+                          <div class="text-xs text-white/50">Evaluate each component</div>
+                        </div>
+                      </div>
+                      <div class="thinking-step" style="--step-color: #b45309;">
+                        <div class="step-number">4</div>
+                        <div>
+                          <div class="font-medium text-sm">SYNTHESIZE</div>
+                          <div class="text-xs text-white/50">Combine insights into conclusion</div>
+                        </div>
+                      </div>
+                      <div class="thinking-step" style="--step-color: #92400e;">
+                        <div class="step-number">5</div>
+                        <div>
+                          <div class="font-medium text-sm">VALIDATE</div>
+                          <div class="text-xs text-white/50">Check logic and assumptions</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Trigger Phrases</h4>
+                    <div class="glass p-4 rounded-xl mb-4">
+                      <p class="text-sm text-white/60 mb-3">Kata-kata yang memicu deep thinking:</p>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Think step by step"</span>
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Analyze carefully"</span>
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Consider all factors"</span>
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Show your reasoning"</span>
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Before concluding..."</span>
+                        <span class="px-3 py-1.5 bg-amber-500/15 rounded-lg text-amber-400 text-sm">"Evaluate pros and cons"</span>
+                      </div>
+                    </div>
+                    
+                    <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                      <div class="flex items-center gap-2 text-amber-400 text-sm font-medium mb-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Kenapa Deep Thinking Penting?
+                      </div>
+                      <p class="text-sm text-white/60">Untuk keputusan strategis, kita butuh tahu MENGAPA suatu rekomendasi dibuat — bukan hanya APA rekomendasinya.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 4.2 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #10b981; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #10b981;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <span class="font-display text-green-400 text-xl">4.2</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-green-400 mb-1">SESI 2 • 50 MENIT</div>
+                  <h3 class="text-xl font-semibold">Course of Action (COA) Development & Analysis</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-04-02-coa-analysis.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-green-500/15 rounded-full text-green-400 text-xs font-mono">FRAMEWORK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">COA Development Process</h4>
+                    <div class="space-y-3">
+                      <div class="coa-card glass p-4 rounded-xl" style="--coa-color: #22d3ee;">
+                        <div class="text-xs font-mono text-cyan-400 mb-1">STEP 1</div>
+                        <div class="font-medium text-sm mb-1">Define Objective</div>
+                        <div class="text-xs text-white/50">Apa end state yang diinginkan?</div>
+                      </div>
+                      <div class="coa-card glass p-4 rounded-xl" style="--coa-color: #10b981;">
+                        <div class="text-xs font-mono text-green-400 mb-1">STEP 2</div>
+                        <div class="font-medium text-sm mb-1">Identify Constraints</div>
+                        <div class="text-xs text-white/50">Resources, time, rules of engagement</div>
+                      </div>
+                      <div class="coa-card glass p-4 rounded-xl" style="--coa-color: #f59e0b;">
+                        <div class="text-xs font-mono text-amber-400 mb-1">STEP 3</div>
+                        <div class="font-medium text-sm mb-1">Generate Options</div>
+                        <div class="text-xs text-white/50">Brainstorm 3-5 distinct approaches</div>
+                      </div>
+                      <div class="coa-card glass p-4 rounded-xl" style="--coa-color: #a855f7;">
+                        <div class="text-xs font-mono text-purple-400 mb-1">STEP 4</div>
+                        <div class="font-medium text-sm mb-1">Evaluate & Compare</div>
+                        <div class="text-xs text-white/50">Score against criteria</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Sample COA Comparison</h4>
+                    <div class="glass p-4 rounded-xl overflow-x-auto">
+                      <table class="w-full text-xs">
+                        <thead>
+                          <tr class="border-b border-white/10">
+                            <th class="text-left py-2 text-white/40">Criteria</th>
+                            <th class="text-center py-2 text-green-400">COA A</th>
+                            <th class="text-center py-2 text-amber-400">COA B</th>
+                            <th class="text-center py-2 text-purple-400">COA C</th>
+                          </tr>
+                        </thead>
+                        <tbody class="text-white/70">
+                          <tr class="border-b border-white/5">
+                            <td class="py-2">Effectiveness</td>
+                            <td class="text-center">8</td>
+                            <td class="text-center">7</td>
+                            <td class="text-center">6</td>
+                          </tr>
+                          <tr class="border-b border-white/5">
+                            <td class="py-2">Risk Level</td>
+                            <td class="text-center">5</td>
+                            <td class="text-center">7</td>
+                            <td class="text-center">9</td>
+                          </tr>
+                          <tr class="border-b border-white/5">
+                            <td class="py-2">Resources</td>
+                            <td class="text-center">4</td>
+                            <td class="text-center">7</td>
+                            <td class="text-center">8</td>
+                          </tr>
+                          <tr class="border-b border-white/5">
+                            <td class="py-2">Speed</td>
+                            <td class="text-center">6</td>
+                            <td class="text-center">8</td>
+                            <td class="text-center">5</td>
+                          </tr>
+                          <tr class="font-semibold">
+                            <td class="py-2">TOTAL</td>
+                            <td class="text-center text-green-400">23</td>
+                            <td class="text-center text-amber-400">29</td>
+                            <td class="text-center text-purple-400">28</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <div class="text-xs text-green-400 font-mono">RECOMMENDATION: COA B</div>
+                      <div class="text-xs text-white/50 mt-1">Highest overall score with balanced risk-reward profile</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 4.3 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #ef4444; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #ef4444;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <span class="font-display text-red-400 text-xl">4.3</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-red-400 mb-1">SESI 3 • 50 MENIT</div>
+                  <h3 class="text-xl font-semibold">Risk Assessment & Wargaming dengan AI</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-04-03-risk-wargaming.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-red-500/15 rounded-full text-red-400 text-xs font-mono">SIMULATION</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Risk Assessment Matrix</h4>
+                    <div class="glass p-4 rounded-xl mb-4">
+                      <div class="decision-matrix mx-auto mb-4">
+                        <div class="matrix-cell bg-amber-500/30 text-amber-400">MEDIUM</div>
+                        <div class="matrix-cell bg-red-500/30 text-red-400">HIGH</div>
+                        <div class="matrix-cell bg-green-500/30 text-green-400">LOW</div>
+                        <div class="matrix-cell bg-amber-500/30 text-amber-400">MEDIUM</div>
+                      </div>
+                      <div class="flex justify-between text-xs text-white/40">
+                        <span>← Low Impact</span>
+                        <span>High Impact →</span>
+                      </div>
+                      <div class="flex flex-col items-center text-xs text-white/40 mt-2">
+                        <span>↑ High Likelihood</span>
+                        <span>Low Likelihood ↓</span>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+                        <span class="text-sm">Enemy counter-attack</span>
+                        <span class="risk-badge risk-high">HIGH</span>
+                      </div>
+                      <div class="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg">
+                        <span class="text-sm">Supply line disruption</span>
+                        <span class="risk-badge risk-medium">MEDIUM</span>
+                      </div>
+                      <div class="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                        <span class="text-sm">Weather delay</span>
+                        <span class="risk-badge risk-low">LOW</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">AI Wargaming Process</h4>
+                    <div class="glass p-4 rounded-xl space-y-4">
+                      <div class="p-3 bg-blue-500/10 border-l-4 border-blue-500 rounded-r-lg">
+                        <div class="text-xs text-blue-400 font-mono mb-1">YOU (Blue Force)</div>
+                        <p class="text-sm text-white/70">Execute COA B: flanking maneuver from sector NE</p>
+                      </div>
+                      <div class="text-center text-white/30 text-sm">↓ AI simulates adversary response ↓</div>
+                      <div class="p-3 bg-red-500/10 border-l-4 border-red-500 rounded-r-lg">
+                        <div class="text-xs text-red-400 font-mono mb-1">ADVERSARY (Red Force)</div>
+                        <p class="text-sm text-white/70">Most likely response: reinforce sector NE, deploy reserves</p>
+                      </div>
+                      <div class="text-center text-white/30 text-sm">↓ Your counter-move ↓</div>
+                      <div class="p-3 bg-blue-500/10 border-l-4 border-blue-500 rounded-r-lg">
+                        <div class="text-xs text-blue-400 font-mono mb-1">COUNTER-MOVE</div>
+                        <p class="text-sm text-white/70">Feint NE, main effort redirect to sector E</p>
+                      </div>
+                    </div>
+                    
+                    <div class="mt-4 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                      <div class="text-xs text-purple-400 font-mono mb-1">WARGAMING INSIGHT</div>
+                      <p class="text-sm text-white/60">AI dapat berperan sebagai "Red Team" — memprediksi adversary moves dan membantu identify vulnerabilities dalam COA kita.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 4.4 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #a855f7; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #a855f7;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <span class="font-display text-purple-400 text-xl">4.4</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-purple-400 mb-1">SESI 4 • 40 MENIT</div>
+                  <h3 class="text-xl font-semibold">Hands-On: Complete Decision Support Package</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-04-04-decision-support.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-purple-500/15 rounded-full text-purple-400 text-xs font-mono">PRAKTIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <p class="text-white/60 mb-6">
+                  Capstone exercise: menggunakan semua tools untuk menghasilkan complete decision support package 
+                  dari scenario yang diberikan.
+                </p>
+                
+                <div class="glass p-6 rounded-xl mb-6">
+                  <h4 class="font-semibold mb-4 text-purple-400">Decision Support Package Contents</h4>
+                  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">📋</div>
+                      <div class="font-medium text-sm">Part 1</div>
+                      <div class="text-xs text-white/50">Situation Analysis</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">🎯</div>
+                      <div class="font-medium text-sm">Part 2</div>
+                      <div class="text-xs text-white/50">COA Options (3)</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">⚠️</div>
+                      <div class="font-medium text-sm">Part 3</div>
+                      <div class="text-xs text-white/50">Risk Assessment</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">✅</div>
+                      <div class="font-medium text-sm">Part 4</div>
+                      <div class="text-xs text-white/50">Recommendation</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                    <div class="text-sm font-semibold text-green-400 mb-2">✓ Deliverables</div>
+                    <ul class="space-y-1 text-sm text-white/60">
+                      <li>• Complete COA analysis document</li>
+                      <li>• Risk matrix with mitigation plans</li>
+                      <li>• Decision recommendation with justification</li>
+                      <li>• Wargaming results summary</li>
+                    </ul>
+                  </div>
+                  <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                    <div class="text-sm font-semibold text-amber-400 mb-2">⏱ Time Management</div>
+                    <ul class="space-y-1 text-sm text-white/60">
+                      <li>• Situation analysis: 10 min</li>
+                      <li>• COA development: 15 min</li>
+                      <li>• Risk assessment: 10 min</li>
+                      <li>• Final recommendation: 5 min</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Templates Section -->
+  <section id="templates" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          PROMPT TEMPLATES
+        </div>
+        <h2 class="section-title">
+          STRATEGIC DECISION<br>
+          <span class="text-amber-400">PROMPT LIBRARY</span>
+        </h2>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Template 1: Deep Thinking COA -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-amber-400">TEMPLATE 01</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Deep Thinking COA Analysis</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template1')" 
+                    :class="copiedPrompt === 'template1' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template1'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template1' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template1">Kamu adalah <span class="prompt-var">[ROLE: strategic military advisor]</span>.
+
+SITUASI:
+<span class="prompt-var">[DESCRIBE CURRENT SITUATION]</span>
+
+OBJECTIVE:
+<span class="prompt-var">[DEFINE DESIRED END STATE]</span>
+
+CONSTRAINTS:
+- Resources: <span class="prompt-var">[LIST]</span>
+- Time: <span class="prompt-var">[DEADLINE]</span>
+- Rules of Engagement: <span class="prompt-var">[CONSTRAINTS]</span>
+
+TUGAS: Develop and analyze 3 distinct COAs.
+
+THINK STEP BY STEP:
+
+1. UNDERSTAND: Restate the problem and objective
+2. GENERATE: Create 3 distinct approaches (conservative, moderate, aggressive)
+3. ANALYZE: For each COA, evaluate:
+   - Probability of success
+   - Resource requirements
+   - Risk level
+   - Time to execute
+   - Potential adversary response
+4. COMPARE: Score each COA (1-10) on criteria
+5. RECOMMEND: Select best COA with clear justification
+
+FORMAT OUTPUT:
+## Situation Summary
+## COA 1: [Name] - Conservative
+## COA 2: [Name] - Moderate
+## COA 3: [Name] - Aggressive
+## Comparison Matrix
+## RECOMMENDATION with Justification</div>
+        </div>
+        
+        <!-- Template 2: Risk Assessment -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-amber-400">TEMPLATE 02</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Risk Assessment & Mitigation</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template2')"
+                    :class="copiedPrompt === 'template2' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template2'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template2' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template2">Kamu adalah <span class="prompt-var">[ROLE: risk assessment specialist]</span>.
+
+PROPOSED ACTION:
+<span class="prompt-var">[DESCRIBE THE PLAN/COA]</span>
+
+CONTEXT:
+<span class="prompt-var">[RELEVANT SITUATION DETAILS]</span>
+
+TUGAS: Lakukan comprehensive risk assessment.
+
+ANALYZE EACH RISK CATEGORY:
+1. OPERATIONAL RISKS
+   - Execution failures
+   - Coordination issues
+   - Technical malfunctions
+
+2. ADVERSARY RISKS
+   - Counter-actions
+   - Preemptive strikes
+   - Intelligence compromise
+
+3. ENVIRONMENTAL RISKS
+   - Weather impact
+   - Terrain challenges
+   - Civilian considerations
+
+4. RESOURCE RISKS
+   - Supply chain disruption
+   - Personnel availability
+   - Equipment reliability
+
+FOR EACH IDENTIFIED RISK:
+- Description
+- Likelihood: [1-5]
+- Impact: [1-5]
+- Risk Score: [L x I]
+- Mitigation Strategy
+- Residual Risk after mitigation
+
+OUTPUT: Risk Register with Top 5 Risks and Mitigation Plans</div>
+        </div>
+        
+        <!-- Template 3: Wargaming -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-amber-400">TEMPLATE 03</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">AI Wargaming (Red Team)</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template3')"
+                    :class="copiedPrompt === 'template3' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template3'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template3' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template3">Kamu akan berperan sebagai <span class="prompt-var">[ADVERSARY]</span> dalam wargame exercise.
+
+ADVERSARY PROFILE:
+- Capabilities: <span class="prompt-var">[LIST KNOWN CAPABILITIES]</span>
+- Doctrine: <span class="prompt-var">[TYPICAL TACTICS]</span>
+- Objectives: <span class="prompt-var">[WHAT DO THEY WANT?]</span>
+
+BLUE FORCE ACTION:
+<span class="prompt-var">[DESCRIBE OUR PLANNED ACTION]</span>
+
+AS THE ADVERSARY, THINK STEP BY STEP:
+
+1. How would you detect this action?
+2. What is your most likely response?
+3. What is your most dangerous response?
+4. What vulnerabilities in Blue's plan would you exploit?
+5. What counter-moves would you prepare?
+
+PROVIDE:
+## Most Likely Adversary Response
+- Actions
+- Timing
+- Forces committed
+
+## Most Dangerous Adversary Response
+- Actions
+- Why this is dangerous
+- Indicators we would see
+
+## Vulnerabilities in Blue Plan
+- List of exploitable weaknesses
+
+## Recommended Blue Adjustments
+- How to mitigate adversary responses</div>
+        </div>
+        
+        <!-- Template 4: Decision Brief -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-amber-400">TEMPLATE 04</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Commander Decision Brief</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template4')"
+                    :class="copiedPrompt === 'template4' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template4'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template4' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template4">Kamu adalah <span class="prompt-var">[ROLE: staff officer]</span> preparing decision brief untuk <span class="prompt-var">[COMMANDER LEVEL]</span>.
+
+DECISION REQUIRED:
+<span class="prompt-var">[WHAT DECISION NEEDS TO BE MADE]</span>
+
+BACKGROUND:
+<span class="prompt-var">[CONTEXT AND SITUATION]</span>
+
+ANALYSIS COMPLETED:
+<span class="prompt-var">[SUMMARY OF COA ANALYSIS]</span>
+
+FORMAT OUTPUT AS DECISION BRIEF:
+
+## BLUF (Bottom Line Up Front)
+[1-2 sentences: recommendation + why]
+
+## SITUATION (30 seconds read)
+- Current status
+- Key developments
+- Time constraints
+
+## OPTIONS CONSIDERED
+| Option | Pro | Con | Risk |
+[Brief table format]
+
+## RECOMMENDED COURSE OF ACTION
+- What: [Action]
+- Why: [Justification]
+- Risk Level: [HIGH/MEDIUM/LOW]
+- Resources Required: [Summary]
+
+## DECISION REQUESTED
+[ ] Approve COA [X]
+[ ] Approve COA [Y]
+[ ] Request additional analysis
+[ ] Other guidance
+
+## TIMELINE
+- Decision needed by: [DATE/TIME]
+- Execution begins: [DATE/TIME]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Exercises Section -->
+  <section id="exercises" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-amber-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          HANDS-ON EXERCISES
+        </div>
+        <h2 class="section-title">
+          3 LATIHAN PRAKTIK<br>
+          <span class="text-amber-400">STRATEGIC DECISION-MAKING</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Exercise 1 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="font-display text-amber-400">E1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">EXERCISE 01</div>
+              <div class="text-xs text-white/40">Difficulty: Intermediate</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">COA Development</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan tactical scenario. Develop 3 distinct COAs dengan full analysis menggunakan Deep Thinking.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 25 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: 3 COAs + comparison matrix</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-amber-500/10 rounded text-amber-400 text-xs">COA</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/50 text-xs">Deep Thinking</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 2 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="font-display text-red-400">E2</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-red-400">EXERCISE 02</div>
+              <div class="text-xs text-white/40">Difficulty: Advanced</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Wargaming Session</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Run 3-move wargame dengan AI sebagai Red Team. Identify vulnerabilities dan adjust COA.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 30 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Wargame log + adjusted COA</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-red-500/10 rounded text-red-400 text-xs">Red Team</span>
+            <span class="px-2 py-1 bg-blue-500/10 rounded text-blue-400 text-xs">Blue Force</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 3 -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="font-display text-purple-400">E3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">EXERCISE 03</div>
+              <div class="text-xs text-white/40">Difficulty: Expert</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Complete Decision Package</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Full scenario: dari intel hingga decision brief. Create complete package siap untuk commander.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 40 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Full decision support package</span>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+            <div class="text-xs text-purple-400 font-medium">Package includes:</div>
+            <div class="text-xs text-white/50 mt-1">Situation Analysis + 3 COAs + Risk Matrix + Decision Brief</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Assessment Criteria -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="text-center mb-8">
+          <div class="module-badge inline-flex mb-4">
+            <span class="status-dot"></span>
+            KRITERIA PENILAIAN
+          </div>
+          <h3 class="section-title">
+            RUBRIK ASSESSMENT<br>
+            <span class="text-amber-400">MODUL 04</span>
+          </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Kriteria</th>
+                <th class="text-center py-3 px-4 text-white/60 font-medium">Bobot</th>
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Indikator Sukses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Reasoning Quality</td>
+                <td class="py-4 px-4 text-center text-amber-400 font-semibold">30%</td>
+                <td class="py-4 px-4 text-white/60">Clear chain of thought, logical progression</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">COA Distinctiveness</td>
+                <td class="py-4 px-4 text-center text-amber-400 font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">3 genuinely different approaches, not variations</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Risk Identification</td>
+                <td class="py-4 px-4 text-center text-amber-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Comprehensive risk coverage with mitigations</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium">Recommendation Justification</td>
+                <td class="py-4 px-4 text-center text-amber-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Clear rationale supported by analysis</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 text-center">
+          <div class="text-sm text-white/40 mb-2">Passing Score</div>
+          <div class="text-4xl font-display text-amber-400">75%</div>
+          <div class="text-xs text-white/30 mt-2">Strategic thinking requires higher standards</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Navigation -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <a href="modul-03-visual-intelligence.html" class="cta-secondary">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Modul 03: Visual Intelligence
+        </a>
+        
+        <div class="text-center">
+          <div class="text-sm text-white/40">Modul Terakhir</div>
+          <div class="font-semibold text-orange-400">Capstone: Integrated AI Operations</div>
+        </div>
+        
+        <a href="#" class="cta-primary">
+          Modul 05
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    function copyPrompt(id) {
+      const element = document.getElementById(id);
+      const text = element.innerText;
+      navigator.clipboard.writeText(text);
+    }
+    
+    gsap.utils.toArray('[data-reveal]').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 2.4 | Multi-Source Intelligence Fusion</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#f59e0b',
+            'accent-light': '#fbbf24',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #d97706; opacity: 0.1; animation-delay: -3s; }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: linear-gradient(rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(245, 158, 11, 0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fbbf24); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; }
+    
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16, 185, 129, 0.3); border-color: #10b981; color: #10b981; }
+    
+    /* Source Cards */
+    .source-card {
+      transition: all 0.3s ease;
+      border-left: 3px solid var(--source-color, var(--accent));
+    }
+    .source-card:hover {
+      transform: translateX(4px);
+      background: rgba(255,255,255,0.06);
+    }
+    
+    /* Fusion Diagram */
+    .fusion-node {
+      transition: all 0.3s ease;
+    }
+    .fusion-node:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px var(--node-glow, rgba(245, 158, 11, 0.3));
+    }
+    
+    /* Matrix Table */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+    .matrix-table th {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .matrix-table .confirm { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .matrix-table .contradict { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .matrix-table .partial { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .matrix-table .na { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); }
+    
+    /* Quiz */
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(245, 158, 11, 0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(245, 158, 11, 0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+    
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.3); border-radius: 3px; }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0, 
+  totalSlides: 12,
+  progress: 0,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' });
+  }
+}">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-02-intelligence-analysis.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 02</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 2.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">ADVANCED</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-02-03-threat-assessment.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 2.3</a>
+        <span class="text-white/20">|</span>
+        <a href="modul-03-visual-intelligence.html" class="text-xs text-white/40 hover:text-white/60">Modul 03 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 02 • SESI 4 • ADVANCED</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        MULTI-SOURCE<br>
+        <span class="text-accent">INTELLIGENCE FUSION</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Sesi puncak modul: menggabungkan <strong class="text-white">SIGINT, IMINT, HUMINT, OSINT</strong> 
+        menjadi <strong class="text-accent">unified intelligence picture</strong> — skill yang membedakan analyst pemula dari expert.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center" style="--source-color: #22d3ee;">
+          <div class="text-lg font-display text-cyan-400">SIGINT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center" style="--source-color: #a855f7;">
+          <div class="text-lg font-display text-purple-400">IMINT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center" style="--source-color: #10b981;">
+          <div class="text-lg font-display text-green-400">HUMINT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center" style="--source-color: #f59e0b;">
+          <div class="text-lg font-display text-amber-400">OSINT</div>
+        </div>
+        <div class="flex items-center text-accent text-2xl px-4">→</div>
+        <div class="glass px-6 py-3 rounded-xl text-center bg-accent/20 border-accent">
+          <div class="text-lg font-display text-accent">UNIFIED</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHY FUSION MATTERS -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MENGAPA PENTING</div>
+        <h2 class="slide-title">
+          SINGLE SOURCE<br>
+          <span class="text-accent">VS FUSION</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 text-xl">1</span>
+            </div>
+            <h3 class="font-semibold text-red-400">Single Source Analysis</h3>
+          </div>
+          
+          <div class="space-y-3 mb-4">
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="text-sm text-white/70">Hanya melihat sebagian gambar</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="text-sm text-white/70">Rentan terhadap deception</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="text-sm text-white/70">Low confidence assessment</div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-xs text-white/50 mb-2">Contoh:</div>
+            <div class="text-sm text-white/70">
+              "Radar mendeteksi 5 aircraft di sector NE" 
+              <span class="text-red-400">→ Tapi apa yang mereka lakukan? Friendly atau hostile?</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400 text-xl">∞</span>
+            </div>
+            <h3 class="font-semibold text-green-400">Multi-Source Fusion</h3>
+          </div>
+          
+          <div class="space-y-3 mb-4">
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="text-sm text-white/70">Gambar lengkap dari berbagai sudut</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="text-sm text-white/70">Cross-validation mendeteksi deception</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="text-sm text-white/70">High confidence assessment</div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="text-xs text-accent mb-2">Contoh Fusion:</div>
+            <div class="text-sm text-white/70">
+              Radar (5 aircraft) + SIGINT (encrypted military comms) + HUMINT (naval exercise reported) 
+              <span class="text-green-400">→ Likely: neighboring country's scheduled exercise</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 4 INTELLIGENCE TYPES -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">INTELLIGENCE TYPES</div>
+        <h2 class="slide-title">
+          4 SUMBER<br>
+          <span class="text-accent">INTELIJEN</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="source-card glass-lit p-6 rounded-2xl" style="--source-color: #22d3ee;">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <span class="text-2xl">📻</span>
+            </div>
+            <div>
+              <div class="font-semibold text-cyan-400">SIGINT</div>
+              <div class="text-xs text-white/50">Signals Intelligence</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">
+            Informasi dari intercept komunikasi, radar emissions, electronic signatures.
+          </p>
+          <div class="text-xs text-white/40">
+            <strong class="text-white/60">Kekuatan:</strong> Real-time, technical accuracy<br>
+            <strong class="text-white/60">Kelemahan:</strong> Bisa di-jam, encrypted
+          </div>
+        </div>
+        
+        <div class="source-card glass-lit p-6 rounded-2xl" style="--source-color: #a855f7;">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-2xl">🛰️</span>
+            </div>
+            <div>
+              <div class="font-semibold text-purple-400">IMINT</div>
+              <div class="text-xs text-white/50">Imagery Intelligence</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">
+            Informasi dari satellite imagery, aerial photography, video surveillance.
+          </p>
+          <div class="text-xs text-white/40">
+            <strong class="text-white/60">Kekuatan:</strong> Visual proof, verifiable<br>
+            <strong class="text-white/60">Kelemahan:</strong> Weather dependent, camouflage
+          </div>
+        </div>
+        
+        <div class="source-card glass-lit p-6 rounded-2xl" style="--source-color: #10b981;">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-2xl">👁️</span>
+            </div>
+            <div>
+              <div class="font-semibold text-green-400">HUMINT</div>
+              <div class="text-xs text-white/50">Human Intelligence</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">
+            Informasi dari human sources — agents, defectors, travelers, local contacts.
+          </p>
+          <div class="text-xs text-white/40">
+            <strong class="text-white/60">Kekuatan:</strong> Context, intentions, plans<br>
+            <strong class="text-white/60">Kelemahan:</strong> Subjective, possible deception
+          </div>
+        </div>
+        
+        <div class="source-card glass-lit p-6 rounded-2xl" style="--source-color: #f59e0b;">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-2xl">🌐</span>
+            </div>
+            <div>
+              <div class="font-semibold text-amber-400">OSINT</div>
+              <div class="text-xs text-white/50">Open Source Intelligence</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">
+            Informasi dari publicly available sources — news, social media, government publications.
+          </p>
+          <div class="text-xs text-white/40">
+            <strong class="text-white/60">Kekuatan:</strong> Accessible, broad coverage<br>
+            <strong class="text-white/60">Kelemahan:</strong> May be propaganda, unverified
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: FUSION PROCESS -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROSES FUSION</div>
+        <h2 class="slide-title">
+          INTELLIGENCE<br>
+          <span class="text-accent">FUSION CYCLE</span>
+        </h2>
+      </div>
+      
+      <div class="flex flex-wrap justify-center items-center gap-6 mb-8">
+        <div class="fusion-node glass-lit p-4 rounded-2xl text-center" style="--node-glow: rgba(34, 211, 238, 0.3);">
+          <div class="w-14 h-14 rounded-xl bg-cyan-500/20 flex items-center justify-center mx-auto mb-2">
+            <span class="text-xl">1</span>
+          </div>
+          <div class="font-semibold text-cyan-400 text-sm">COLLECT</div>
+          <div class="text-xs text-white/50">Gather sources</div>
+        </div>
+        
+        <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        
+        <div class="fusion-node glass-lit p-4 rounded-2xl text-center" style="--node-glow: rgba(168, 85, 247, 0.3);">
+          <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-2">
+            <span class="text-xl">2</span>
+          </div>
+          <div class="font-semibold text-purple-400 text-sm">EVALUATE</div>
+          <div class="text-xs text-white/50">Source reliability</div>
+        </div>
+        
+        <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        
+        <div class="fusion-node glass-lit p-4 rounded-2xl text-center" style="--node-glow: rgba(16, 185, 129, 0.3);">
+          <div class="w-14 h-14 rounded-xl bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+            <span class="text-xl">3</span>
+          </div>
+          <div class="font-semibold text-green-400 text-sm">CORRELATE</div>
+          <div class="text-xs text-white/50">Find connections</div>
+        </div>
+        
+        <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        
+        <div class="fusion-node glass-lit p-4 rounded-2xl text-center" style="--node-glow: rgba(245, 158, 11, 0.3);">
+          <div class="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center mx-auto mb-2">
+            <span class="text-xl">4</span>
+          </div>
+          <div class="font-semibold text-amber-400 text-sm">SYNTHESIZE</div>
+          <div class="text-xs text-white/50">Unified picture</div>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-4 text-center">Key Questions at Each Step</h3>
+        <div class="grid md:grid-cols-4 gap-4 text-sm">
+          <div class="p-3 bg-cyan-500/10 rounded-lg">
+            <div class="text-cyan-400 font-semibold mb-2">COLLECT</div>
+            <ul class="text-white/60 space-y-1 text-xs">
+              <li>• What sources available?</li>
+              <li>• Any gaps in coverage?</li>
+            </ul>
+          </div>
+          <div class="p-3 bg-purple-500/10 rounded-lg">
+            <div class="text-purple-400 font-semibold mb-2">EVALUATE</div>
+            <ul class="text-white/60 space-y-1 text-xs">
+              <li>• Source reliability (A-F)?</li>
+              <li>• Info credibility (1-6)?</li>
+            </ul>
+          </div>
+          <div class="p-3 bg-green-500/10 rounded-lg">
+            <div class="text-green-400 font-semibold mb-2">CORRELATE</div>
+            <ul class="text-white/60 space-y-1 text-xs">
+              <li>• What confirms what?</li>
+              <li>• Any contradictions?</li>
+            </ul>
+          </div>
+          <div class="p-3 bg-amber-500/10 rounded-lg">
+            <div class="text-amber-400 font-semibold mb-2">SYNTHESIZE</div>
+            <ul class="text-white/60 space-y-1 text-xs">
+              <li>• What's the story?</li>
+              <li>• Overall confidence?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: CORRELATION MATRIX -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK KUNCI</div>
+        <h2 class="slide-title">
+          CORRELATION<br>
+          <span class="text-accent">MATRIX</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <p class="text-white/70 text-center mb-6">
+          Correlation Matrix membantu memvisualisasikan hubungan antar sumber — 
+          mana yang <span class="text-green-400">confirm</span>, mana yang <span class="text-red-400">contradict</span>.
+        </p>
+        
+        <div class="overflow-x-auto">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>SIGINT</th>
+                <th>IMINT</th>
+                <th>HUMINT</th>
+                <th>OSINT</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>SIGINT</th>
+                <td class="na">—</td>
+                <td class="confirm">✓ CONFIRM</td>
+                <td class="partial">~ PARTIAL</td>
+                <td class="na">N/A</td>
+              </tr>
+              <tr>
+                <th>IMINT</th>
+                <td class="confirm">✓ CONFIRM</td>
+                <td class="na">—</td>
+                <td class="confirm">✓ CONFIRM</td>
+                <td class="partial">~ PARTIAL</td>
+              </tr>
+              <tr>
+                <th>HUMINT</th>
+                <td class="partial">~ PARTIAL</td>
+                <td class="confirm">✓ CONFIRM</td>
+                <td class="na">—</td>
+                <td class="contradict">✕ CONTRADICT</td>
+              </tr>
+              <tr>
+                <th>OSINT</th>
+                <td class="na">N/A</td>
+                <td class="partial">~ PARTIAL</td>
+                <td class="contradict">✕ CONTRADICT</td>
+                <td class="na">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-green-400 font-semibold mb-1">✓ CONFIRM</div>
+          <div class="text-xs text-white/50">Both sources say same thing → Higher confidence</div>
+        </div>
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-amber-400 font-semibold mb-1">~ PARTIAL</div>
+          <div class="text-xs text-white/50">Some overlap, some differences → Needs investigation</div>
+        </div>
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-red-400 font-semibold mb-1">✕ CONTRADICT</div>
+          <div class="text-xs text-white/50">Conflicting info → One source may be wrong or deception</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: SAMPLE SCENARIO -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">SKENARIO SIMULASI</div>
+        <h2 class="slide-title">
+          OPERATION<br>
+          <span class="text-accent">CORAL SEA</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+            <span class="text-xl">📋</span>
+          </div>
+          <div>
+            <div class="font-semibold">Situation Brief</div>
+            <div class="text-xs text-white/50">Increased activity detected in Coral Sea sector</div>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="source-card p-4 bg-white/5 rounded-xl" style="--source-color: #22d3ee;">
+            <div class="text-xs font-mono text-cyan-400 mb-2">SOURCE A: SIGINT</div>
+            <p class="text-xs text-white/60">
+              Encrypted military communications detected on naval frequencies. 
+              Volume: 4x normal. Location: Grid CS-7.
+            </p>
+          </div>
+          
+          <div class="source-card p-4 bg-white/5 rounded-xl" style="--source-color: #a855f7;">
+            <div class="text-xs font-mono text-purple-400 mb-2">SOURCE B: IMINT</div>
+            <p class="text-xs text-white/60">
+              Satellite imagery shows 3 naval vessels in CS-7. 
+              Type: 2 frigates, 1 supply ship. Formation: patrol pattern.
+            </p>
+          </div>
+          
+          <div class="source-card p-4 bg-white/5 rounded-xl" style="--source-color: #10b981;">
+            <div class="text-xs font-mono text-green-400 mb-2">SOURCE C: HUMINT</div>
+            <p class="text-xs text-white/60">
+              Local fisherman reports: "Navy ships asking fishing boats to leave area. 
+              Said exercise happening for 5 days." Reliability: B-2
+            </p>
+          </div>
+          
+          <div class="source-card p-4 bg-white/5 rounded-xl" style="--source-color: #f59e0b;">
+            <div class="text-xs font-mono text-amber-400 mb-2">SOURCE D: OSINT</div>
+            <p class="text-xs text-white/60">
+              No official announcement of naval exercise. 
+              However, defense ministry website shows "routine patrol" mentioned last week.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">Question for AI:</div>
+        <div class="text-sm text-white/60">"Fuse these 4 sources and provide unified assessment with confidence level"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: FUSION PROMPT TEMPLATE -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-title">
+          FUSION<br>
+          <span class="text-accent">PROMPT</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('fusion-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: MULTI-SOURCE FUSION</div>
+        
+        <div class="code-block p-6" id="fusion-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Kamu adalah <span class="text-accent">intelligence fusion analyst senior</span> dengan expertise dalam multi-source analysis.
+
+SITUATION: [Brief description of the intelligence problem]
+
+=== SOURCE A: SIGINT (Reliability: [A-F]-[1-6]) ===
+[Paste SIGINT report]
+
+=== SOURCE B: IMINT (Reliability: [A-F]-[1-6]) ===
+[Paste IMINT report]
+
+=== SOURCE C: HUMINT (Reliability: [A-F]-[1-6]) ===
+[Paste HUMINT report]
+
+=== SOURCE D: OSINT (Reliability: [A-F]-[1-6]) ===
+[Paste OSINT report]
+
+FUSION ANALYSIS REQUIRED:
+1. Source-by-source key findings
+2. Correlation Matrix (what confirms/contradicts what)
+3. Unified intelligence picture
+4. Confidence assessment per finding
+5. Intelligence gaps
+6. Recommended actions
+
+OUTPUT FORMAT:
+## BLUF (Bottom Line Up Front - 50 kata)
+## Source Analysis
+## Correlation Matrix
+## Unified Assessment
+## Confidence Levels
+## Intelligence Gaps
+## Recommended Collection/Actions
+
+Bahasa Indonesia formal, max 500 kata.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: FUSION QUESTIONS -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PERTANYAAN KUNCI</div>
+        <h2 class="slide-title">
+          FUSION<br>
+          <span class="text-accent">QUESTIONS</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <p class="text-white/70 text-center mb-8">
+          Gunakan pertanyaan-pertanyaan ini untuk memandu AI dalam melakukan fusion analysis:
+        </p>
+        
+        <div class="space-y-4">
+          <div class="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
+            <div class="font-semibold text-cyan-400 mb-1">1. Temporal Correlation</div>
+            <div class="text-sm text-white/60">"Apakah ada korelasi waktu antara SIGINT traffic increase dan IMINT ship movements?"</div>
+          </div>
+          
+          <div class="p-4 bg-purple-500/10 border-l-4 border-purple-500 rounded-r-xl">
+            <div class="font-semibold text-purple-400 mb-1">2. Cross-Validation</div>
+            <div class="text-sm text-white/60">"Bagaimana HUMINT report mengkonfirmasi atau kontradiksi technical intelligence (SIGINT/IMINT)?"</div>
+          </div>
+          
+          <div class="p-4 bg-green-500/10 border-l-4 border-green-500 rounded-r-xl">
+            <div class="font-semibold text-green-400 mb-1">3. Hypothesis Testing</div>
+            <div class="text-sm text-white/60">"Apa hypothesis yang paling likely berdasarkan semua sumber? Apa alternative hypotheses?"</div>
+          </div>
+          
+          <div class="p-4 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl">
+            <div class="font-semibold text-amber-400 mb-1">4. Gap Identification</div>
+            <div class="text-sm text-white/60">"Apa intelligence gaps yang masih perlu diisi untuk meningkatkan confidence?"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: SAMPLE OUTPUT -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT</div>
+        <h2 class="slide-subtitle">FUSED INTELLIGENCE BRIEF</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4 text-sm">
+          <div class="p-4 bg-accent/10 border-l-4 border-accent rounded-r-xl">
+            <div class="font-semibold text-accent mb-2">BLUF</div>
+            <p class="text-white/80">
+              Aktivitas naval di Grid CS-7 dengan <strong>HIGH confidence</strong> merupakan <strong>routine naval exercise</strong> 
+              bukan hostile operation. Empat sumber independen konsisten menunjukkan aktivitas terencana dengan durasi terbatas (5 hari). 
+              Threat level: <strong class="text-green-400">LOW</strong>.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-accent mb-2">CORRELATION SUMMARY</div>
+            <ul class="text-white/70 space-y-1">
+              <li><span class="text-green-400">✓</span> SIGINT + IMINT: Confirm — naval presence with comms activity</li>
+              <li><span class="text-green-400">✓</span> IMINT + HUMINT: Confirm — ships match "exercise" story from fisherman</li>
+              <li><span class="text-amber-400">~</span> OSINT + HUMINT: Partial — no official announcement but "routine patrol" mentioned</li>
+            </ul>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-green-500/10 rounded-xl">
+              <div class="font-semibold text-green-400 mb-2">UNIFIED ASSESSMENT</div>
+              <p class="text-white/60 text-xs">
+                Most likely scenario: Scheduled naval exercise tidak diumumkan secara resmi untuk alasan operational security. 
+                Aktivitas konsisten dengan exercise pattern (limited duration, local fishing boats cleared).
+              </p>
+            </div>
+            <div class="p-4 bg-amber-500/10 rounded-xl">
+              <div class="font-semibold text-amber-400 mb-2">INTELLIGENCE GAPS</div>
+              <ul class="text-white/60 text-xs space-y-1">
+                <li>• Exercise objectives tidak diketahui</li>
+                <li>• Submarine presence unknown</li>
+                <li>• Official communication needed for confirmation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: COMMON MISTAKES -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HINDARI</div>
+        <h2 class="slide-title">
+          COMMON<br>
+          <span class="text-accent">MISTAKES</span>
+        </h2>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400">1</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Confirmation Bias</div>
+            <p class="text-sm text-white/60">
+              Hanya mencari sumber yang mendukung hypothesis awal, mengabaikan yang contradict. 
+              <span class="text-green-400">→ Solusi: Explicitly ask AI untuk list contradictions.</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400">2</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Source Weighting Error</div>
+            <p class="text-sm text-white/60">
+              Memberikan weight yang sama untuk semua sumber tanpa mempertimbangkan reliability. 
+              <span class="text-green-400">→ Solusi: Include reliability rating (A-F, 1-6) dalam prompt.</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400">3</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Overconfidence</div>
+            <p class="text-sm text-white/60">
+              Menyatakan HIGH confidence tanpa justifikasi kuat dari multiple sources. 
+              <span class="text-green-400">→ Solusi: Require AI to justify every confidence level.</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400">4</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Missing Gaps Analysis</div>
+            <p class="text-sm text-white/60">
+              Tidak mengidentifikasi apa yang TIDAK diketahui. 
+              <span class="text-green-400">→ Solusi: Always ask "What don't we know?"</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: QUIZ -->
+  <section class="slide-section" id="slide-11">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false, correct: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Jika HUMINT report mengatakan "tidak ada aktivitas" tapi SIGINT dan IMINT menunjukkan aktivitas tinggi, 
+          apa yang PALING mungkin terjadi?
+        </p>
+        
+        <div class="space-y-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }"
+               @click="if(!submitted) answer = 'a'">
+            <span>A. SIGINT dan IMINT pasti salah</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted && 'b' === 'b' }"
+               @click="if(!submitted) answer = 'b'">
+            <span>B. HUMINT source mungkin tidak memiliki akses atau ada deception</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }"
+               @click="if(!submitted) answer = 'c'">
+            <span>C. Semua sumber harus diabaikan</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }"
+               @click="if(!submitted) answer = 'd'">
+            <span>D. Tidak perlu investigasi lebih lanjut</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all"
+                :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'"
+                :disabled="!answer"
+                @click="submitted = true; correct = (answer === 'b')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B.</strong> 
+            Technical intelligence (SIGINT, IMINT) biasanya lebih objektif. Jika HUMINT contradict, 
+            kemungkinan: (1) source tidak punya akses, (2) sengaja ditipu/deception, (3) outdated info. 
+            Perlu investigasi mengapa ada contradiction.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: KEY TAKEAWAYS & NEXT -->
+  <section class="slide-section" id="slide-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          MODUL 02 COMPLETE
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Fusion > Single Source</div>
+              <div class="text-sm text-white/60">Multiple sources = higher confidence & harder to deceive</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Use Correlation Matrix</div>
+              <div class="text-sm text-white/60">Visualize confirm/contradict relationships</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Weight by Reliability</div>
+              <div class="text-sm text-white/60">Not all sources are equal — use A-F/1-6 ratings</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Identify Gaps</div>
+              <div class="text-sm text-white/60">What you don't know is as important as what you know</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎉 Modul 02 Complete!</div>
+          <div class="text-sm text-white/60">Anda telah menyelesaikan Intelligence Analysis dengan AI</div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-02-03-threat-assessment.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 2.3: Hands-On
+        </a>
+        <a href="modul-03-visual-intelligence.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Modul 03 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tool Comparison Callout → Modul 06 -->
+  <section class="relative py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h4.586a1 1 0 01.707.293l1.414 1.414a1 1 0 00.707.293H18a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
+              <h3 class="text-lg font-semibold">NotebookLM sebagai Fusion Engine</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
+          <p class="text-sm text-white/70">
+            Multi-source fusion di Claude bekerja tapi punya <strong class="text-white">context limit</strong> — paste 30 SITREP sekaligus akan boros tokens dan Claude kadang "lupa" yang di awal. <strong class="text-indigo-400">NotebookLM</strong> dibuat spesifik untuk problem ini: <em>persistent multi-doc workspace dengan citation wajib</em>.
+          </p>
+
+          <div class="glass p-4 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-3">🔀 NotebookLM untuk Multi-Source Fusion</div>
+            <div class="grid md:grid-cols-3 gap-3 text-xs">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-white mb-1">1. Ingest</div>
+                <div class="text-white/60">Upload 50+ SITREP, OSINT report, doktrin, historical ops — dalam 1 notebook. Tidak hilang konteks.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-white mb-1">2. Cross-Reference</div>
+                <div class="text-white/60">Tanya: "Apakah indicator A yang muncul di source 1 konsisten dengan pattern di source 12, 18, 34?" → NotebookLM citing exact paragraph.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-white mb-1">3. Synthesize</div>
+                <div class="text-white/60">Generate briefing doc / timeline / mind map yang aggregate insight dari semua 50 sources.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+            <div class="font-semibold text-amber-400 mb-2">⚠ Limitations NotebookLM untuk Fusion</div>
+            <ul class="text-xs text-white/70 space-y-1">
+              <li>• Tidak punya <em>ranking/weighting</em> antar sources — kalau ada source A1 (highly reliable) dan F6 (unreliable), NotebookLM treat sama. Solusi: pisahkan notebook, atau tag reliability di nama file.</li>
+              <li>• Tidak <em>infer</em> di luar dokumen. Bagus untuk ground truth, tapi kalau butuh strategic prediction → kembali ke Claude setelah dapat baseline dari NotebookLM.</li>
+              <li>• Fusion dari <strong class="text-white">live sources</strong> (news, RSS) masih manual upload — belum ada auto-sync.</li>
+            </ul>
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <a href="sesi-06-02-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.2 — NotebookLM Deep Dive →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

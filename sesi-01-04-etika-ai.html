@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 1.4 | Etika AI dalam Pertahanan</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#f43f5e',
+            'accent-light': '#fb7185',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              blue: '#3b82f6',
+              rose: '#f43f5e',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #f43f5e;
+      --accent-glow: rgba(244, 63, 94, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    /* Background Effects */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 600px; height: 600px; 
+      top: -200px; left: -100px; 
+      background: var(--accent); 
+      opacity: 0.1; 
+    }
+    .blob-2 { 
+      width: 400px; height: 400px; 
+      bottom: -100px; right: -50px; 
+      background: #be123c; 
+      opacity: 0.08; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(244, 63, 94, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244, 63, 94, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    /* Glass Cards */
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset,
+                  0 32px 64px -16px rgba(0,0,0,0.5);
+    }
+    
+    /* Slide Section */
+    .slide-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 24px;
+      position: relative;
+    }
+    
+    .slide-section:nth-child(even) {
+      background: linear-gradient(180deg, transparent 0%, rgba(244, 63, 94, 0.03) 50%, transparent 100%);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #fb7185);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Slide Navigation */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .slide-nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .slide-nav-dot.active {
+      background: var(--accent);
+      border-color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    /* Typography */
+    .slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+    
+    .slide-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+    }
+    
+    /* Risk Cards */
+    .risk-card {
+      transition: all 0.3s ease;
+    }
+    
+    .risk-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(244, 63, 94, 0.2);
+    }
+    
+    /* Do/Don't Cards */
+    .dont-card {
+      border-left: 4px solid #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+    }
+    
+    .do-card {
+      border-left: 4px solid #10b981;
+      background: rgba(16, 185, 129, 0.05);
+    }
+    
+    /* Checklist */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .checklist-item:hover {
+      background: rgba(255,255,255,0.06);
+    }
+    
+    .checklist-item.checked {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .checklist-item.checked .check-box {
+      background: #10b981;
+      border-color: #10b981;
+    }
+    
+    .check-box {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    
+    /* Warning Box */
+    .warning-box {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    
+    .warning-box-critical {
+      background: rgba(239, 68, 68, 0.15);
+      border: 2px solid rgba(239, 68, 68, 0.5);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(244, 63, 94, 0.5); }
+    
+    /* Mobile Nav */
+    @media (max-width: 768px) {
+      .slide-nav { display: none; }
+    }
+    
+    /* Quiz Styles */
+    .quiz-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: rgba(244, 63, 94, 0.1);
+    }
+    
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(244, 63, 94, 0.2);
+    }
+    
+    .quiz-option.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .quiz-option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Level cards */
+    .level-card {
+      transition: all 0.3s ease;
+    }
+    
+    .level-card:hover {
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0, 
+  totalSlides: 12,
+  progress: 0,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}">
+
+  <!-- Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <!-- Slide Navigation Dots -->
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" 
+           :class="currentSlide === i-1 ? 'active' : ''"
+           @click="scrollToSlide(i-1)"
+           :title="'Slide ' + i">
+      </div>
+    </template>
+  </div>
+  
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-01-ai-fundamentals.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Modul 01</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 1.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">ETIKA</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-01-03-hands-on-prompt.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 1.3</a>
+        <span class="text-white/20">|</span>
+        <a href="modul-02-intelligence-analysis.html" class="text-xs text-white/40 hover:text-white/60">Modul 02 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 01 • SESI 4 • FINAL</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        ETIKA AI<br>
+        <span class="text-accent">DALAM PERTAHANAN</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Memahami <strong class="text-white">risiko etis</strong>, batasan penggunaan, 
+        dan prinsip <strong class="text-white">Human-in-the-Loop</strong> untuk penggunaan AI yang bertanggung jawab.
+      </p>
+      
+      <!-- Warning Icon -->
+      <div class="w-24 h-24 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-8">
+        <svg class="w-12 h-12 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">45</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">RISIKO UTAMA</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3</div>
+          <div class="text-xs text-white/50">LEVEL HITL</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Sesi</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: LEARNING OBJECTIVES ==================== -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TUJUAN PEMBELAJARAN</div>
+        <h2 class="slide-subtitle">
+          SETELAH SESI INI, ANDA AKAN MAMPU:
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">⚠️</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Mengidentifikasi Risiko Etis</h3>
+          <p class="text-white/60 text-sm">
+            Mengenali 4 risiko utama: bias data, halusinasi, accountability, dan OPSEC.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="w-12 h-12 rounded-xl bg-tactical-green/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">✅</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Membedakan Input yang Tepat</h3>
+          <p class="text-white/60 text-sm">
+            Mengetahui data apa yang boleh dan tidak boleh dimasukkan ke AI.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="w-12 h-12 rounded-xl bg-tactical-cyan/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">👤</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menerapkan Human-in-the-Loop</h3>
+          <p class="text-white/60 text-sm">
+            Memahami 3 level keterlibatan manusia dalam decision-making dengan AI.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="w-12 h-12 rounded-xl bg-tactical-amber/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📋</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menggunakan Checklist Etika</h3>
+          <p class="text-white/60 text-sm">
+            Menerapkan checklist sebelum dan sesudah menggunakan AI.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: 4 ETHICAL RISKS ==================== -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">RISIKO YANG HARUS DIPAHAMI</div>
+        <h2 class="slide-title">
+          4 RISIKO ETIS<br>
+          <span class="text-accent">DALAM PENGGUNAAN AI</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <!-- Risk 1: Bias -->
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-3xl">⚖️</span>
+            </div>
+            <div>
+              <div class="text-xs text-purple-400 font-mono mb-1">RISIKO 1</div>
+              <h3 class="font-semibold text-lg">Bias Data</h3>
+            </div>
+          </div>
+          <p class="text-white/70 text-sm mb-4">
+            AI belajar dari data historis yang mungkin mengandung bias. 
+            Output dapat merefleksikan ketidakadilan yang ada dalam data training.
+          </p>
+          <div class="p-3 bg-purple-500/10 rounded-xl">
+            <div class="text-xs text-purple-400 font-semibold mb-1">Contoh:</div>
+            <div class="text-xs text-white/60">
+              Model yang dilatih dengan data intel dari satu region mungkin 
+              under-estimate threat dari region lain.
+            </div>
+          </div>
+        </div>
+        
+        <!-- Risk 2: Hallucination -->
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-3xl">🎭</span>
+            </div>
+            <div>
+              <div class="text-xs text-blue-400 font-mono mb-1">RISIKO 2</div>
+              <h3 class="font-semibold text-lg">Halusinasi</h3>
+            </div>
+          </div>
+          <p class="text-white/70 text-sm mb-4">
+            AI dapat menghasilkan informasi yang terdengar meyakinkan 
+            tetapi <strong class="text-white">sepenuhnya salah atau tidak akurat</strong>.
+          </p>
+          <div class="p-3 bg-blue-500/10 rounded-xl">
+            <div class="text-xs text-blue-400 font-semibold mb-1">Contoh:</div>
+            <div class="text-xs text-white/60">
+              AI mungkin "menciptakan" fakta tentang capability musuh yang tidak ada 
+              basis faktualnya.
+            </div>
+          </div>
+        </div>
+        
+        <!-- Risk 3: Accountability -->
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-3xl">👤</span>
+            </div>
+            <div>
+              <div class="text-xs text-amber-400 font-mono mb-1">RISIKO 3</div>
+              <h3 class="font-semibold text-lg">Accountability Gap</h3>
+            </div>
+          </div>
+          <p class="text-white/70 text-sm mb-4">
+            Siapa yang bertanggung jawab jika keputusan berbasis AI salah? 
+            <strong class="text-white">AI tidak bisa dimintai pertanggungjawaban</strong>.
+          </p>
+          <div class="p-3 bg-amber-500/10 rounded-xl">
+            <div class="text-xs text-amber-400 font-semibold mb-1">Prinsip:</div>
+            <div class="text-xs text-white/60">
+              Manusia yang menggunakan output AI tetap bertanggung jawab penuh 
+              atas keputusan yang diambil.
+            </div>
+          </div>
+        </div>
+        
+        <!-- Risk 4: OPSEC -->
+        <div class="glass-lit p-6 rounded-2xl risk-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-3xl">🔒</span>
+            </div>
+            <div>
+              <div class="text-xs text-red-400 font-mono mb-1">RISIKO 4</div>
+              <h3 class="font-semibold text-lg">OPSEC Breach</h3>
+            </div>
+          </div>
+          <p class="text-white/70 text-sm mb-4">
+            Data yang dimasukkan ke AI bisa tersimpan atau terekspos. 
+            <strong class="text-white">Informasi sensitif berisiko bocor</strong>.
+          </p>
+          <div class="p-3 bg-red-500/10 rounded-xl">
+            <div class="text-xs text-red-400 font-semibold mb-1">Peringatan:</div>
+            <div class="text-xs text-white/60">
+              Jangan pernah input data classified, koordinat real-time, 
+              atau informasi personel ke AI komersial.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: DO vs DON'T ==================== -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">BATASAN INPUT</div>
+        <h2 class="slide-title">
+          APA YANG BOLEH &<br>
+          <span class="text-accent">TIDAK BOLEH DIINPUT</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- DON'T -->
+        <div class="glass-lit p-6 rounded-2xl dont-card">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-2xl text-red-400">✕</span>
+            </div>
+            <div>
+              <div class="text-red-400 font-semibold text-lg">JANGAN INPUT</div>
+              <div class="text-xs text-white/50">Never enter to AI</div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Data Classified</div>
+                <div class="text-xs text-white/50">Dokumen rahasia negara, intel report classified</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Koordinat Real-Time</div>
+                <div class="text-xs text-white/50">Posisi unit aktif, lokasi operasi berjalan</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Data Personel</div>
+                <div class="text-xs text-white/50">Nama lengkap, NRP, data keluarga prajurit</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Teknis Sensitif</div>
+                <div class="text-xs text-white/50">Frekuensi komunikasi, kode enkripsi, spesifikasi alutsista</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Rencana Operasi</div>
+                <div class="text-xs text-white/50">OPLAN, timeline operasi, order of battle</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg">
+              <span class="text-red-400 mt-0.5">🚫</span>
+              <div>
+                <div class="text-sm font-semibold text-red-300">Intel Sources</div>
+                <div class="text-xs text-white/50">Identitas informan, metode pengumpulan intel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- DO -->
+        <div class="glass-lit p-6 rounded-2xl do-card">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-2xl text-green-400">✓</span>
+            </div>
+            <div>
+              <div class="text-green-400 font-semibold text-lg">BOLEH INPUT</div>
+              <div class="text-xs text-white/50">Safe to enter</div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Informasi Publik</div>
+                <div class="text-xs text-white/50">Data dari media, OSINT, publikasi resmi</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Data Simulasi</div>
+                <div class="text-xs text-white/50">Dataset fiktif untuk latihan, scenario training</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Template & Format</div>
+                <div class="text-xs text-white/50">Struktur dokumen, format laporan standar</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Pertanyaan Prosedural</div>
+                <div class="text-xs text-white/50">Cara kerja sistem, best practices umum</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Data Historis Declassified</div>
+                <div class="text-xs text-white/50">Informasi yang sudah tidak sensitif</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg">
+              <span class="text-green-400 mt-0.5">✅</span>
+              <div>
+                <div class="text-sm font-semibold text-green-300">Konsep & Framework</div>
+                <div class="text-xs text-white/50">Teori, metodologi analisis, academic content</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: ANONYMIZATION ==================== -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK OPSEC</div>
+        <h2 class="slide-title">
+          TEKNIK<br>
+          <span class="text-accent">ANONYMIZATION</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <p class="text-white/70 text-center mb-8">
+          Jika perlu menganalisis data sensitif, <strong class="text-white">ubah terlebih dahulu</strong> 
+          sebelum dimasukkan ke AI. Berikut teknik yang bisa digunakan:
+        </p>
+        
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold flex-shrink-0">1</div>
+            <div>
+              <div class="font-semibold mb-1">Ganti Nama & Identifier</div>
+              <div class="text-sm text-white/60 mb-2">Gunakan pseudonym atau kode</div>
+              <div class="flex items-center gap-4 text-xs">
+                <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded">Kolonel Budi → <span class="line-through">Kolonel Budi</span></span>
+                <span class="text-white/40">→</span>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded">"Unit Commander Alpha"</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold flex-shrink-0">2</div>
+            <div>
+              <div class="font-semibold mb-1">Generalisasi Lokasi</div>
+              <div class="text-sm text-white/60 mb-2">Gunakan area umum, bukan koordinat spesifik</div>
+              <div class="flex items-center gap-4 text-xs">
+                <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded">-2.1534, 117.4523</span>
+                <span class="text-white/40">→</span>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded">"Sektor Utara, wilayah maritim"</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold flex-shrink-0">3</div>
+            <div>
+              <div class="font-semibold mb-1">Offset Waktu</div>
+              <div class="text-sm text-white/60 mb-2">Geser timeline agar tidak menunjukkan waktu sebenarnya</div>
+              <div class="flex items-center gap-4 text-xs">
+                <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded">12 April 2026, 14:30</span>
+                <span class="text-white/40">→</span>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded">"Hari ke-3, sore hari"</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold flex-shrink-0">4</div>
+            <div>
+              <div class="font-semibold mb-1">Abstract Capabilities</div>
+              <div class="text-sm text-white/60 mb-2">Hindari spesifikasi teknis, gunakan kategori umum</div>
+              <div class="flex items-center gap-4 text-xs">
+                <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded">F-16 dengan AIM-120C</span>
+                <span class="text-white/40">→</span>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded">"Fighter aircraft dengan BVR capability"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="warning-box">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-accent text-xl">⚠️</span>
+          <span class="text-accent font-semibold">Ingat</span>
+        </div>
+        <p class="text-white/70 text-sm">
+          Anonymization mengurangi risiko, tetapi <strong class="text-white">bukan jaminan 100%</strong>. 
+          Jika ragu, jangan masukkan data sama sekali.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: HUMAN-IN-THE-LOOP ==================== -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PRINSIP FUNDAMENTAL</div>
+        <h2 class="slide-title">
+          HUMAN-IN-THE-LOOP<br>
+          <span class="text-accent">3 LEVEL KETERLIBATAN</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Level 1 -->
+        <div class="level-card glass-lit p-6 rounded-2xl border-t-4 border-green-500">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">💡</span>
+            </div>
+            <div class="text-xs text-green-400 font-mono mb-1">LEVEL 1</div>
+            <h3 class="font-semibold text-xl">AI Suggests</h3>
+          </div>
+          
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">AI memberikan <strong class="text-white">opsi atau rekomendasi</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Manusia <strong class="text-white">evaluasi dan memilih</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Keputusan 100% di tangan manusia</div>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-green-500/10 rounded-lg text-center">
+            <div class="text-xs text-green-400">Contoh: COA analysis, threat assessment</div>
+          </div>
+        </div>
+        
+        <!-- Level 2 -->
+        <div class="level-card glass-lit p-6 rounded-2xl border-t-4 border-amber-500">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">📝</span>
+            </div>
+            <div class="text-xs text-amber-400 font-mono mb-1">LEVEL 2</div>
+            <h3 class="font-semibold text-xl">AI Drafts</h3>
+          </div>
+          
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">AI membuat <strong class="text-white">draft awal</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Manusia <strong class="text-white">review dan edit</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Final approval tetap manusia</div>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-amber-500/10 rounded-lg text-center">
+            <div class="text-xs text-amber-400">Contoh: Report writing, SITREP drafting</div>
+          </div>
+        </div>
+        
+        <!-- Level 3 -->
+        <div class="level-card glass-lit p-6 rounded-2xl border-t-4 border-cyan-500">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">🔧</span>
+            </div>
+            <div class="text-xs text-cyan-400 font-mono mb-1">LEVEL 3</div>
+            <h3 class="font-semibold text-xl">AI Assists</h3>
+          </div>
+          
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">AI <strong class="text-white">membantu proses</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Manusia tetap <strong class="text-white">mengarahkan</strong></div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white/70">Kolaborasi aktif</div>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-cyan-500/10 rounded-lg text-center">
+            <div class="text-xs text-cyan-400">Contoh: Data analysis, pattern detection</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-6 rounded-2xl text-center">
+        <p class="text-white/70">
+          Pada <strong class="text-white">semua level</strong>, manusia tetap memiliki 
+          <strong class="text-accent">kontrol dan accountability</strong> penuh atas keputusan akhir.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: ABSOLUTE RULES ==================== -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">ATURAN MUTLAK</div>
+        <h2 class="slide-title">
+          TIDAK BOLEH<br>
+          <span class="text-accent">DIDELEGASIKAN KE AI</span>
+        </h2>
+      </div>
+      
+      <div class="warning-box warning-box-critical mb-8">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="w-14 h-14 rounded-2xl bg-red-500/30 flex items-center justify-center flex-shrink-0">
+            <span class="text-3xl">🚨</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-xl text-red-400">CRITICAL: Use of Force Decisions</h3>
+            <p class="text-white/60 text-sm">Keputusan yang melibatkan penggunaan kekuatan atau nyawa manusia</p>
+          </div>
+        </div>
+        
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="flex items-center gap-2 text-red-400 font-semibold mb-2">
+              <span>🚫</span>
+              <span>Weapons Release</span>
+            </div>
+            <p class="text-xs text-white/60">
+              Keputusan untuk menembak atau tidak menembak tidak boleh berdasarkan rekomendasi AI semata.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="flex items-center gap-2 text-red-400 font-semibold mb-2">
+              <span>🚫</span>
+              <span>Rules of Engagement</span>
+            </div>
+            <p class="text-xs text-white/60">
+              AI tidak boleh menentukan kapan ROE terpenuhi atau tidak.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="flex items-center gap-2 text-red-400 font-semibold mb-2">
+              <span>🚫</span>
+              <span>Targeting Decisions</span>
+            </div>
+            <p class="text-xs text-white/60">
+              Penentuan target harus melalui proses manusia sepenuhnya.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="flex items-center gap-2 text-red-400 font-semibold mb-2">
+              <span>🚫</span>
+              <span>Life-or-Death Medical</span>
+            </div>
+            <p class="text-xs text-white/60">
+              Keputusan medis kritis tidak boleh hanya berdasarkan AI.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+            <span class="text-xl">⚖️</span>
+          </div>
+          <div>
+            <div class="font-semibold">Prinsip Tanggung Jawab</div>
+            <div class="text-xs text-white/50">Accountability Principle</div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-white/5 rounded-xl mb-4">
+          <p class="text-white/70 text-center">
+            <em>"Manusia yang menggunakan AI untuk mendukung keputusannya 
+            tetap <strong class="text-white">bertanggung jawab penuh</strong> atas 
+            keputusan tersebut, terlepas dari apa yang AI rekomendasikan."</em>
+          </p>
+        </div>
+        
+        <div class="text-center text-sm text-white/50">
+          AI adalah <strong class="text-white/70">tool</strong>, bukan <strong class="text-white/70">decision-maker</strong>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: CHECKLIST BEFORE ==================== -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CHECKLIST PRAKTIS</div>
+        <h2 class="slide-title">
+          <span class="text-accent">SEBELUM</span><br>
+          MENGGUNAKAN AI
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ checks: {} }">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+            <span class="text-xl">⏸️</span>
+          </div>
+          <div>
+            <div class="font-semibold">Pre-Use Checklist</div>
+            <div class="text-xs text-white/50">Klik untuk centang setiap item</div>
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          <div class="checklist-item" :class="checks[1] ? 'checked' : ''" @click="checks[1] = !checks[1]">
+            <div class="check-box">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah data yang akan diinput <strong class="text-white">sudah dianonim</strong> / tidak sensitif?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[2] ? 'checked' : ''" @click="checks[2] = !checks[2]">
+            <div class="check-box">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya menggunakan <strong class="text-white">framework RISEN</strong> dalam prompt?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[3] ? 'checked' : ''" @click="checks[3] = !checks[3]">
+            <div class="check-box">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya tahu <strong class="text-white">bagaimana saya akan memverifikasi</strong> output AI?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
+            <div class="check-box">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah keputusan ini <strong class="text-white">tidak melibatkan use of force</strong>?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[5] ? 'checked' : ''" @click="checks[5] = !checks[5]">
+            <div class="check-box">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya siap <strong class="text-white">bertanggung jawab penuh</strong> atas keputusan berdasarkan output AI?</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 rounded-xl text-center" 
+             :class="Object.keys(checks).filter(k => checks[k]).length === 5 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 5">
+            <div class="text-green-400 font-semibold">✓ Checklist lengkap — Anda siap menggunakan AI</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 5">
+            <div class="text-white/50">Centang semua item sebelum melanjutkan</div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: CHECKLIST AFTER ==================== -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CHECKLIST PRAKTIS</div>
+        <h2 class="slide-title">
+          <span class="text-accent">SETELAH</span><br>
+          MENERIMA OUTPUT AI
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ checks: {} }">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+            <span class="text-xl">▶️</span>
+          </div>
+          <div>
+            <div class="font-semibold">Post-Output Checklist</div>
+            <div class="text-xs text-white/50">Klik untuk centang setiap item</div>
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          <div class="checklist-item" :class="checks[1] ? 'checked' : ''" @click="checks[1] = !checks[1]">
+            <div class="check-box">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya sudah <strong class="text-white">cross-check fakta dan angka</strong> penting?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[2] ? 'checked' : ''" @click="checks[2] = !checks[2]">
+            <div class="check-box">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah output <strong class="text-white">masuk akal secara logis</strong> dan tidak ada yang janggal?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[3] ? 'checked' : ''" @click="checks[3] = !checks[3]">
+            <div class="check-box">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya sudah <strong class="text-white">menambahkan professional judgment</strong> sendiri?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
+            <div class="check-box">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya sudah <strong class="text-white">iterate untuk menyempurnakan</strong> output?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[5] ? 'checked' : ''" @click="checks[5] = !checks[5]">
+            <div class="check-box">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya <strong class="text-white">mendokumentasikan prompt</strong> yang berhasil untuk referensi?</span>
+            </div>
+          </div>
+          
+          <div class="checklist-item" :class="checks[6] ? 'checked' : ''" @click="checks[6] = !checks[6]">
+            <div class="check-box">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-white/80">Apakah saya <strong class="text-white">share learnings</strong> dengan tim jika ada insight baru?</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 rounded-xl text-center" 
+             :class="Object.keys(checks).filter(k => checks[k]).length === 6 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 6">
+            <div class="text-green-400 font-semibold">✓ Checklist lengkap — Output siap digunakan</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 6">
+            <div class="text-white/50">Centang semua item sebelum menggunakan output</div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: KNOWLEDGE BASE ==================== -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MEMBANGUN ORGANISASI YANG BELAJAR</div>
+        <h2 class="slide-title">
+          TEAM<br>
+          <span class="text-accent">KNOWLEDGE BASE</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-3 gap-6 mb-8">
+        <div class="glass-lit p-6 rounded-2xl text-center risk-card">
+          <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">📝</span>
+          </div>
+          <h3 class="font-semibold mb-2">Document Prompts</h3>
+          <p class="text-white/50 text-sm">
+            Simpan prompt yang berhasil dalam repository tim
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center risk-card">
+          <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🔄</span>
+          </div>
+          <h3 class="font-semibold mb-2">Share Learnings</h3>
+          <p class="text-white/50 text-sm">
+            Bagikan apa yang berhasil dan tidak dengan rekan
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center risk-card">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">📊</span>
+          </div>
+          <h3 class="font-semibold mb-2">Track Errors</h3>
+          <p class="text-white/50 text-sm">
+            Catat ketika AI salah untuk menghindari pengulangan
+          </p>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-4">Template Knowledge Base Entry</h3>
+        
+        <div class="code-block p-4 text-xs">
+          <pre class="text-white/70">
+<span class="text-accent">## Use Case:</span> Intelligence Summary untuk Morning Briefing
+
+<span class="text-accent">## Prompt yang Berhasil:</span>
+[Copy paste RISEN prompt yang digunakan]
+
+<span class="text-accent">## Output Quality:</span> ⭐⭐⭐⭐ (4/5)
+
+<span class="text-accent">## Iteration yang Dilakukan:</span>
+1. Menambahkan "confidence level" ke output
+2. Meminta format tabel untuk anomali
+
+<span class="text-accent">## Lessons Learned:</span>
+- AI cenderung under-estimate threat level
+- Perlu explicitly minta untuk highlight contradictions
+
+<span class="text-accent">## Date:</span> 12 April 2026
+<span class="text-accent">## Author:</span> [Nama]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 11: QUIZ ==================== -->
+  <section class="slide-section" id="slide-11">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">
+          <span class="text-accent">QUIZ</span><br>
+          ETIKA AI
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ 
+        answer: null, 
+        submitted: false,
+        correct: false
+      }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Manakah yang <strong class="text-white">BOLEH</strong> dimasukkan ke AI komersial?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'a' && !submitted,
+                 'incorrect': answer === 'a' && submitted 
+               }"
+               @click="if(!submitted) answer = 'a'">
+            <span>Koordinat posisi unit patroli aktif</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'b' && !submitted,
+                 'correct': submitted && 'b' === 'b'
+               }"
+               @click="if(!submitted) answer = 'b'">
+            <span>Data simulasi untuk keperluan training</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'c' && !submitted,
+                 'incorrect': answer === 'c' && submitted 
+               }"
+               @click="if(!submitted) answer = 'c'">
+            <span>Nama dan NRP personel operasi</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'd' && !submitted,
+                 'incorrect': answer === 'd' && submitted 
+               }"
+               @click="if(!submitted) answer = 'd'">
+            <span>Timeline rencana operasi mendatang</span>
+          </div>
+        </div>
+        
+        <button 
+          class="w-full py-3 rounded-xl font-semibold transition-all"
+          :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'"
+          :disabled="!answer"
+          @click="submitted = true; correct = (answer === 'b')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: Data simulasi untuk keperluan training.</strong><br>
+            Data simulasi tidak mengandung informasi sensitif dan aman untuk digunakan dalam AI. 
+            Koordinat aktif, data personel, dan rencana operasi adalah informasi classified yang tidak boleh diinput.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 12: KEY TAKEAWAYS ==================== -->
+  <section class="slide-section" id="slide-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 1.4 & MODUL 01
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <h3 class="font-semibold text-accent mb-4">Ringkasan Etika AI</h3>
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">4 Risiko Utama</div>
+              <div class="text-sm text-white/60">Bias, Halusinasi, Accountability, OPSEC</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Batasan Input Jelas</div>
+              <div class="text-sm text-white/60">Tidak ada data classified ke AI komersial</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Human-in-the-Loop</div>
+              <div class="text-sm text-white/60">Manusia selalu punya kontrol dan accountability</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Use of Force = NO AI</div>
+              <div class="text-sm text-white/60">Keputusan nyawa tidak boleh didelegasikan</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="warning-box p-4">
+          <div class="text-center">
+            <div class="text-accent font-semibold mb-2">🎓 MODUL 01 SELESAI</div>
+            <p class="text-white/70 text-sm">
+              Anda telah menyelesaikan <strong class="text-white">AI Fundamentals untuk Pengambil Keputusan</strong>. 
+              Lanjut ke Modul 02 untuk mempelajari Intelligence Analysis dengan AI.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-01-03-hands-on-prompt.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 1.3: Hands-On
+        </a>
+        <a href="modul-01-ai-fundamentals.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          📚 Kembali ke Modul 01
+        </a>
+        <a href="modul-02-intelligence-analysis.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Modul 02 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

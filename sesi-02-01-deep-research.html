@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 2.1 | Deep Research dengan AI</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#14b8a6',
+            'accent-light': '#2dd4bf',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #14b8a6;
+      --accent-glow: rgba(20, 184, 166, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    /* Background Effects */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 600px; height: 600px; 
+      top: -200px; left: -100px; 
+      background: var(--accent); 
+      opacity: 0.12; 
+    }
+    .blob-2 { 
+      width: 400px; height: 400px; 
+      bottom: -100px; right: -50px; 
+      background: #0891b2; 
+      opacity: 0.1; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(20, 184, 166, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 184, 166, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    /* Glass Cards */
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset,
+                  0 32px 64px -16px rgba(0,0,0,0.5);
+    }
+    
+    /* Slide Section */
+    .slide-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 24px;
+      position: relative;
+    }
+    
+    .slide-section:nth-child(even) {
+      background: linear-gradient(180deg, transparent 0%, rgba(20, 184, 166, 0.03) 50%, transparent 100%);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #2dd4bf);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Slide Navigation */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .slide-nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .slide-nav-dot.active {
+      background: var(--accent);
+      border-color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    /* Typography */
+    .slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+    
+    .slide-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+    }
+    
+    /* Step Cards */
+    .step-card {
+      transition: all 0.3s ease;
+    }
+    
+    .step-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(20, 184, 166, 0.2);
+    }
+    
+    /* CACS Framework */
+    .cacs-letter {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .cacs-letter:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Code Block */
+    .code-block {
+      background: #0a0f1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+    }
+    
+    /* Copy Button */
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #10b981;
+      color: #10b981;
+    }
+    
+    /* Flow Diagram */
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    
+    /* Quiz Styles */
+    .quiz-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: rgba(20, 184, 166, 0.1);
+    }
+    
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(20, 184, 166, 0.2);
+    }
+    
+    .quiz-option.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .quiz-option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.5); }
+    
+    /* Mobile Nav */
+    @media (max-width: 768px) {
+      .slide-nav { display: none; }
+    }
+    
+    /* Capability Card */
+    .capability-card {
+      transition: all 0.3s ease;
+    }
+    
+    .capability-card:hover {
+      transform: scale(1.02);
+      background: rgba(255,255,255,0.06);
+    }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0, 
+  totalSlides: 10,
+  progress: 0,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}">
+
+  <!-- Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <!-- Slide Navigation Dots -->
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" 
+           :class="currentSlide === i-1 ? 'active' : ''"
+           @click="scrollToSlide(i-1)"
+           :title="'Slide ' + i">
+      </div>
+    </template>
+  </div>
+  
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-02-intelligence-analysis.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Modul 02</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 2.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">KONSEP</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-01-04-etika-ai.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 1.4</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-02-02-pattern-recognition.html" class="text-xs text-white/40 hover:text-white/60">Sesi 2.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 02 • SESI 1</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        DEEP RESEARCH<br>
+        <span class="text-accent">DENGAN AI</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Metodologi <strong class="text-white">CACS</strong> untuk menganalisis multiple documents 
+        dan menghasilkan <strong class="text-white">unified intelligence picture</strong> dalam hitungan menit.
+      </p>
+      
+      <!-- CACS Preview -->
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="cacs-letter bg-accent/20 text-accent">C</div>
+        <div class="cacs-letter bg-cyan-500/20 text-cyan-400">A</div>
+        <div class="cacs-letter bg-amber-500/20 text-amber-400">C</div>
+        <div class="cacs-letter bg-green-500/20 text-green-400">S</div>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">45</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">STEP</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">∞</div>
+          <div class="text-xs text-white/50">DOCUMENTS</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: LEARNING OBJECTIVES ==================== -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TUJUAN PEMBELAJARAN</div>
+        <h2 class="slide-subtitle">
+          SETELAH SESI INI, ANDA AKAN MAMPU:
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl step-card">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📚</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Memahami Deep Research</h3>
+          <p class="text-white/60 text-sm">
+            Mengerti apa itu deep research, kapabilitas AI dalam multi-document analysis, 
+            dan kapan menggunakannya.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl step-card">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🔄</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menerapkan Metodologi CACS</h3>
+          <p class="text-white/60 text-sm">
+            Menggunakan framework 4-step: Collect, Analyze, Correlate, Synthesize 
+            untuk riset yang sistematis.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl step-card">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📝</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menyusun Research Prompt</h3>
+          <p class="text-white/60 text-sm">
+            Membuat prompt yang efektif untuk analisis multi-source 
+            dengan output yang terstruktur.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl step-card">
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">✅</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menilai Confidence Level</h3>
+          <p class="text-white/60 text-sm">
+            Memahami cara menilai reliability dan confidence 
+            dari hasil analisis AI.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: WHAT IS DEEP RESEARCH ==================== -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KONSEP DASAR</div>
+        <h2 class="slide-title">
+          APA ITU<br>
+          <span class="text-accent">DEEP RESEARCH?</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-8 rounded-2xl">
+          <h3 class="font-semibold text-xl mb-4 text-accent">Definisi</h3>
+          <p class="text-white/70 mb-6">
+            Deep Research adalah kemampuan AI untuk <strong class="text-white">menganalisis multiple documents</strong>, 
+            mengekstrak informasi kunci, menemukan hubungan antar data, 
+            dan <strong class="text-white">menyintesis insights</strong> yang koheren — 
+            semua dalam <strong class="text-accent">hitungan menit</strong>.
+          </p>
+          
+          <div class="p-4 bg-accent/10 border border-accent/20 rounded-xl">
+            <div class="text-sm font-semibold text-accent mb-2">💡 Analogi</div>
+            <p class="text-sm text-white/60">
+              Bayangkan memiliki 10 staff analis yang membaca 50 dokumen secara paralel, 
+              kemudian diskusi untuk mencari pola — dalam waktu 5 menit.
+            </p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-8 rounded-2xl">
+          <h3 class="font-semibold text-xl mb-4 text-accent">Kapan Menggunakan?</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg capability-card">
+              <span class="text-accent mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Multiple Intel Reports</div>
+                <div class="text-xs text-white/50">Mensintesis 5+ dokumen menjadi satu assessment</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg capability-card">
+              <span class="text-accent mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Historical Analysis</div>
+                <div class="text-xs text-white/50">Membandingkan data dari berbagai periode</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg capability-card">
+              <span class="text-accent mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Cross-Source Verification</div>
+                <div class="text-xs text-white/50">Mencari konfirmasi/kontradiksi antar sumber</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg capability-card">
+              <span class="text-accent mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Pattern Discovery</div>
+                <div class="text-xs text-white/50">Menemukan pola tersembunyi dalam data besar</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: AI CAPABILITIES ==================== -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KAPABILITAS AI</div>
+        <h2 class="slide-title">
+          APA YANG BISA<br>
+          <span class="text-accent">AI LAKUKAN?</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="glass-lit p-5 rounded-2xl text-center step-card">
+          <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📑</span>
+          </div>
+          <h4 class="font-semibold text-sm mb-2">Cross-Reference</h4>
+          <p class="text-xs text-white/50">Membandingkan informasi dari multiple documents secara otomatis</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center step-card">
+          <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">⚡</span>
+          </div>
+          <h4 class="font-semibold text-sm mb-2">Contradictions</h4>
+          <p class="text-xs text-white/50">Mengidentifikasi informasi yang saling bertentangan</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center step-card">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📊</span>
+          </div>
+          <h4 class="font-semibold text-sm mb-2">Temporal Patterns</h4>
+          <p class="text-xs text-white/50">Menemukan pola berdasarkan waktu dan sequence</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center step-card">
+          <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🎯</span>
+          </div>
+          <h4 class="font-semibold text-sm mb-2">Confidence Scores</h4>
+          <p class="text-xs text-white/50">Memberikan tingkat keyakinan untuk setiap finding</p>
+        </div>
+      </div>
+      
+      <div class="glass p-6 rounded-2xl">
+        <h4 class="font-semibold text-accent mb-4 text-center">Perbandingan Waktu</h4>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <div class="text-red-400 font-semibold mb-2">Manual Analysis</div>
+            <div class="flex items-center gap-4">
+              <div class="text-3xl font-display text-red-400">4-6</div>
+              <div class="text-sm text-white/50">jam untuk mensintesis 10 dokumen dengan 2-3 analis</div>
+            </div>
+          </div>
+          <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <div class="text-green-400 font-semibold mb-2">AI-Assisted</div>
+            <div class="flex items-center gap-4">
+              <div class="text-3xl font-display text-green-400">15-30</div>
+              <div class="text-sm text-white/50">menit untuk hasil yang comparable (dengan verifikasi manusia)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: CACS FRAMEWORK OVERVIEW ==================== -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">FRAMEWORK</div>
+        <h2 class="slide-title">
+          METODOLOGI<br>
+          <span class="text-accent">CACS</span>
+        </h2>
+      </div>
+      
+      <div class="flex flex-wrap justify-center items-center gap-4 mb-12">
+        <div class="text-center">
+          <div class="cacs-letter bg-accent/20 text-accent mx-auto mb-2">C</div>
+          <div class="font-semibold text-accent">Collect</div>
+          <div class="text-xs text-white/50">Kumpulkan</div>
+        </div>
+        
+        <div class="flow-arrow px-4">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </div>
+        
+        <div class="text-center">
+          <div class="cacs-letter bg-cyan-500/20 text-cyan-400 mx-auto mb-2">A</div>
+          <div class="font-semibold text-cyan-400">Analyze</div>
+          <div class="text-xs text-white/50">Ekstrak</div>
+        </div>
+        
+        <div class="flow-arrow px-4">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </div>
+        
+        <div class="text-center">
+          <div class="cacs-letter bg-amber-500/20 text-amber-400 mx-auto mb-2">C</div>
+          <div class="font-semibold text-amber-400">Correlate</div>
+          <div class="text-xs text-white/50">Hubungkan</div>
+        </div>
+        
+        <div class="flow-arrow px-4">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </div>
+        
+        <div class="text-center">
+          <div class="cacs-letter bg-green-500/20 text-green-400 mx-auto mb-2">S</div>
+          <div class="font-semibold text-green-400">Synthesize</div>
+          <div class="text-xs text-white/50">Sintesis</div>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl text-center">
+        <p class="text-white/70">
+          CACS adalah framework <strong class="text-white">4-step</strong> yang memastikan 
+          analisis multi-source dilakukan secara <strong class="text-accent">sistematis dan komprehensif</strong>. 
+          Setiap step memiliki prompt dan output yang jelas.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: STEP 1 - COLLECT ==================== -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="cacs-letter bg-accent/20 text-accent">C</div>
+        <div>
+          <div class="text-accent font-mono text-sm mb-1">STEP 1 OF 4</div>
+          <h2 class="slide-title leading-tight">
+            COLLECT<br>
+            <span class="text-accent text-2xl">Kumpulkan Semua Sumber</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Apa yang Dilakukan?</h3>
+            <p class="text-white/70 mb-4">
+              Identifikasi dan kumpulkan semua sumber yang relevan untuk analisis. 
+              Pastikan sumber <strong class="text-white">beragam</strong> dan <strong class="text-white">credible</strong>.
+            </p>
+            
+            <div class="space-y-3">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm text-accent mb-1">Jenis Sumber:</div>
+                <div class="text-sm text-white/60">SIGINT, IMINT, HUMINT, OSINT, Radar Data, Field Reports</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm text-accent mb-1">Jumlah Ideal:</div>
+                <div class="text-sm text-white/60">3-10 sumber untuk satu analisis (lebih bisa, tapi verify quality)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Format Input ke AI</h3>
+            <div class="code-block p-4 text-xs">
+              <pre class="text-white/70">
+<span class="text-accent">=== SOURCE 1: SIGINT Report ===</span>
+[Paste content atau summary]
+Date: 11 APR 2026
+Classification: UNCLASS/SIMULATED
+
+<span class="text-cyan-400">=== SOURCE 2: Radar Data ===</span>
+[Paste data table atau summary]
+Period: 48 hours
+Sector: NE-7
+
+<span class="text-amber-400">=== SOURCE 3: HUMINT Field Report ===</span>
+[Paste report content]
+Source reliability: B-2
+
+<span class="text-green-400">=== SOURCE 4: OSINT ===</span>
+[Paste news/social media summary]
+Date range: Last 7 days</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: STEP 2-4 OVERVIEW ==================== -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STEP 2, 3, 4</div>
+        <h2 class="slide-title">
+          ANALYZE, CORRELATE,<br>
+          <span class="text-accent">SYNTHESIZE</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- ANALYZE -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="cacs-letter bg-cyan-500/20 text-cyan-400" style="width: 50px; height: 50px; font-size: 1.5rem;">A</div>
+            <div>
+              <div class="text-xs text-cyan-400 font-mono">STEP 2</div>
+              <div class="font-semibold">ANALYZE</div>
+            </div>
+          </div>
+          
+          <p class="text-white/60 text-sm mb-4">
+            Ekstrak informasi kunci dari <strong class="text-white">setiap sumber secara terpisah</strong>.
+          </p>
+          
+          <div class="space-y-2 text-sm">
+            <div class="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">• Key facts per source</div>
+            <div class="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">• Timeline events</div>
+            <div class="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">• Source reliability</div>
+          </div>
+        </div>
+        
+        <!-- CORRELATE -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="cacs-letter bg-amber-500/20 text-amber-400" style="width: 50px; height: 50px; font-size: 1.5rem;">C</div>
+            <div>
+              <div class="text-xs text-amber-400 font-mono">STEP 3</div>
+              <div class="font-semibold">CORRELATE</div>
+            </div>
+          </div>
+          
+          <p class="text-white/60 text-sm mb-4">
+            Temukan <strong class="text-white">hubungan antar sumber</strong> — apa yang confirm, apa yang contradict.
+          </p>
+          
+          <div class="space-y-2 text-sm">
+            <div class="p-2 bg-amber-500/10 rounded-lg text-amber-400">• Cross-source matches</div>
+            <div class="p-2 bg-amber-500/10 rounded-lg text-amber-400">• Contradictions found</div>
+            <div class="p-2 bg-amber-500/10 rounded-lg text-amber-400">• Intelligence gaps</div>
+          </div>
+        </div>
+        
+        <!-- SYNTHESIZE -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="cacs-letter bg-green-500/20 text-green-400" style="width: 50px; height: 50px; font-size: 1.5rem;">S</div>
+            <div>
+              <div class="text-xs text-green-400 font-mono">STEP 4</div>
+              <div class="font-semibold">SYNTHESIZE</div>
+            </div>
+          </div>
+          
+          <p class="text-white/60 text-sm mb-4">
+            Hasilkan <strong class="text-white">unified intelligence picture</strong> dari semua analisis.
+          </p>
+          
+          <div class="space-y-2 text-sm">
+            <div class="p-2 bg-green-500/10 rounded-lg text-green-400">• Executive summary</div>
+            <div class="p-2 bg-green-500/10 rounded-lg text-green-400">• Overall assessment</div>
+            <div class="p-2 bg-green-500/10 rounded-lg text-green-400">• Recommendations</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-6 rounded-2xl text-center">
+        <p class="text-white/70">
+          Dalam praktik, ketiga step ini bisa dilakukan dalam <strong class="text-white">satu prompt</strong> 
+          atau <strong class="text-white">terpisah</strong> tergantung kompleksitas analisis.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: COMPLETE PROMPT TEMPLATE ==================== -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE LENGKAP</div>
+        <h2 class="slide-title">
+          DEEP RESEARCH<br>
+          <span class="text-accent">PROMPT</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" 
+                @click="
+                  navigator.clipboard.writeText(document.getElementById('full-prompt').innerText);
+                  copied = true;
+                  setTimeout(() => copied = false, 2000);
+                ">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: MULTI-SOURCE ANALYSIS</div>
+        
+        <div class="code-block p-6" id="full-prompt">
+          <pre class="text-sm text-white/70 whitespace-pre-wrap">Kamu adalah <span class="text-accent">intelligence fusion analyst</span> dengan expertise dalam multi-source analysis untuk operasi pertahanan.
+
+TUGAS: Analisis dan sintesis informasi dari multiple sources berikut.
+
+=== SOURCE 1: [JENIS - misal SIGINT] ===
+[PASTE DATA SOURCE 1]
+
+=== SOURCE 2: [JENIS - misal RADAR DATA] ===
+[PASTE DATA SOURCE 2]
+
+=== SOURCE 3: [JENIS - misal HUMINT] ===
+[PASTE DATA SOURCE 3]
+
+ANALISIS YANG DIPERLUKAN (CACS Framework):
+1. Per-source key findings (ANALYZE)
+2. Cross-source correlations & contradictions (CORRELATE)
+3. Unified assessment dengan confidence level (SYNTHESIZE)
+4. Intelligence gaps yang perlu di-follow up
+5. Recommended actions
+
+OUTPUT FORMAT:
+## Executive Summary (maksimal 100 kata)
+## Source-by-Source Analysis
+## Correlation Matrix (apa yang match, apa yang contradict)
+## Unified Intelligence Picture
+## Confidence Assessment (Low/Medium/High per finding)
+## Intelligence Gaps
+## Recommended Actions
+
+Bahasa Indonesia formal, maksimal 600 kata total.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: CONFIDENCE LEVELS ==================== -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MENILAI HASIL</div>
+        <h2 class="slide-title">
+          CONFIDENCE<br>
+          <span class="text-accent">LEVELS</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <p class="text-white/70 text-center mb-8">
+          Setiap finding dari AI harus dinilai <strong class="text-white">confidence level</strong>-nya. 
+          Jangan treat semua output dengan tingkat kepercayaan yang sama.
+        </p>
+        
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <div class="w-20 text-center">
+              <div class="text-xl font-display text-green-400">HIGH</div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-green-400 mb-1">Multiple sources confirm</div>
+              <div class="text-sm text-white/60">3+ sumber independen memberikan informasi yang sama/konsisten</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div class="w-20 text-center">
+              <div class="text-xl font-display text-amber-400">MED</div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-amber-400 mb-1">Some corroboration</div>
+              <div class="text-sm text-white/60">1-2 sumber confirm, tidak ada yang contradict</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <div class="w-20 text-center">
+              <div class="text-xl font-display text-red-400">LOW</div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-red-400 mb-1">Single source only</div>
+              <div class="text-sm text-white/60">Hanya dari 1 sumber, atau ada kontradiksi dengan sumber lain</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <p class="text-white/60 text-sm">
+          <strong class="text-accent">Tip:</strong> Selalu minta AI untuk explicitly state confidence level 
+          di setiap finding. Jangan berasumsi semua output sama-sama reliable.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: QUIZ & KEY TAKEAWAYS ==================== -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">
+          <span class="text-accent">QUIZ</span><br>
+          & KEY TAKEAWAYS
+        </h2>
+      </div>
+      
+      <!-- Quiz -->
+      <div class="glass-lit p-8 rounded-2xl mb-8" x-data="{ 
+        answer: null, 
+        submitted: false,
+        correct: false
+      }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam framework CACS, step mana yang bertugas <strong class="text-white">menemukan hubungan dan kontradiksi antar sumber</strong>?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'a' && !submitted,
+                 'incorrect': answer === 'a' && submitted 
+               }"
+               @click="if(!submitted) answer = 'a'">
+            <div class="flex items-center gap-3">
+              <div class="cacs-letter bg-accent/20 text-accent" style="width: 40px; height: 40px; font-size: 1.25rem;">C</div>
+              <span>Collect</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'b' && !submitted,
+                 'incorrect': answer === 'b' && submitted 
+               }"
+               @click="if(!submitted) answer = 'b'">
+            <div class="flex items-center gap-3">
+              <div class="cacs-letter bg-cyan-500/20 text-cyan-400" style="width: 40px; height: 40px; font-size: 1.25rem;">A</div>
+              <span>Analyze</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'c' && !submitted,
+                 'correct': submitted && 'c' === 'c'
+               }"
+               @click="if(!submitted) answer = 'c'">
+            <div class="flex items-center gap-3">
+              <div class="cacs-letter bg-amber-500/20 text-amber-400" style="width: 40px; height: 40px; font-size: 1.25rem;">C</div>
+              <span>Correlate</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'd' && !submitted,
+                 'incorrect': answer === 'd' && submitted 
+               }"
+               @click="if(!submitted) answer = 'd'">
+            <div class="flex items-center gap-3">
+              <div class="cacs-letter bg-green-500/20 text-green-400" style="width: 40px; height: 40px; font-size: 1.25rem;">S</div>
+              <span>Synthesize</span>
+            </div>
+          </div>
+        </div>
+        
+        <button 
+          class="w-full py-3 rounded-xl font-semibold transition-all"
+          :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'"
+          :disabled="!answer"
+          @click="submitted = true; correct = (answer === 'c')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: Correlate.</strong> 
+            Step Correlate bertugas menemukan hubungan antar sumber, termasuk apa yang saling mengkonfirmasi 
+            dan apa yang bertentangan (contradictions).
+          </p>
+        </div>
+      </div>
+      
+      <!-- Key Takeaways -->
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold">Key Takeaways Sesi 2.1</h3>
+        </div>
+        
+        <div class="grid sm:grid-cols-2 gap-4 mb-8">
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">1</span>
+            <span class="text-white/70"><strong class="text-white">CACS</strong> = Collect, Analyze, Correlate, Synthesize</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">2</span>
+            <span class="text-white/70">AI bisa <strong class="text-white">10x lebih cepat</strong> dari analisis manual</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">3</span>
+            <span class="text-white/70">Selalu minta <strong class="text-white">confidence level</strong> per finding</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">4</span>
+            <span class="text-white/70"><strong class="text-white">Verify</strong> output AI sebelum digunakan</span>
+          </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="modul-02-intelligence-analysis.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+            ← Kembali ke Modul 02
+          </a>
+          <a href="sesi-02-02-pattern-recognition.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+            Lanjut ke Sesi 2.2 →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tool Comparison Callout → Modul 06 -->
+  <section class="relative py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
+              <h3 class="text-lg font-semibold">Kapan NotebookLM Mengalahkan Chatbot untuk Deep Research</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
+          <p class="text-sm text-white/70">
+            Deep research via Claude atau Gemini chat bagus untuk <strong class="text-white">eksplorasi open-ended</strong>. Tapi begitu Anda punya <strong class="text-white">fixed corpus dokumen</strong> yang harus dicitir dengan presisi, <strong class="text-indigo-400">NotebookLM</strong> adalah tool yang lebih tepat.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-teal-500/10 rounded-xl border border-teal-500/20">
+              <div class="text-xs font-mono text-teal-400 mb-2">PAKAI CLAUDE / GEMINI KALAU...</div>
+              <ul class="text-xs text-white/70 space-y-2">
+                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Topik baru, belum tahu sumbernya</li>
+                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Butuh <em>generate</em> insight/angle baru</li>
+                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Mau brainstorm, bukan cite</li>
+                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Perlu creative reasoning/analogi</li>
+                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Konteks &lt;200k tokens</li>
+              </ul>
+            </div>
+            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+              <div class="text-xs font-mono text-indigo-400 mb-2">SWITCH KE NOTEBOOKLM KALAU...</div>
+              <ul class="text-xs text-white/70 space-y-2">
+                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Sudah ada 10+ dokumen sumber</li>
+                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Citation wajib untuk setiap klaim</li>
+                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Audit trail traceable ke source</li>
+                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Tim butuh shared baseline intel</li>
+                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Komandan minta audio briefing</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Ops Workflow Hybrid</div>
+            <p class="text-sm text-white/70">
+              <strong class="text-white">Step 1:</strong> Claude untuk eksplorasi awal — "apa saja angle penting tentang X?"<br>
+              <strong class="text-white">Step 2:</strong> Collect 15-30 sources yang relevan berdasarkan angle tsb<br>
+              <strong class="text-white">Step 3:</strong> Upload ke NotebookLM untuk deep synthesis dengan citation<br>
+              <strong class="text-white">Step 4:</strong> Kembali ke Claude untuk <em>strategic reasoning</em> dari grounded output NotebookLM
+            </p>
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <a href="sesi-06-02-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.2 — NotebookLM Deep Dive →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

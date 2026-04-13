@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 5.4 | Commander's Decision Brief</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#f97316',
+            'accent-light': '#fb923c',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #f97316; --accent-glow: rgba(249,115,22,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #ea580c; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(249,115,22,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fb923c); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .brief-section { padding: 16px; background: rgba(249,115,22,0.1); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; margin-bottom: 8px; }
+    
+    .deliverable-card { transition: all 0.3s ease; }
+    .deliverable-card:hover { transform: scale(1.02); }
+    
+    .celebration { animation: celebrate 0.6s ease-out; }
+    @keyframes celebrate { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-05-capstone.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 05</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">PHASE 4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">30 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">FINAL</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-05-03-coa-wargaming.html" class="text-xs text-white/40 hover:text-white/60">← Phase 3</a>
+        <span class="text-white/20">|</span>
+        <a href="index.html" class="text-xs text-white/40 hover:text-white/60">Home →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">CAPSTONE • PHASE 4 • FINAL DELIVERABLE</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        COMMANDER'S<br>
+        <span class="text-accent">DECISION BRIEF</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Fase akhir: <strong class="text-white">compile semua deliverable</strong> dari Phase 1-3 
+        menjadi <strong class="text-accent">decision brief</strong> yang siap dipresentasikan ke komandan.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-teal-400 text-xl mb-1">📄</div>
+          <div class="text-xs text-white/50">Intel Report</div>
+        </div>
+        <div class="text-white/20 flex items-center">+</div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-blue-400 text-xl mb-1">📊</div>
+          <div class="text-xs text-white/50">Visuals</div>
+        </div>
+        <div class="text-white/20 flex items-center">+</div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-amber-400 text-xl mb-1">🎯</div>
+          <div class="text-xs text-white/50">COA Analysis</div>
+        </div>
+        <div class="text-accent flex items-center text-xl">=</div>
+        <div class="glass px-6 py-3 rounded-xl text-center bg-accent/20 border-accent">
+          <div class="text-xl mb-1">📋</div>
+          <div class="text-xs text-accent font-semibold">DECISION BRIEF</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Final Phase</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHAT IS DECISION BRIEF -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DEFINITION</div>
+        <h2 class="slide-title">
+          APA ITU<br>
+          <span class="text-accent">DECISION BRIEF?</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="text-center mb-6">
+          <p class="text-lg text-white/80">
+            <strong class="text-accent">Decision Brief</strong> adalah dokumen yang menyajikan 
+            <strong class="text-white">semua informasi yang dibutuhkan komandan</strong> untuk 
+            membuat keputusan — dalam format yang <strong class="text-white">ringkas, jelas, dan actionable</strong>.
+          </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="glass p-4 rounded-xl text-center">
+            <div class="text-2xl mb-2">⏱️</div>
+            <div class="text-accent font-semibold mb-1">Time-Efficient</div>
+            <div class="text-sm text-white/60">Komandan sibuk — brief harus bisa dibaca dalam 5 menit</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-center">
+            <div class="text-2xl mb-2">🎯</div>
+            <div class="text-accent font-semibold mb-1">Decision-Focused</div>
+            <div class="text-sm text-white/60">Bukan info dump — ada clear recommendation</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-center">
+            <div class="text-2xl mb-2">📋</div>
+            <div class="text-accent font-semibold mb-1">Self-Contained</div>
+            <div class="text-sm text-white/60">Semua info yang dibutuhkan ada di satu dokumen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: DECISION BRIEF STRUCTURE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STRUKTUR</div>
+        <h2 class="slide-title">
+          7 SECTIONS<br>
+          <span class="text-accent">DECISION BRIEF</span>
+        </h2>
+      </div>
+      
+      <div class="space-y-3 max-w-2xl mx-auto">
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">1</span>
+            <div>
+              <div class="font-semibold text-accent">BLUF (Bottom Line Up Front)</div>
+              <div class="text-sm text-white/60">2 sentences max — recommendation + why</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">2</span>
+            <div>
+              <div class="font-semibold text-accent">Situation Summary</div>
+              <div class="text-sm text-white/60">What's happening? Threat level, key facts</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">3</span>
+            <div>
+              <div class="font-semibold text-accent">Options Considered</div>
+              <div class="text-sm text-white/60">Brief summary of each COA evaluated</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">4</span>
+            <div>
+              <div class="font-semibold text-accent">Recommended COA</div>
+              <div class="text-sm text-white/60">Which option + detailed justification</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">5</span>
+            <div>
+              <div class="font-semibold text-accent">Risk Summary</div>
+              <div class="text-sm text-white/60">Key risks + mitigations for recommended COA</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">6</span>
+            <div>
+              <div class="font-semibold text-accent">Decision Requested</div>
+              <div class="text-sm text-white/60">What exactly does commander need to approve?</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="brief-section">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-navy-900 font-bold">7</span>
+            <div>
+              <div class="font-semibold text-accent">Timeline for Execution</div>
+              <div class="text-sm text-white/60">When action needed? Key milestones</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: BLUF WRITING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CRITICAL SKILL</div>
+        <h2 class="slide-subtitle">WRITING THE BLUF</h2>
+        <p class="text-white/60 mt-2">Bottom Line Up Front — paling penting!</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400">✕</span>
+            </div>
+            <div class="text-red-400 font-semibold">BAD BLUF</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-sm bg-red-500/10">
+            <p class="text-white/80">"This brief will discuss the situation in Sector NE-7 and present several options for consideration based on intelligence gathered from multiple sources over the past 48 hours."</p>
+          </div>
+          <div class="mt-3 text-sm text-red-400">
+            ⚠️ Too vague, no recommendation, wastes time
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400">✓</span>
+            </div>
+            <div class="text-green-400 font-semibold">GOOD BLUF</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-sm bg-green-500/10">
+            <p class="text-white/80">"<strong class="text-green-400">Recommend immediate deployment of CAP to Sector NE-7</strong> to deter escalating hostile activity. <strong class="text-white">Decision required by 1800Z</strong> to maintain initiative."</p>
+          </div>
+          <div class="mt-3 text-sm text-green-400">
+            ✓ Clear recommendation, why, and urgency
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-2">💡 BLUF Formula</div>
+        <div class="text-sm text-white/60">
+          <strong class="text-white">[Recommendation]</strong> + <strong class="text-white">[Key reason]</strong> + <strong class="text-white">[Urgency/timeline]</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: DECISION BRIEF PROMPT TEMPLATE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">DECISION BRIEF PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('brief-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 DECISION BRIEF COMPILATION PROMPT</div>
+        
+        <div class="code-block p-4 max-h-72 overflow-y-auto" id="brief-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Compile the following deliverables into a <span class="text-accent">Commander's Decision Brief</span>:
+
+=== INPUT DELIVERABLES ===
+
+<span class="text-teal-400">INTELLIGENCE REPORT (from Phase 1):</span>
+<span class="text-cyan-400">[PASTE YOUR INTEL ASSESSMENT HERE]</span>
+
+<span class="text-blue-400">VISUAL PACKAGE (from Phase 2):</span>
+<span class="text-cyan-400">[DESCRIBE YOUR DASHBOARD/MAP/SITREP]</span>
+
+<span class="text-amber-400">COA ANALYSIS (from Phase 3):</span>
+<span class="text-cyan-400">[PASTE YOUR COA COMPARISON + WARGAMING RESULTS]</span>
+
+=== BRIEF STRUCTURE ===
+
+Create a decision brief with these 7 sections:
+
+<span class="text-accent">1. BLUF (2 sentences max)</span>
+   - Recommendation + why + urgency
+
+<span class="text-accent">2. SITUATION SUMMARY (50 words)</span>
+   - Threat level, key facts, confidence
+
+<span class="text-accent">3. OPTIONS CONSIDERED (bullet points)</span>
+   - COA A: [one-liner]
+   - COA B: [one-liner]  
+   - COA C: [one-liner]
+
+<span class="text-accent">4. RECOMMENDED COA (100 words)</span>
+   - Which option
+   - Why this over others
+   - Expected outcome
+
+<span class="text-accent">5. RISK SUMMARY (bullet points)</span>
+   - Top 3 risks + mitigations
+
+<span class="text-accent">6. DECISION REQUESTED</span>
+   - Specific approval needed
+
+<span class="text-accent">7. TIMELINE</span>
+   - Decision deadline
+   - Key execution milestones
+
+=== FORMAT REQUIREMENTS ===
+- Professional military tone
+- No jargon that needs explanation
+- Visual: include [REFERENCE: Dashboard] etc where appropriate
+- Total length: 1 page max</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: SAMPLE OUTPUT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EXAMPLE</div>
+        <h2 class="slide-subtitle">SAMPLE DECISION BRIEF</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-xs text-white/40">DTG: 131800Z APR 2026</div>
+            <div class="font-display text-lg">OPERATION CORAL SHIELD</div>
+          </div>
+          <div class="px-4 py-2 bg-amber-500 rounded-lg">
+            <div class="font-display text-navy-900">MEDIUM-HIGH</div>
+          </div>
+        </div>
+        
+        <div class="space-y-4 text-sm">
+          <div class="p-3 bg-accent/20 rounded-lg">
+            <div class="text-accent font-mono text-xs mb-1">1. BLUF</div>
+            <div class="text-white/90"><strong>Recommend COA B: establish defensive perimeter in Sector E-3</strong> to deter further incursion while avoiding escalation. <strong>Decision required by 2000Z</strong> to deploy assets before daybreak.</div>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-white/50 font-mono text-xs mb-1">2. SITUATION</div>
+            <div class="text-white/70">Threat level MEDIUM-HIGH. 47 vessel contacts detected in Eastern sectors (+220% baseline). Hostile naval exercise ongoing. Intelligence confidence HIGH (SIGINT confirmed, IMINT partial).</div>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-white/50 font-mono text-xs mb-1">3. OPTIONS</div>
+            <div class="text-white/70">
+              • <strong>COA A:</strong> Full engagement — clear all hostile contacts<br>
+              • <strong>COA B:</strong> Defensive perimeter + deterrence posture<br>
+              • <strong>COA C:</strong> Diplomatic pressure + monitoring only
+            </div>
+          </div>
+          
+          <div class="p-3 bg-green-500/10 rounded-lg">
+            <div class="text-green-400 font-mono text-xs mb-1">4. RECOMMENDED</div>
+            <div class="text-white/80">COA B scores highest (29/40) in decision matrix. Balances objective achievement dengan minimal escalation risk. Preserves diplomatic options while demonstrating resolve. [See: VISUAL PACKAGE — Decision Matrix]</div>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="text-red-400 font-mono text-xs mb-1">5. RISKS</div>
+              <div class="text-white/70 text-xs">
+                • Adversary escalation → Ready QRF<br>
+                • Asset attrition → Reserve 2 units<br>
+                • Intel gaps → Continue ISR
+              </div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono text-xs mb-1">6-7. DECISION & TIMELINE</div>
+              <div class="text-white/70 text-xs">
+                Approve: COA B deployment<br>
+                Deadline: 2000Z today<br>
+                Execute: 0400Z tomorrow
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: FINAL CHECKLIST -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">QUALITY CHECK</div>
+        <h2 class="slide-subtitle">FINAL CHECKLIST</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-3">
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[1] ? 'bg-accent/20' : ''" @click="checks[1] = !checks[1]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[1] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">BLUF contains clear recommendation?</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[2] ? 'bg-accent/20' : ''" @click="checks[2] = !checks[2]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[2] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">All 7 sections present?</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[3] ? 'bg-accent/20' : ''" @click="checks[3] = !checks[3]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[3] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Decision deadline clearly stated?</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[4] ? 'bg-accent/20' : ''" @click="checks[4] = !checks[4]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[4] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Visual references included?</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[5] ? 'bg-accent/20' : ''" @click="checks[5] = !checks[5]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[5] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Fits on 1 page?</span>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg flex items-center gap-3 cursor-pointer transition-all" :class="checks[6] ? 'bg-accent/20' : ''" @click="checks[6] = !checks[6]">
+            <div class="w-6 h-6 border-2 rounded flex items-center justify-center" :class="checks[6] ? 'bg-accent border-accent' : 'border-white/30'">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Risk mitigations for recommended COA?</span>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 6 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 6">
+            <div class="text-green-400 font-semibold">✓ Ready to present to Commander!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 6">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/6 items complete'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam Decision Brief, apa yang <strong class="text-white">HARUS</strong> ada di BLUF section?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'a' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. Detailed situation analysis</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'b' && !submitted, 'border-2 border-green-500 bg-green-500/20': submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. Recommendation + why + urgency</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'c' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. List of all COAs considered</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'd' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. Complete risk assessment</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true">
+          <span x-text="submitted ? (answer === 'b' ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="answer === 'b' ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="answer === 'b' ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B (Recommendation + why + urgency).</strong> 
+            BLUF adalah "Bottom Line Up Front" — komandan langsung tahu apa yang direkomendasikan, mengapa, dan seberapa urgent.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: TRAINING COMPLETE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="celebration">
+        <div class="text-6xl mb-6">🎖️</div>
+        <h2 class="slide-title mb-4">
+          <span class="text-accent">TRAINING</span><br>
+          COMPLETE!
+        </h2>
+      </div>
+      
+      <p class="text-xl text-white/60 mb-8">
+        Selamat! Anda telah menyelesaikan <strong class="text-white">seluruh 5 modul</strong> 
+        AI-OPINT Training Program untuk Koopsudnas.
+      </p>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-8">
+        <h3 class="font-semibold text-accent mb-4">Apa yang telah Anda pelajari:</h3>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div class="glass p-4 rounded-xl">
+            <div class="text-purple-400 font-semibold mb-1">Modul 01</div>
+            <div class="text-white/60">AI Fundamentals + RISEN Framework</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-cyan-400 font-semibold mb-1">Modul 02</div>
+            <div class="text-white/60">Intelligence Analysis + Pattern Recognition</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-blue-400 font-semibold mb-1">Modul 03</div>
+            <div class="text-white/60">Visual Intelligence + Command Briefing</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-amber-400 font-semibold mb-1">Modul 04</div>
+            <div class="text-white/60">Strategic Reasoning + COA Analysis</div>
+          </div>
+          <div class="glass p-4 rounded-xl col-span-2 sm:col-span-1 md:col-span-2">
+            <div class="text-accent font-semibold mb-1">Modul 05</div>
+            <div class="text-white/60">Capstone — Integrated AI Operations</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-1">🚀 Next Steps</div>
+        <div class="text-sm text-white/60">Praktikkan skills ini dalam operasi nyata. AI adalah tool — expertise Anda adalah yang membuat keputusan.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: NAVIGATION -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="text-accent font-mono text-sm mb-4">NAVIGATION</div>
+      <h2 class="slide-subtitle mb-8">KEMBALI KE MODUL</h2>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <a href="modul-01-ai-fundamentals.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all">
+          <div class="text-purple-400 font-display text-xl">01</div>
+          <div class="text-sm text-white/60">AI Fundamentals</div>
+        </a>
+        <a href="modul-02-intelligence-analysis.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all">
+          <div class="text-cyan-400 font-display text-xl">02</div>
+          <div class="text-sm text-white/60">Intelligence Analysis</div>
+        </a>
+        <a href="modul-03-visual-intelligence.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all">
+          <div class="text-blue-400 font-display text-xl">03</div>
+          <div class="text-sm text-white/60">Visual Intelligence</div>
+        </a>
+        <a href="modul-04-strategic-reasoning.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all">
+          <div class="text-amber-400 font-display text-xl">04</div>
+          <div class="text-sm text-white/60">Strategic Reasoning</div>
+        </a>
+        <a href="modul-05-capstone.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all">
+          <div class="text-accent font-display text-xl">05</div>
+          <div class="text-sm text-white/60">Capstone</div>
+        </a>
+        <a href="index.html" class="glass p-4 rounded-xl hover:bg-white/5 transition-all bg-accent/20">
+          <div class="text-accent font-display text-xl">🏠</div>
+          <div class="text-sm text-accent">Home</div>
+        </a>
+      </div>
+      
+      <a href="index.html" class="inline-flex items-center gap-2 py-3 px-8 bg-accent rounded-xl text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+        Kembali ke Landing Page
+      </a>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

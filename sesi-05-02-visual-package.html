@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 5.2 | Visual Intelligence Package</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#3b82f6',
+            'accent-light': '#60a5fa',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #2563eb; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #60a5fa); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .deliverable-card { transition: all 0.3s ease; }
+    .deliverable-card:hover { transform: translateY(-2px); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-05-capstone.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 05</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">PHASE 2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CAPSTONE</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-05-01-intel-fusion.html" class="text-xs text-white/40 hover:text-white/60">← Phase 1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-05-03-coa-wargaming.html" class="text-xs text-white/40 hover:text-white/60">Phase 3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-full mb-4">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        <span class="text-red-400 font-mono text-sm">OPERATION GARUDA SHIELD</span>
+      </div>
+      
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8 ml-4">
+        <span class="text-accent font-mono text-sm">MODUL 05 • PHASE 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        VISUAL INTELLIGENCE<br>
+        <span class="text-accent">PACKAGE</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Transform intelligence assessment menjadi <strong class="text-white">3 visual deliverables</strong> 
+        untuk command briefing.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">📊</div>
+          <div class="text-xs text-accent">Dashboard</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">🗺️</div>
+          <div class="text-xs text-green-400">Threat Map</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-lg">📋</div>
+          <div class="text-xs text-purple-400">SITREP</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Phase 2</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: INPUT FROM PHASE 1 -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">INPUT</div>
+        <h2 class="slide-subtitle">DATA FROM PHASE 1</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="p-4 bg-teal-500/10 rounded-xl mb-4">
+          <div class="text-teal-400 font-semibold mb-2">📋 Intelligence Assessment Summary</div>
+          <div class="text-sm text-white/70 space-y-2">
+            <p><strong class="text-white">BLUF:</strong> Foreign military conducting reconnaissance operation in sectors NE-7 to NE-9 under cover of announced "exercise." High probability of intelligence collection against our assets.</p>
+            <p><strong class="text-white">Threat Level:</strong> <span class="text-amber-400">HIGH</span></p>
+            <p><strong class="text-white">Confidence:</strong> <span class="text-green-400">HIGH</span> (4 sources corroborate)</p>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-xs text-white/50 mb-1">Key Metrics</div>
+            <div class="text-sm">
+              • 47 unidentified aircraft contacts<br>
+              • 340% comms surge<br>
+              • 3 vessels (AIS off)<br>
+              • Est. 40-60 personnel ground
+            </div>
+          </div>
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-xs text-white/50 mb-1">Location Focus</div>
+            <div class="text-sm">
+              • Primary: <strong>NE-7</strong> (23 contacts)<br>
+              • Secondary: NE-8, NE-9<br>
+              • Ground activity: NE-8 coastal<br>
+              • Timeline: 7 days from 15 APR
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">⏱️ Phase 2 Time: 45 Minutes</div>
+        <div class="text-sm text-white/60">Create: Dashboard (15min) + Threat Map (15min) + SITREP (15min)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: DELIVERABLE 1 - DASHBOARD -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+          <span class="text-2xl">📊</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm">DELIVERABLE 1 • 15 MIN</div>
+          <h2 class="slide-subtitle">SITUATIONAL DASHBOARD</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Required Elements</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="font-semibold text-sm">Threat Level Widget</div>
+              <div class="text-xs text-white/50">Large, color-coded badge</div>
+            </div>
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="font-semibold text-sm">Key Metrics (4)</div>
+              <div class="text-xs text-white/50">Contacts, comms surge, vessels, personnel</div>
+            </div>
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="font-semibold text-sm">48h Activity Trend</div>
+              <div class="text-xs text-white/50">Bar chart showing escalation</div>
+            </div>
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="font-semibold text-sm">Sector Status Table</div>
+              <div class="text-xs text-white/50">NE-6 through NE-9 status</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="text-xs text-accent font-mono mb-3">PREVIEW</div>
+          <div class="bg-navy-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-4">
+              <div class="text-xs text-white/40">GARUDA SHIELD • 121500Z</div>
+              <div class="px-3 py-1 bg-amber-500 rounded text-xs font-bold text-navy-900">HIGH</div>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="p-2 bg-white/5 rounded text-center">
+                <div class="text-lg font-display text-accent">47</div>
+                <div class="text-[10px] text-white/40">Aircraft</div>
+              </div>
+              <div class="p-2 bg-white/5 rounded text-center">
+                <div class="text-lg font-display text-red-400">340%</div>
+                <div class="text-[10px] text-white/40">Comms</div>
+              </div>
+              <div class="p-2 bg-white/5 rounded text-center">
+                <div class="text-lg font-display text-amber-400">3</div>
+                <div class="text-[10px] text-white/40">Vessels</div>
+              </div>
+              <div class="p-2 bg-white/5 rounded text-center">
+                <div class="text-lg font-display text-purple-400">~50</div>
+                <div class="text-[10px] text-white/40">Personnel</div>
+              </div>
+            </div>
+            <div class="h-12 flex items-end gap-0.5">
+              <div class="flex-1 bg-green-500/50 rounded-t" style="height: 20%;"></div>
+              <div class="flex-1 bg-green-500/50 rounded-t" style="height: 30%;"></div>
+              <div class="flex-1 bg-amber-500/50 rounded-t" style="height: 50%;"></div>
+              <div class="flex-1 bg-amber-500/50 rounded-t" style="height: 65%;"></div>
+              <div class="flex-1 bg-red-500/50 rounded-t" style="height: 85%;"></div>
+              <div class="flex-1 bg-red-500/50 rounded-t" style="height: 100%;"></div>
+            </div>
+            <div class="text-[10px] text-white/30 text-center mt-1">48h Activity Trend</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: DELIVERABLE 2 - THREAT MAP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center">
+          <span class="text-2xl">🗺️</span>
+        </div>
+        <div>
+          <div class="text-green-400 font-mono text-sm">DELIVERABLE 2 • 15 MIN</div>
+          <h2 class="slide-subtitle">THREAT MAP</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-green-400 mb-4">Required Elements</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Sector Grid</div>
+              <div class="text-xs text-white/50">NE-6, NE-7, NE-8, NE-9 labeled</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Contact Markers</div>
+              <div class="text-xs text-white/50">Red = hostile, concentration in NE-7</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Threat Zone Highlight</div>
+              <div class="text-xs text-white/50">NE-7 as primary concern (shaded)</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Ground Activity Marker</div>
+              <div class="text-xs text-white/50">NE-8 coastal area</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Legend</div>
+              <div class="text-xs text-white/50">Symbol explanation</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="text-xs text-green-400 font-mono mb-3">PREVIEW</div>
+          <div class="relative bg-navy-800 rounded-xl p-4 h-56">
+            <div class="absolute inset-4 grid grid-cols-2 grid-rows-2 border border-white/10">
+              <div class="border border-white/5 relative p-1">
+                <span class="text-[10px] text-white/30">NE-6</span>
+                <div class="absolute top-1/2 left-1/2 w-2 h-2 rounded-full bg-red-500/50"></div>
+              </div>
+              <div class="border border-white/5 relative p-1 bg-red-500/20">
+                <span class="text-[10px] text-red-400">NE-7 ⚠️</span>
+                <div class="absolute top-1/3 left-1/3 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <div class="absolute top-1/2 left-1/2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <div class="absolute top-2/3 left-2/3 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+              </div>
+              <div class="border border-white/5 relative p-1">
+                <span class="text-[10px] text-white/30">E-1</span>
+              </div>
+              <div class="border border-white/5 relative p-1 bg-amber-500/10">
+                <span class="text-[10px] text-amber-400">NE-8</span>
+                <div class="absolute bottom-2 right-2 w-3 h-3 rounded bg-amber-500/50"></div>
+              </div>
+            </div>
+            <div class="absolute bottom-2 right-2 text-[10px] bg-navy-900/80 p-1 rounded">
+              <span class="text-red-400">●</span> Air
+              <span class="text-amber-400 ml-1">■</span> Ground
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: DELIVERABLE 3 - SITREP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+          <span class="text-2xl">📋</span>
+        </div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm">DELIVERABLE 3 • 15 MIN</div>
+          <h2 class="slide-subtitle">SITREP VISUAL</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 mb-4">Required Elements</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Header with DTG</div>
+              <div class="text-xs text-white/50">Operation name, date-time group</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Threat Level Badge</div>
+              <div class="text-xs text-white/50">Prominent, color-coded</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Enemy Status Summary</div>
+              <div class="text-xs text-white/50">What hostile forces are doing</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Friendly Status</div>
+              <div class="text-xs text-white/50">Our readiness posture</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm">Recommended Actions</div>
+              <div class="text-xs text-white/50">Immediate priorities</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="text-xs text-purple-400 font-mono mb-3">PREVIEW</div>
+          <div class="bg-navy-800 rounded-xl p-4 text-xs">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+              <div>
+                <div class="font-display text-sm">GARUDA SHIELD SITREP</div>
+                <div class="text-white/40">121500Z APR 2026</div>
+              </div>
+              <div class="px-2 py-1 bg-amber-500 rounded text-navy-900 font-bold">HIGH</div>
+            </div>
+            
+            <div class="space-y-2">
+              <div class="p-2 bg-red-500/10 rounded">
+                <div class="text-red-400 font-semibold">ENEMY</div>
+                <div class="text-white/60">Active recon ops in NE-7. 47 air contacts, 3 vessels, ground element NE-8.</div>
+              </div>
+              
+              <div class="p-2 bg-blue-500/10 rounded">
+                <div class="text-blue-400 font-semibold">FRIENDLY</div>
+                <div class="text-white/60">Air defense: READY. CAP: 2 on standby. Radar: 100% coverage.</div>
+              </div>
+              
+              <div class="p-2 bg-green-500/10 rounded">
+                <div class="text-green-400 font-semibold">ACTIONS</div>
+                <div class="text-white/60">1. Deploy CAP to NE-7. 2. Increase SIGINT. 3. Notify regional partners.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: VISUAL PACKAGE PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">VISUAL PACKAGE PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('visual-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 VISUAL PACKAGE TEMPLATE</div>
+        
+        <div class="code-block p-4 max-h-64 overflow-y-auto" id="visual-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Create a <span class="text-accent">visual intelligence package</span> with 3 HTML deliverables:
+
+=== INTELLIGENCE DATA ===
+Operation: GARUDA SHIELD
+DTG: 121500Z APR 2026
+Threat Level: HIGH
+
+Key Metrics:
+- Aircraft contacts: 47 (+280%)
+- Communications surge: 340%
+- Naval vessels: 3 (AIS off)
+- Ground personnel: ~50
+
+Location Focus:
+- Primary: NE-7 (23 contacts)
+- Secondary: NE-8, NE-9
+- Ground activity: NE-8 coastal
+
+Timeline: Exercise 15-22 APR
+
+=== CREATE 3 VISUALS ===
+
+VISUAL 1: SITUATIONAL DASHBOARD
+- Threat level badge (large, prominent)
+- 4 key metric cards
+- 48h activity trend chart
+- Sector status overview
+
+VISUAL 2: THREAT MAP
+- 2x2 grid (NE-6, NE-7, NE-8, E-1)
+- Red markers for air contacts
+- NE-7 highlighted as threat zone
+- Ground activity marker in NE-8
+- Legend
+
+VISUAL 3: SITREP VISUAL
+- Header with DTG
+- Threat level badge
+- Enemy status section
+- Friendly status section
+- Recommended actions
+
+=== DESIGN REQUIREMENTS ===
+- Dark background (#050810)
+- Consistent color coding
+- 3-second rule per visual
+- Professional military aesthetic</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: QUALITY STANDARDS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">STANDARDS</div>
+        <h2 class="slide-subtitle">VISUAL QUALITY CHECKLIST</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-green-400 mb-4">✓ DO</h3>
+            <div class="space-y-2 text-sm">
+              <div class="p-2 bg-green-500/10 rounded flex items-start gap-2">
+                <span class="text-green-400">✓</span>
+                <span class="text-white/70">Threat level visible within 3 seconds</span>
+              </div>
+              <div class="p-2 bg-green-500/10 rounded flex items-start gap-2">
+                <span class="text-green-400">✓</span>
+                <span class="text-white/70">Consistent color coding across all 3 visuals</span>
+              </div>
+              <div class="p-2 bg-green-500/10 rounded flex items-start gap-2">
+                <span class="text-green-400">✓</span>
+                <span class="text-white/70">DTG on every visual</span>
+              </div>
+              <div class="p-2 bg-green-500/10 rounded flex items-start gap-2">
+                <span class="text-green-400">✓</span>
+                <span class="text-white/70">Legend on threat map</span>
+              </div>
+              <div class="p-2 bg-green-500/10 rounded flex items-start gap-2">
+                <span class="text-green-400">✓</span>
+                <span class="text-white/70">Actionable items in SITREP</span>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-red-400 mb-4">✕ DON'T</h3>
+            <div class="space-y-2 text-sm">
+              <div class="p-2 bg-red-500/10 rounded flex items-start gap-2">
+                <span class="text-red-400">✕</span>
+                <span class="text-white/70">Overload with too many metrics</span>
+              </div>
+              <div class="p-2 bg-red-500/10 rounded flex items-start gap-2">
+                <span class="text-red-400">✕</span>
+                <span class="text-white/70">Use inconsistent threat level colors</span>
+              </div>
+              <div class="p-2 bg-red-500/10 rounded flex items-start gap-2">
+                <span class="text-red-400">✕</span>
+                <span class="text-white/70">Leave map without labels</span>
+              </div>
+              <div class="p-2 bg-red-500/10 rounded flex items-start gap-2">
+                <span class="text-red-400">✕</span>
+                <span class="text-white/70">Forget to include next update time</span>
+              </div>
+              <div class="p-2 bg-red-500/10 rounded flex items-start gap-2">
+                <span class="text-red-400">✕</span>
+                <span class="text-white/70">Make text too small to read</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: DELIVERABLE CHECKLIST -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CHECKLIST</div>
+        <h2 class="slide-subtitle">PHASE 2 DELIVERABLES</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-4 mb-6">
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[1] = !checks[1]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[1] ? 'bg-accent border-accent' : 'border-white/30'">
+                <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-accent">📊 Situational Dashboard</div>
+                <div class="text-xs text-white/50">Threat level, 4 metrics, trend chart, status table</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-green-500/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[2] = !checks[2]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[2] ? 'bg-green-500 border-green-500' : 'border-white/30'">
+                <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-green-400">🗺️ Threat Map</div>
+                <div class="text-xs text-white/50">Sector grid, contact markers, threat zone, legend</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-purple-500/10 rounded-xl">
+            <div class="flex items-center gap-3 cursor-pointer" @click="checks[3] = !checks[3]">
+              <div class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all" :class="checks[3] ? 'bg-purple-500 border-purple-500' : 'border-white/30'">
+                <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <div class="font-semibold text-purple-400">📋 SITREP Visual</div>
+                <div class="text-xs text-white/50">Header/DTG, enemy status, friendly status, actions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 3 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 3">
+            <div class="text-green-400 font-semibold">✓ Visual Package Complete — Ready for Phase 3!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 3">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/3 deliverables complete'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: EVALUATION CRITERIA -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EVALUATION</div>
+        <h2 class="slide-subtitle">PHASE 2 SCORING</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">3-Second Rule Compliance</div>
+              <div class="text-xs text-white/50">Key info immediately visible on each visual</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Visual Consistency</div>
+              <div class="text-xs text-white/50">Same colors, fonts, styling across all 3</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Information Accuracy</div>
+              <div class="text-xs text-white/50">Data matches Phase 1 assessment</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Completeness</div>
+              <div class="text-xs text-white/50">All required elements present</div>
+            </div>
+            <div class="text-xl font-display text-accent">25%</div>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-accent/20 rounded-lg text-center">
+          <span class="text-accent font-semibold">Passing: 70%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: TRANSITION TO PHASE 3 -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PHASE 2 COMPLETE</div>
+        <h2 class="slide-title">
+          <span class="text-accent">PROCEED TO</span><br>
+          PHASE 3
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="flex items-center justify-center gap-4 mb-6">
+          <div class="glass p-3 rounded-xl text-center">
+            <div class="text-lg mb-1">📋</div>
+            <div class="text-xs text-teal-400">Intel</div>
+          </div>
+          <div class="text-white/30">+</div>
+          <div class="glass p-3 rounded-xl text-center">
+            <div class="text-lg mb-1">📊</div>
+            <div class="text-xs text-accent">Visuals</div>
+          </div>
+          <div class="text-accent text-xl">→</div>
+          <div class="glass p-3 rounded-xl text-center bg-amber-500/20 border border-amber-500/30">
+            <div class="text-lg mb-1">🎯</div>
+            <div class="text-xs text-amber-400">COA</div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-amber-500/10 rounded-xl">
+          <div class="font-semibold text-amber-400 mb-2">Phase 3: COA Development & Wargaming (60 min)</div>
+          <div class="grid sm:grid-cols-2 gap-2 text-sm text-white/60">
+            <div>• Develop 3 distinct COAs</div>
+            <div>• Conduct risk assessment</div>
+            <div>• Run wargaming simulation</div>
+            <div>• Compare and recommend</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-05-01-intel-fusion.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Kembali ke Phase 1
+        </a>
+        <a href="sesi-05-03-coa-wargaming.html" class="flex-1 py-3 px-6 bg-amber-500 rounded-xl text-center text-navy-900 font-semibold hover:bg-amber-400 transition-colors">
+          Lanjut ke Phase 3 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 4.1 | Deep Thinking & Chain of Thought</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#f59e0b',
+            'accent-light': '#fbbf24',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #f59e0b; --accent-glow: rgba(245,158,11,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #d97706; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fbbf24); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .thinking-step { display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(245,158,11,0.1); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; margin-bottom: 8px; }
+    .thinking-step .step-num { width: 32px; height: 32px; background: var(--accent); color: #050810; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    
+    .comparison-card { transition: all 0.3s ease; }
+    .comparison-card:hover { transform: translateY(-4px); }
+    .comparison-card.bad { border-color: rgba(239,68,68,0.3); }
+    .comparison-card.good { border-color: rgba(16,185,129,0.3); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 04</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 4.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">40 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">KONSEP</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="modul-03-visual-intelligence.html" class="text-xs text-white/40 hover:text-white/60">← Modul 03</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-04-02-coa-analysis.html" class="text-xs text-white/40 hover:text-white/60">Sesi 4.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 04 • SESI 1 • KONSEP DASAR</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        DEEP THINKING &<br>
+        <span class="text-accent">CHAIN OF THOUGHT</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Teknik prompting untuk <strong class="text-white">strategic reasoning</strong> — 
+        memaksa AI berpikir <strong class="text-accent">step-by-step</strong> 
+        sebelum memberikan rekomendasi.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-3xl font-display text-accent">5</div>
+          <div class="text-sm text-white/50">Thinking Steps</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-3xl font-display text-accent">6</div>
+          <div class="text-sm text-white/50">Trigger Phrases</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-3xl font-display text-accent">∞</div>
+          <div class="text-sm text-white/50">Better Decisions</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHY DEEP THINKING -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">THE PROBLEM</div>
+        <h2 class="slide-title">
+          KENAPA DEEP THINKING<br>
+          <span class="text-accent">PENTING?</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="comparison-card bad glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400">✕</span>
+            </div>
+            <div class="text-red-400 font-semibold">Tanpa Deep Thinking</div>
+          </div>
+          <div class="glass p-4 rounded-xl mb-4 text-sm">
+            <div class="text-white/50 mb-2">Prompt:</div>
+            <div class="text-white/80">"Apa yang harus kita lakukan terhadap ancaman di sektor NE-7?"</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-sm bg-red-500/10">
+            <div class="text-white/50 mb-2">Response:</div>
+            <div class="text-white/80">"Kirim pasukan ke sektor NE-7."</div>
+          </div>
+          <div class="mt-4 text-sm text-red-400">
+            ⚠️ Jawaban langsung tanpa reasoning — tidak tahu MENGAPA
+          </div>
+        </div>
+        
+        <div class="comparison-card good glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400">✓</span>
+            </div>
+            <div class="text-green-400 font-semibold">Dengan Deep Thinking</div>
+          </div>
+          <div class="glass p-4 rounded-xl mb-4 text-sm">
+            <div class="text-white/50 mb-2">Prompt:</div>
+            <div class="text-white/80">"<strong class="text-accent">Analyze step-by-step:</strong> apa yang harus kita lakukan terhadap ancaman di sektor NE-7?"</div>
+          </div>
+          <div class="glass p-4 rounded-xl text-sm bg-green-500/10">
+            <div class="text-white/50 mb-2">Response:</div>
+            <div class="text-white/80 text-xs">
+              <strong>Step 1:</strong> Identify threat type...<br>
+              <strong>Step 2:</strong> Assess our resources...<br>
+              <strong>Step 3:</strong> Consider risks...<br>
+              <strong>Recommendation:</strong> Deploy CAP because...
+            </div>
+          </div>
+          <div class="mt-4 text-sm text-green-400">
+            ✓ Reasoning visible — komandan bisa validate logic
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">💡 Key Insight</div>
+        <div class="text-sm text-white/60">Untuk keputusan strategis, kita butuh tahu <strong class="text-white">MENGAPA</strong> suatu rekomendasi dibuat — bukan hanya <strong class="text-white">APA</strong> rekomendasinya.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 5 THINKING STEPS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">FRAMEWORK</div>
+        <h2 class="slide-title">
+          5-STEP<br>
+          <span class="text-accent">CHAIN OF THOUGHT</span>
+        </h2>
+      </div>
+      
+      <div class="space-y-4 max-w-2xl mx-auto">
+        <div class="thinking-step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="font-semibold text-accent">UNDERSTAND</div>
+            <div class="text-sm text-white/60">Restate the problem in own words — pastikan AI memahami konteks dengan benar</div>
+          </div>
+        </div>
+        
+        <div class="thinking-step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="font-semibold text-accent">DECOMPOSE</div>
+            <div class="text-sm text-white/60">Break into sub-problems — pecahkan masalah besar menjadi komponen kecil</div>
+          </div>
+        </div>
+        
+        <div class="thinking-step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="font-semibold text-accent">ANALYZE</div>
+            <div class="text-sm text-white/60">Evaluate each component — analisis setiap faktor secara mendalam</div>
+          </div>
+        </div>
+        
+        <div class="thinking-step">
+          <div class="step-num">4</div>
+          <div>
+            <div class="font-semibold text-accent">SYNTHESIZE</div>
+            <div class="text-sm text-white/60">Combine insights into conclusion — gabungkan temuan menjadi kesimpulan</div>
+          </div>
+        </div>
+        
+        <div class="thinking-step">
+          <div class="step-num">5</div>
+          <div>
+            <div class="font-semibold text-accent">VALIDATE</div>
+            <div class="text-sm text-white/60">Check logic and assumptions — verifikasi apakah reasoning masuk akal</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-4 rounded-xl text-center">
+        <div class="text-sm text-white/60">Minta AI mengikuti 5 step ini untuk setiap analisis strategis</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: TRIGGER PHRASES -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">VOCABULARY</div>
+        <h2 class="slide-title">
+          TRIGGER<br>
+          <span class="text-accent">PHRASES</span>
+        </h2>
+        <p class="text-white/60 mt-4">Kata-kata yang memicu AI untuk berpikir lebih dalam</p>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">🔍</div>
+          <div class="font-mono text-accent text-sm mb-1">"Think step by step"</div>
+          <div class="text-xs text-white/50">Memaksa sequential reasoning</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">⚖️</div>
+          <div class="font-mono text-accent text-sm mb-1">"Evaluate pros and cons"</div>
+          <div class="text-xs text-white/50">Balanced analysis</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">🎯</div>
+          <div class="font-mono text-accent text-sm mb-1">"Consider all factors"</div>
+          <div class="text-xs text-white/50">Comprehensive review</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">📝</div>
+          <div class="font-mono text-accent text-sm mb-1">"Show your reasoning"</div>
+          <div class="text-xs text-white/50">Transparent logic</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">⏸️</div>
+          <div class="font-mono text-accent text-sm mb-1">"Before concluding..."</div>
+          <div class="text-xs text-white/50">Force deliberation</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center hover:bg-white/5 transition-all cursor-default">
+          <div class="text-2xl mb-2">🔬</div>
+          <div class="font-mono text-accent text-sm mb-1">"Analyze carefully"</div>
+          <div class="text-xs text-white/50">Deep examination</div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-2">💡 Pro Tip</div>
+        <div class="text-sm text-white/60">Kombinasikan beberapa trigger phrases: <span class="text-white">"Think step by step and show your reasoning. Before concluding, consider all factors."</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: DEEP THINKING PROMPT TEMPLATE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">DEEP THINKING PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('deep-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 DEEP THINKING ANALYSIS PROMPT</div>
+        
+        <div class="code-block p-4 max-h-80 overflow-y-auto" id="deep-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Kamu adalah <span class="text-cyan-400">[ROLE: strategic military advisor]</span> dengan expertise dalam <span class="text-cyan-400">[DOMAIN: air defense operations]</span>.
+
+=== SITUASI ===
+<span class="text-cyan-400">[DESCRIBE CURRENT SITUATION]</span>
+
+=== OBJECTIVE ===
+<span class="text-cyan-400">[WHAT DECISION NEEDS TO BE MADE]</span>
+
+=== ANALYSIS INSTRUCTIONS ===
+<span class="text-accent">Think through this problem step by step.</span> Before giving any recommendation:
+
+<span class="text-green-400">Step 1 - UNDERSTAND:</span>
+Restate the problem in your own words. What exactly are we trying to solve?
+
+<span class="text-green-400">Step 2 - DECOMPOSE:</span>
+Break this into sub-problems. What are the key factors to consider?
+
+<span class="text-green-400">Step 3 - ANALYZE:</span>
+Evaluate each factor. What are the implications of each?
+
+<span class="text-green-400">Step 4 - SYNTHESIZE:</span>
+Combine your analysis. What patterns or conclusions emerge?
+
+<span class="text-green-400">Step 5 - VALIDATE:</span>
+Check your reasoning. Are there any flaws or assumptions that need to be challenged?
+
+=== OUTPUT FORMAT ===
+Provide your analysis following the 5 steps above, then conclude with:
+- <span class="text-accent">RECOMMENDATION</span>: Your recommended course of action
+- <span class="text-accent">CONFIDENCE</span>: How confident are you (HIGH/MEDIUM/LOW) and why
+- <span class="text-accent">RISKS</span>: What could go wrong with this recommendation</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: EXAMPLE IN ACTION -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EXAMPLE</div>
+        <h2 class="slide-subtitle">DEEP THINKING IN ACTION</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs text-accent font-mono mb-3">INPUT SCENARIO</div>
+          <div class="glass p-4 rounded-xl text-sm">
+            <div class="text-white/80 mb-3">
+              <strong>Situasi:</strong> Radar mendeteksi 15 unidentified aircraft approaching dari sektor NE, 
+              jarak 150km, kecepatan 400 knots. ETA 22 minutes.
+            </div>
+            <div class="text-white/80 mb-3">
+              <strong>Resources:</strong> 4 aircraft on standby, 2 SAM batteries ready.
+            </div>
+            <div class="text-white/80">
+              <strong>Question:</strong> Think step by step — what should we do?
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs text-green-400 font-mono mb-3">AI RESPONSE (DEEP THINKING)</div>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="text-accent font-mono text-xs mb-1">STEP 1: UNDERSTAND</div>
+              <div class="text-white/70 text-xs">15 unknown aircraft approaching at combat speed. We have limited response window (22 min)...</div>
+            </div>
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="text-accent font-mono text-xs mb-1">STEP 2: DECOMPOSE</div>
+              <div class="text-white/70 text-xs">Key factors: (1) threat identification, (2) response options, (3) escalation risk...</div>
+            </div>
+            <div class="p-3 bg-accent/10 rounded-lg">
+              <div class="text-accent font-mono text-xs mb-1">STEP 3-5: ANALYZE → SYNTHESIZE → VALIDATE</div>
+              <div class="text-white/70 text-xs">Pattern suggests reconnaissance mission. CAP intercept is proportional response...</div>
+            </div>
+            <div class="p-3 bg-green-500/20 rounded-lg">
+              <div class="text-green-400 font-mono text-xs mb-1">RECOMMENDATION</div>
+              <div class="text-white/80 text-xs">Launch 2 aircraft for intercept, keep 2 on alert. SAM batteries to active standby.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">✓ Transparent Reasoning</div>
+        <div class="text-sm text-white/60">Komandan dapat melihat BAGAIMANA AI sampai pada rekomendasinya — bisa challenge atau validate setiap step</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: WHEN TO USE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">GUIDANCE</div>
+        <h2 class="slide-title">
+          KAPAN PAKAI<br>
+          <span class="text-accent">DEEP THINKING?</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400 text-xl">✓</span>
+            </div>
+            <div class="text-green-400 font-semibold">GUNAKAN Deep Thinking</div>
+          </div>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 rounded-lg text-sm">
+              <strong class="text-green-400">Strategic decisions</strong>
+              <div class="text-white/60 text-xs">Keputusan dengan high stakes, long-term impact</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg text-sm">
+              <strong class="text-green-400">Complex scenarios</strong>
+              <div class="text-white/60 text-xs">Multiple factors, unclear best option</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg text-sm">
+              <strong class="text-green-400">Risk assessment</strong>
+              <div class="text-white/60 text-xs">When understanding "why" matters</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg text-sm">
+              <strong class="text-green-400">COA analysis</strong>
+              <div class="text-white/60 text-xs">Comparing multiple courses of action</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 text-xl">✕</span>
+            </div>
+            <div class="text-red-400 font-semibold">SKIP Deep Thinking</div>
+          </div>
+          <div class="space-y-3">
+            <div class="p-3 bg-red-500/10 rounded-lg text-sm">
+              <strong class="text-red-400">Simple queries</strong>
+              <div class="text-white/60 text-xs">"What's the weather?" — tidak perlu 5 steps</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg text-sm">
+              <strong class="text-red-400">Time-critical</strong>
+              <div class="text-white/60 text-xs">Emergency responses butuh quick answer</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg text-sm">
+              <strong class="text-red-400">Factual lookups</strong>
+              <div class="text-white/60 text-xs">"Define <term>" — straightforward answer</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg text-sm">
+              <strong class="text-red-400">Creative tasks</strong>
+              <div class="text-white/60 text-xs">Writing, visualization — berbeda approach</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: COMMON MISTAKES -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PITFALLS</div>
+        <h2 class="slide-title">
+          COMMON<br>
+          <span class="text-accent">MISTAKES</span>
+        </h2>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400 font-bold">1</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Terlalu Panjang = Tidak Dibaca</div>
+            <div class="text-sm text-white/60">Deep thinking harus USEFUL, bukan exhaustive. Jika AI menghasilkan 10 halaman, 
+            minta ringkasan: <span class="text-accent">"Summarize your analysis in 5 bullet points"</span></div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400 font-bold">2</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Tidak Specify Output Format</div>
+            <div class="text-sm text-white/60">Tanpa format yang jelas, AI bisa berikan reasoning yang scattered. 
+            Selalu minta: <span class="text-accent">"End with: Recommendation, Confidence, Risks"</span></div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400 font-bold">3</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Skip Validation Step</div>
+            <div class="text-sm text-white/60">Step 5 (Validate) adalah quality check. Tanpa ini, AI bisa confident dengan flawed logic. 
+            <span class="text-accent">"Check your assumptions before concluding"</span></div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-red-400 font-bold">4</span>
+          </div>
+          <div>
+            <div class="font-semibold text-red-400 mb-1">Pakai untuk Semua Query</div>
+            <div class="text-sm text-white/60">Deep thinking adds latency. Use it for strategic decisions, not routine questions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam 5-Step Chain of Thought, step mana yang berfungsi sebagai <strong class="text-white">"quality check"</strong> 
+          untuk memastikan reasoning tidak ada flaw?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'a' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. UNDERSTAND</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'b' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'b' && submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. DECOMPOSE</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'c' && !submitted, 'border-2 border-red-500 bg-red-500/20': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. SYNTHESIZE</span>
+          </div>
+          <div class="glass p-4 rounded-xl cursor-pointer transition-all" :class="{ 'border-2 border-accent bg-accent/20': answer === 'd' && !submitted, 'border-2 border-green-500 bg-green-500/20': submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. VALIDATE</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true">
+          <span x-text="submitted ? (answer === 'd' ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="answer === 'd' ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="answer === 'd' ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: D (VALIDATE).</strong> 
+            Step 5 VALIDATE adalah quality check — memeriksa logic, assumptions, dan potential flaws dalam reasoning sebelum memberikan rekomendasi final.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">5 Steps Framework</div>
+              <div class="text-sm text-white/60">Understand → Decompose → Analyze → Synthesize → Validate</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Trigger Phrases</div>
+              <div class="text-sm text-white/60">"Think step by step", "Show your reasoning", "Before concluding..."</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Use Selectively</div>
+              <div class="text-sm text-white/60">Strategic decisions YES, routine queries NO</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Transparent Reasoning</div>
+              <div class="text-sm text-white/60">Komandan dapat validate setiap step</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Terapkan Deep Thinking untuk <strong class="text-white">COA (Course of Action) Analysis</strong></div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Overview Modul 04
+        </a>
+        <a href="sesi-04-02-coa-analysis.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Sesi 4.2: COA Analysis →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tool Comparison Callout → Modul 06 -->
+  <section class="relative py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
+              <h3 class="text-lg font-semibold">Gemini 2.5 Thinking Mode — Native Chain of Thought</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
+          <p class="text-sm text-white/70">
+            Di Claude, "deep thinking" dipancing via prompt phrase ("think step by step", "show your reasoning"). Di <strong class="text-indigo-400">Gemini 2.5 Pro</strong>, thinking mode sudah <strong class="text-white">native</strong> — model otomatis reasoning sebelum jawab, dan Anda bisa lihat <em>thinking trace</em> explicit di output.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+              <div class="text-xs font-mono text-amber-400 mb-2">CLAUDE — PROMPTED CoT</div>
+              <div class="text-xs text-white/70 font-mono leading-relaxed p-2 bg-navy-900/50 rounded">
+                Prompt: "Analyze this COA. <strong class="text-white">Think step by step</strong>, showing your reasoning before concluding."<br><br>
+                <span class="text-amber-300">→ Claude menulis reasoning inline di body response, perlu explicit trigger</span>
+              </div>
+            </div>
+            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+              <div class="text-xs font-mono text-indigo-400 mb-2">GEMINI 2.5 PRO — NATIVE</div>
+              <div class="text-xs text-white/70 font-mono leading-relaxed p-2 bg-navy-900/50 rounded">
+                Prompt: "Analyze this COA."<br><br>
+                <span class="text-white/40">&lt;thinking&gt;</span><br>
+                <span class="text-white/60">&nbsp;&nbsp;Step 1: understand the tasking...<br>&nbsp;&nbsp;Step 2: identify constraints...</span><br>
+                <span class="text-white/40">&lt;/thinking&gt;</span><br>
+                <span class="text-green-400">Answer: ...</span><br><br>
+                <span class="text-indigo-300">→ Otomatis, separate dari final answer</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">🎯 Kapan Pakai Mana untuk Strategic Reasoning?</div>
+            <ul class="text-sm text-white/70 space-y-2">
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Claude:</strong> lebih baik untuk <em>ethical reasoning</em>, nuanced judgment, narrative brief yang formal. Reasoning inline membantu rekonstruksi logic di commander's brief.</li>
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Gemini 2.5 Pro:</strong> lebih baik untuk <em>audit trail</em> — thinking trace yang explicit adalah <strong class="text-white">built-in evidence log</strong>. Komandan bisa baca trace untuk verify reasoning chain.</li>
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Dual-tool approach:</strong> draft dengan Claude (nuance + prose), lalu <em>audit</em> via Gemini 2.5 Pro yang akan check logic chain — combined gives highest confidence.</li>
+            </ul>
+          </div>
+
+          <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl" style="--accent:#6366f1;border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.1);">
+            <div class="font-semibold mb-2" style="color:#818cf8;">💡 Experiment</div>
+            <p class="text-xs text-white/70">Ambil 1 COA analysis yang sudah Anda buat dengan Claude di Sesi 4.2. Paste ke Gemini 2.5 Pro dengan prompt: "Audit this reasoning for logical gaps, missing assumptions, or unsound inferences. Show your thinking." Bandingkan — apakah Gemini catch something Claude miss?</p>
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <a href="sesi-06-01-gemini-ecosystem.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.1 — Gemini Ecosystem (Thinking Mode section) →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

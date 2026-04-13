@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 4.3 | Risk Assessment & Wargaming dengan AI</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#ef4444',
+            'accent-light': '#f87171',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #ef4444; --accent-glow: rgba(239,68,68,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #dc2626; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(239,68,68,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(239,68,68,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(239,68,68,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #f87171); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .risk-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 300px; }
+    .risk-cell { padding: 16px 8px; text-align: center; font-size: 0.75rem; font-weight: 600; border-radius: 4px; }
+    
+    .wargame-move { transition: all 0.3s ease; }
+    .wargame-move:hover { transform: translateX(4px); }
+    .blue-move { border-left: 4px solid #3b82f6; background: rgba(59,130,246,0.1); }
+    .red-move { border-left: 4px solid #ef4444; background: rgba(239,68,68,0.1); }
+    
+    .risk-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .risk-high { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .risk-medium { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .risk-low { background: rgba(16,185,129,0.2); color: #10b981; }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(239,68,68,0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(239,68,68,0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 04</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 4.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">50 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">SIMULATION</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-04-02-coa-analysis.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 4.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-04-04-decision-support.html" class="text-xs text-white/40 hover:text-white/60">Sesi 4.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 04 • SESI 3</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        RISK ASSESSMENT &<br>
+        <span class="text-accent">WARGAMING</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Menggunakan AI sebagai <strong class="text-white">Red Team</strong> — 
+        memprediksi adversary response dan <strong class="text-accent">identifying vulnerabilities</strong>.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">50</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-blue-400">BLUE</div>
+          <div class="text-xs text-white/50">YOUR MOVES</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">RED</div>
+          <div class="text-xs text-white/50">ADVERSARY</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: RISK ASSESSMENT MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">RISK ASSESSMENT</div>
+        <h2 class="slide-title">
+          LIKELIHOOD ×<br>
+          <span class="text-accent">IMPACT MATRIX</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Standard Risk Matrix</h3>
+          
+          <div class="flex items-start gap-4">
+            <div class="text-xs text-white/40 writing-mode-vertical transform -rotate-180" style="writing-mode: vertical-rl;">
+              ← Low Likelihood | High Likelihood →
+            </div>
+            <div>
+              <div class="risk-matrix mx-auto mb-2">
+                <div class="risk-cell bg-amber-500/30 text-amber-400">MED</div>
+                <div class="risk-cell bg-red-500/30 text-red-400">HIGH</div>
+                <div class="risk-cell bg-red-500/50 text-red-400">CRITICAL</div>
+                <div class="risk-cell bg-green-500/30 text-green-400">LOW</div>
+                <div class="risk-cell bg-amber-500/30 text-amber-400">MED</div>
+                <div class="risk-cell bg-red-500/30 text-red-400">HIGH</div>
+                <div class="risk-cell bg-green-500/50 text-green-400">MINIMAL</div>
+                <div class="risk-cell bg-green-500/30 text-green-400">LOW</div>
+                <div class="risk-cell bg-amber-500/30 text-amber-400">MED</div>
+              </div>
+              <div class="text-xs text-white/40 text-center">← Low Impact | High Impact →</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Sample Risk Register</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-red-500/10 rounded-lg flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-sm">Enemy counter-attack</div>
+                <div class="text-xs text-white/50">High likelihood + High impact</div>
+              </div>
+              <span class="risk-badge risk-high">CRITICAL</span>
+            </div>
+            <div class="p-3 bg-amber-500/10 rounded-lg flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-sm">Supply line disruption</div>
+                <div class="text-xs text-white/50">Med likelihood + High impact</div>
+              </div>
+              <span class="risk-badge risk-medium">HIGH</span>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-sm">Weather delay</div>
+                <div class="text-xs text-white/50">Low likelihood + Med impact</div>
+              </div>
+              <span class="risk-badge risk-low">LOW</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: RISK ASSESSMENT PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">RISK ASSESSMENT PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('risk-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 RISK ASSESSMENT TEMPLATE</div>
+        
+        <div class="code-block p-4" id="risk-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Analisis risiko untuk COA berikut:
+
+COA: [Describe the course of action]
+
+CONTEXT:
+- Objective: [What we want to achieve]
+- Environment: [Operational context]
+- Resources: [Available assets]
+
+Untuk setiap risiko yang teridentifikasi, provide:
+
+1. RISK NAME: Brief description
+2. LIKELIHOOD: HIGH/MEDIUM/LOW (dengan justifikasi)
+3. IMPACT: HIGH/MEDIUM/LOW (dengan justifikasi)
+4. RISK LEVEL: Combine likelihood × impact
+5. MITIGATION: How to reduce this risk
+6. CONTINGENCY: What to do if risk materializes
+
+Format output sebagai Risk Register table:
+| Risk | Likelihood | Impact | Level | Mitigation |
+
+Identify minimum 5 risks across categories:
+- Operational risks
+- Enemy action risks
+- Resource/logistics risks
+- Environmental risks
+- Political/strategic risks
+
+End with TOP 3 RISKS that require commander attention.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: WARGAMING CONCEPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WARGAMING</div>
+        <h2 class="slide-title">
+          AI AS<br>
+          <span class="text-accent">RED TEAM</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <p class="text-lg text-white/70 text-center mb-8">
+          <strong class="text-white">Wargaming</strong> adalah simulasi move-countermove untuk test COA. 
+          AI dapat berperan sebagai <strong class="text-accent">adversary</strong> — memprediksi respons 
+          dan membantu identify vulnerabilities.
+        </p>
+        
+        <div class="space-y-4">
+          <div class="wargame-move blue-move p-4 rounded-r-xl">
+            <div class="text-xs text-blue-400 font-mono mb-1">TURN 1 — BLUE (You)</div>
+            <div class="text-sm text-white/70">Execute COA B: Deploy CAP to NE-7, increase SIGINT coverage</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <svg class="w-6 h-6 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          
+          <div class="wargame-move red-move p-4 rounded-r-xl">
+            <div class="text-xs text-red-400 font-mono mb-1">TURN 2 — RED (AI simulates adversary)</div>
+            <div class="text-sm text-white/70">Most likely response: Withdraw reconnaissance, shift to sector NE-6, increase electronic countermeasures</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <svg class="w-6 h-6 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          
+          <div class="wargame-move blue-move p-4 rounded-r-xl">
+            <div class="text-xs text-blue-400 font-mono mb-1">TURN 3 — BLUE (Your counter)</div>
+            <div class="text-sm text-white/70">Extend coverage to NE-6, deploy EW assets to counter jamming</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: WARGAMING PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">WARGAMING PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('wargame-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 WARGAMING SIMULATION TEMPLATE</div>
+        
+        <div class="code-block p-4" id="wargame-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Kamu akan berperan sebagai <span class="text-accent">adversary commander</span> (Red Team) dalam wargaming exercise.
+
+SCENARIO:
+[Describe situation]
+
+ADVERSARY PROFILE:
+- Capabilities: [What they can do]
+- Objectives: [What they want]
+- Constraints: [Limitations they face]
+- Doctrine: [How they typically operate]
+
+BLUE FORCE ACTION:
+[Describe what we plan to do]
+
+INSTRUCTIONS:
+As the adversary commander, analyze the Blue action and provide:
+
+1. MOST LIKELY RESPONSE (MLR)
+   - What you would most probably do
+   - Why this response makes sense
+   
+2. MOST DANGEROUS RESPONSE (MDR)
+   - Worst-case scenario for Blue
+   - What would hurt Blue the most
+   
+3. VULNERABILITIES IDENTIFIED
+   - Weaknesses in Blue's plan
+   - Opportunities you could exploit
+   
+4. RECOMMENDED BLUE ADAPTATIONS
+   - How Blue should modify their plan
+   - Contingencies Blue should prepare
+
+Be adversarial but realistic — respond as a competent opponent would.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: MLR vs MDR -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KEY CONCEPTS</div>
+        <h2 class="slide-subtitle">MLR vs MDR</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-2xl">📊</span>
+            </div>
+            <div>
+              <div class="font-semibold text-amber-400">Most Likely Response (MLR)</div>
+              <div class="text-xs text-white/50">What adversary will probably do</div>
+            </div>
+          </div>
+          
+          <div class="space-y-3 text-sm text-white/70">
+            <p>Respons yang <strong class="text-white">paling mungkin</strong> berdasarkan:</p>
+            <ul class="space-y-2 pl-4">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                Adversary's known doctrine
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                Historical behavior patterns
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                Resource constraints
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                Political considerations
+              </li>
+            </ul>
+          </div>
+          
+          <div class="mt-4 p-3 bg-amber-500/10 rounded-lg">
+            <div class="text-xs text-amber-400 font-semibold">USE FOR:</div>
+            <div class="text-xs text-white/60">Primary planning, resource allocation</div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-2xl">⚠️</span>
+            </div>
+            <div>
+              <div class="font-semibold text-red-400">Most Dangerous Response (MDR)</div>
+              <div class="text-xs text-white/50">Worst-case scenario</div>
+            </div>
+          </div>
+          
+          <div class="space-y-3 text-sm text-white/70">
+            <p>Respons yang <strong class="text-white">paling berbahaya</strong> untuk kita:</p>
+            <ul class="space-y-2 pl-4">
+              <li class="flex items-start gap-2">
+                <span class="text-red-400">•</span>
+                Exploits our vulnerabilities
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400">•</span>
+                Maximizes adversary advantage
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400">•</span>
+                May be less likely but high impact
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400">•</span>
+                Tests our contingencies
+              </li>
+            </ul>
+          </div>
+          
+          <div class="mt-4 p-3 bg-red-500/10 rounded-lg">
+            <div class="text-xs text-red-400 font-semibold">USE FOR:</div>
+            <div class="text-xs text-white/60">Contingency planning, stress testing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: SAMPLE WARGAME OUTPUT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT</div>
+        <h2 class="slide-subtitle">AI RED TEAM ANALYSIS</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="mb-4 p-3 bg-blue-500/10 rounded-lg">
+          <div class="text-xs text-blue-400 font-mono mb-1">BLUE ACTION:</div>
+          <div class="text-sm text-white/70">Deploy 4 CAP to NE-7 with aggressive intercept ROE</div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="text-amber-400 font-semibold text-sm mb-2">📊 MLR (Most Likely)</div>
+            <div class="text-sm text-white/60 mb-2">
+              Withdraw reconnaissance assets from NE-7, shift activity to less-covered sectors (NE-5, E-2). 
+              Maintain tempo elsewhere while Blue is concentrated.
+            </div>
+            <div class="text-xs text-amber-400">Probability: 70%</div>
+          </div>
+          
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="text-red-400 font-semibold text-sm mb-2">⚠️ MDR (Most Dangerous)</div>
+            <div class="text-sm text-white/60 mb-2">
+              Deploy decoys to NE-7 while executing surprise action in unmonitored sector. 
+              Blue assets tied up responding to diversion.
+            </div>
+            <div class="text-xs text-red-400">Impact if occurs: CRITICAL</div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-purple-500/10 rounded-xl">
+          <div class="text-purple-400 font-semibold text-sm mb-2">🔍 VULNERABILITIES IDENTIFIED</div>
+          <div class="grid sm:grid-cols-2 gap-2 text-sm text-white/60">
+            <div class="flex items-start gap-2">
+              <span class="text-purple-400">1.</span>
+              Concentration in NE-7 leaves other sectors exposed
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-purple-400">2.</span>
+              No reserve if primary CAP engaged
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-purple-400">3.</span>
+              Aggressive ROE may trigger escalation
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-purple-400">4.</span>
+              SIGINT gap during transition period
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: MITIGATION STRATEGIES -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MITIGASI</div>
+        <h2 class="slide-subtitle">RISK MITIGATION STRATEGIES</h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400 font-bold">A</span>
+            </div>
+            <div class="font-semibold text-green-400">AVOID</div>
+          </div>
+          <p class="text-sm text-white/60">Eliminate the risk by not taking the action. Choose different COA that doesn't expose us to this risk.</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">T</span>
+            </div>
+            <div class="font-semibold text-blue-400">TRANSFER</div>
+          </div>
+          <p class="text-sm text-white/60">Shift risk to another party. E.g., use partner forces for high-risk tasks.</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">M</span>
+            </div>
+            <div class="font-semibold text-amber-400">MITIGATE</div>
+          </div>
+          <p class="text-sm text-white/60">Reduce likelihood or impact. Add controls, increase monitoring, stage contingencies.</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 font-bold">A</span>
+            </div>
+            <div class="font-semibold text-red-400">ACCEPT</div>
+          </div>
+          <p class="text-sm text-white/60">Acknowledge and proceed. Some risks are unavoidable — document and monitor.</p>
+        </div>
+      </div>
+      
+      <div class="mt-6 glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-2">💡 Key Insight</div>
+        <div class="text-sm text-white/60">
+          Every mitigation has a cost. The goal is not zero risk — it's <strong class="text-white">acceptable risk</strong> 
+          given the objective's importance.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam wargaming, apa perbedaan utama antara <strong class="text-white">MLR</strong> dan <strong class="text-white">MDR</strong>?
+        </p>
+        
+        <div class="space-y-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. MLR is offensive, MDR is defensive</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. MLR is most probable, MDR is highest impact/worst-case</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. MLR is our response, MDR is adversary response</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. MLR is short-term, MDR is long-term</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true">
+          <span x-text="submitted ? (answer === 'b' ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="answer === 'b' ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="answer === 'b' ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B.</strong> MLR (Most Likely Response) adalah respons yang paling mungkin dilakukan adversary. 
+            MDR (Most Dangerous Response) adalah respons yang paling berbahaya untuk kita — mungkin less likely tapi high impact jika terjadi.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 4.3
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Risk = Likelihood × Impact</div>
+              <div class="text-sm text-white/60">Use matrix to prioritize risks</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">AI as Red Team</div>
+              <div class="text-sm text-white/60">Simulate adversary to test your plan</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">MLR + MDR</div>
+              <div class="text-sm text-white/60">Plan for likely AND dangerous responses</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Mitigate, Don't Eliminate</div>
+              <div class="text-sm text-white/60">Zero risk isn't the goal — acceptable risk is</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-04-02-coa-analysis.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 4.2: COA Analysis
+        </a>
+        <a href="sesi-04-04-decision-support.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 4.4 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

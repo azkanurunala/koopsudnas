@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 01 | AI Fundamentals untuk Pengambil Keputusan</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-bg-2: #0a0f1a;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-surface-hover: rgba(255, 255, 255, 0.06);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-bright: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(20px);
+      --module-color: #a855f7;
+      --color-text: rgba(255, 255, 255, 0.92);
+      --color-muted: rgba(255, 255, 255, 0.55);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 700px; height: 700px; 
+      top: -250px; left: -150px; 
+      background: var(--module-color); 
+      opacity: 0.1; 
+    }
+    .blob-2 { 
+      width: 500px; height: 500px; 
+      bottom: -150px; right: -100px; 
+      background: #6366f1; 
+      opacity: 0.06; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(40px, -30px) scale(1.08); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .glass:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-bright);
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 32px 64px -16px rgba(0,0,0,0.6);
+    }
+    
+    .module-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #a855f7;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 24px rgba(168, 85, 247, 0.3);
+      text-decoration: none;
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
+    }
+    
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-bright);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-smooth);
+      text-decoration: none;
+    }
+    
+    .cta-secondary:hover {
+      background: var(--color-surface);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    /* Prompt Template Styling */
+    .prompt-template {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .prompt-header {
+      background: rgba(168, 85, 247, 0.15);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .prompt-content {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      white-space: pre-wrap;
+    }
+    
+    .prompt-var {
+      color: #a855f7;
+      background: rgba(168, 85, 247, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    /* Session Card */
+    .session-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .session-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--session-color, #a855f7);
+    }
+    
+    /* Exercise Card */
+    .exercise-card {
+      position: relative;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, transparent 100%);
+    }
+    
+    .exercise-card::after {
+      content: 'HANDS-ON';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      background: rgba(168, 85, 247, 0.2);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #a855f7;
+      letter-spacing: 0.1em;
+    }
+    
+    /* Timeline */
+    .session-timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .session-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: linear-gradient(180deg, #a855f7 0%, rgba(168, 85, 247, 0.2) 100%);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 3px solid var(--session-color, #a855f7);
+    }
+    
+    /* Accordion */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+    }
+    
+    .accordion-content.open {
+      max-height: 2000px;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.5); }
+    
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+  </style>
+</head>
+<body x-data="{ activeSession: 1, copiedPrompt: null }">
+  
+  <!-- Scene Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Kembali</span>
+        </a>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="module-badge">
+          <span class="status-dot"></span>
+          MODUL 01
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#sessions" class="text-sm text-white/60 hover:text-white transition-colors">Sesi</a>
+        <a href="#frameworks" class="text-sm text-white/60 hover:text-white transition-colors">Framework</a>
+        <a href="#exercises" class="text-sm text-white/60 hover:text-white transition-colors">Latihan</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex items-center pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-start">
+        <div class="lg:col-span-3">
+          <div class="flex items-center gap-4 mb-6" data-reveal>
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
+              <span class="font-display text-3xl text-white">01</span>
+            </div>
+            <div>
+              <div class="text-sm text-purple-400 font-mono">FOUNDATION • 3 JAM</div>
+              <div class="text-white/40 text-sm">Sesi 1 dari 5 Modul</div>
+            </div>
+          </div>
+          
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl tracking-wide leading-none mb-6" data-reveal>
+            AI FUNDAMENTALS<br>
+            <span class="text-purple-400">UNTUK PENGAMBIL</span><br>
+            KEPUTUSAN
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-2xl mb-8 leading-relaxed" data-reveal>
+            Memahami kapabilitas dan limitasi AI dalam konteks operasi militer. 
+            Tidak perlu background teknis — fokus pada <strong class="text-white">konsep strategis</strong> 
+            dan aplikasi langsung untuk pengambilan keputusan.
+          </p>
+          
+          <div class="flex flex-wrap gap-4" data-reveal>
+            <a href="#sessions" class="cta-primary">
+              Mulai Pembelajaran
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#frameworks" class="cta-secondary">
+              Lihat Framework RISEN
+            </a>
+          </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="lg:col-span-2" data-reveal>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Ringkasan Modul
+            </h3>
+            
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Durasi Total</span>
+                <span class="font-semibold">3 Jam</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Jumlah Sesi</span>
+                <span class="font-semibold">4 Sesi</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Hands-on Exercise</span>
+                <span class="font-semibold text-purple-400">3 Latihan</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Template Prompt</span>
+                <span class="font-semibold text-purple-400">5 Template</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-white/60">Prerequisite</span>
+                <span class="font-semibold text-tactical-green">Tidak Ada</span>
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/10">
+              <div class="text-sm text-white/40 mb-3">Output Modul:</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1.5 bg-purple-500/15 border border-purple-500/30 rounded-lg text-purple-400 text-sm">Tactical Prompt Library</span>
+                <span class="px-3 py-1.5 bg-purple-500/15 border border-purple-500/30 rounded-lg text-purple-400 text-sm">RISEN Framework Card</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Learning Objectives -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          LEARNING OBJECTIVES
+        </div>
+        <h2 class="section-title">
+          SETELAH MODUL INI<br>
+          <span class="text-purple-400">ANDA AKAN MAMPU</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Memahami AI</h3>
+          <p class="text-white/50 text-sm">Menjelaskan kapabilitas dan limitasi AI dalam konteks operasi militer</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Menulis Prompt</h3>
+          <p class="text-white/50 text-sm">Menggunakan framework RISEN untuk menyusun prompt terstruktur dan efektif</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Evaluasi Etis</h3>
+          <p class="text-white/50 text-sm">Mengidentifikasi pertimbangan etis dalam penggunaan AI untuk pertahanan</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Aplikasi Taktis</h3>
+          <p class="text-white/50 text-sm">Menerapkan AI untuk analisis situasi taktis dan pembuatan brief</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Sessions Section -->
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          BREAKDOWN SESI
+        </div>
+        <h2 class="section-title">
+          4 SESI PEMBELAJARAN<br>
+          <span class="text-purple-400">180 MENIT TOTAL</span>
+        </h2>
+      </div>
+      
+      <div class="session-timeline space-y-8">
+        <!-- Session 1 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #a855f7; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #a855f7;"
+               x-data="{ open: true }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <span class="font-display text-purple-400 text-xl">1.1</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-purple-400 mb-1">SESI 1 • 30 MENIT</div>
+                  <h3 class="text-xl font-semibold">Apa Itu AI? Demistifikasi untuk Leaders</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-01-01-demistifikasi-ai.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-purple-500/15 rounded-full text-purple-400 text-xs font-mono">KONSEP</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10 space-y-8">
+                
+                <!-- Learning Objectives -->
+                <div class="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-purple-400 font-semibold mb-3">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tujuan Pembelajaran Sesi Ini
+                  </div>
+                  <ul class="grid sm:grid-cols-2 gap-2 text-sm text-white/70">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      Memahami apa sebenarnya AI dan cara kerjanya secara sederhana
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      Membedakan kapabilitas vs limitasi AI dengan jelas
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      Mengidentifikasi aplikasi AI dalam konteks pertahanan
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      Memahami posisi human-AI dalam pengambilan keputusan
+                    </li>
+                  </ul>
+                </div>
+                
+                <!-- Part 1: What is AI Really? -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-mono text-sm font-bold">1</div>
+                    <h4 class="font-semibold text-lg">Apa Sebenarnya AI Itu?</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="glass p-6 rounded-xl mb-4">
+                    <div class="text-center mb-6">
+                      <div class="inline-block px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg mb-4">
+                        <span class="text-red-400 font-semibold">❌ MISKONSEPSI UMUM</span>
+                      </div>
+                      <p class="text-white/60 italic">"AI adalah mesin yang bisa berpikir seperti manusia"</p>
+                    </div>
+                    
+                    <div class="text-center">
+                      <div class="inline-block px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-lg mb-4">
+                        <span class="text-green-400 font-semibold">✓ REALITASNYA</span>
+                      </div>
+                      <p class="text-white/80 font-medium">"AI adalah sistem yang mengenali pola dari data dan memprediksi output berdasarkan pola tersebut"</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Analogy Section -->
+                  <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div class="glass p-5 rounded-xl">
+                      <div class="text-sm text-purple-400 font-mono mb-2">ANALOGI: STAFF OFFICER SUPER CEPAT</div>
+                      <p class="text-white/70 text-sm leading-relaxed">
+                        Bayangkan seorang staff officer yang sudah membaca <strong class="text-white">jutaan dokumen</strong> — 
+                        intel reports, SITREP, doktrinal manuals, historical operations. Ketika Anda bertanya, 
+                        ia tidak "berpikir" seperti manusia, tapi <strong class="text-white">mencocokkan pola</strong> 
+                        dari semua yang pernah dibaca untuk menghasilkan respons yang paling relevan.
+                      </p>
+                    </div>
+                    <div class="glass p-5 rounded-xl">
+                      <div class="text-sm text-tactical-cyan font-mono mb-2">ANALOGI: AUTOCOMPLETE YANG SANGAT PINTAR</div>
+                      <p class="text-white/70 text-sm leading-relaxed">
+                        Ketika Anda mengetik di smartphone, autocomplete memprediksi kata berikutnya. 
+                        AI seperti ChatGPT/Claude/Gemini bekerja dengan prinsip sama — tapi dengan 
+                        <strong class="text-white">triliunan parameter</strong> dan kemampuan memprediksi 
+                        bukan hanya kata, tapi paragraf, analisis, bahkan strategi.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- How LLM Works - Simplified -->
+                  <div class="glass p-5 rounded-xl">
+                    <div class="text-sm text-purple-400 font-mono mb-4">CARA KERJA LLM (LARGE LANGUAGE MODEL)</div>
+                    <div class="flex flex-wrap items-center justify-center gap-3 text-sm">
+                      <div class="px-4 py-3 bg-blue-500/20 border border-blue-500/30 rounded-lg text-center">
+                        <div class="text-blue-400 font-semibold">INPUT</div>
+                        <div class="text-xs text-white/50">Prompt Anda</div>
+                      </div>
+                      <svg class="w-6 h-6 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                      </svg>
+                      <div class="px-4 py-3 bg-purple-500/20 border border-purple-500/30 rounded-lg text-center">
+                        <div class="text-purple-400 font-semibold">PATTERN MATCHING</div>
+                        <div class="text-xs text-white/50">Cocokkan dengan training data</div>
+                      </div>
+                      <svg class="w-6 h-6 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                      </svg>
+                      <div class="px-4 py-3 bg-amber-500/20 border border-amber-500/30 rounded-lg text-center">
+                        <div class="text-amber-400 font-semibold">PREDICTION</div>
+                        <div class="text-xs text-white/50">Prediksi token berikutnya</div>
+                      </div>
+                      <svg class="w-6 h-6 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                      </svg>
+                      <div class="px-4 py-3 bg-green-500/20 border border-green-500/30 rounded-lg text-center">
+                        <div class="text-green-400 font-semibold">OUTPUT</div>
+                        <div class="text-xs text-white/50">Respons yang dihasilkan</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 2: Capabilities vs Limitations -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-mono text-sm font-bold">2</div>
+                    <h4 class="font-semibold text-lg">Kapabilitas vs Limitasi AI</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Capabilities -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-green-500">
+                      <div class="flex items-center gap-2 text-green-400 font-semibold mb-4">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        APA YANG AI BISA LAKUKAN
+                      </div>
+                      <div class="space-y-3">
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-green-400">📊 Analisis Data Masif</div>
+                          <div class="text-xs text-white/60 mt-1">Memproses ribuan halaman dokumen dalam hitungan menit</div>
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-green-400">🔍 Pattern Recognition</div>
+                          <div class="text-xs text-white/60 mt-1">Menemukan pola tersembunyi dalam data kompleks</div>
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-green-400">📝 Sintesis Informasi</div>
+                          <div class="text-xs text-white/60 mt-1">Menggabungkan multiple sources menjadi summary koheren</div>
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-green-400">💡 Generasi Opsi</div>
+                          <div class="text-xs text-white/60 mt-1">Brainstorm alternatives dan Course of Actions</div>
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-green-400">⚡ Kecepatan</div>
+                          <div class="text-xs text-white/60 mt-1">24/7 availability, respons dalam detik</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Limitations -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-red-500">
+                      <div class="flex items-center gap-2 text-red-400 font-semibold mb-4">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        APA YANG AI TIDAK BISA / LEMAH
+                      </div>
+                      <div class="space-y-3">
+                        <div class="p-3 bg-red-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-red-400">🎭 Halusinasi</div>
+                          <div class="text-xs text-white/60 mt-1">Bisa menghasilkan informasi yang terdengar benar tapi salah</div>
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-red-400">📡 Tidak Ada Real-World Sensing</div>
+                          <div class="text-xs text-white/60 mt-1">Tidak bisa "melihat" situasi lapangan secara real-time</div>
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-red-400">⚖️ Judgment Etis</div>
+                          <div class="text-xs text-white/60 mt-1">Tidak memiliki moral compass seperti manusia</div>
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-red-400">🔒 Knowledge Cutoff</div>
+                          <div class="text-xs text-white/60 mt-1">Tidak tahu events setelah tanggal training terakhir</div>
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg">
+                          <div class="font-medium text-sm text-red-400">🎯 Accountability</div>
+                          <div class="text-xs text-white/60 mt-1">Tidak bisa bertanggung jawab atas keputusan</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 3: Military Applications -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-mono text-sm font-bold">3</div>
+                    <h4 class="font-semibold text-lg">Aplikasi AI dalam Konteks Pertahanan</h4>
+                    <span class="text-xs text-white/40 font-mono">7 MENIT</span>
+                  </div>
+                  
+                  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="glass p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                      <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Intelligence Analysis</div>
+                      <div class="text-xs text-white/50">Sintesis multi-source intel, pattern detection</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                      <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Threat Assessment</div>
+                      <div class="text-xs text-white/50">Evaluasi ancaman, risk scoring, early warning</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                      <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Decision Support</div>
+                      <div class="text-xs text-white/50">COA analysis, wargaming, risk assessment</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                      <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Report Generation</div>
+                      <div class="text-xs text-white/50">SITREP, briefs, documentation automation</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Real Example -->
+                  <div class="glass p-5 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+                    <div class="text-sm text-purple-400 font-mono mb-3">💡 CONTOH KONKRET: INTELLIGENCE SUMMARY</div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="p-3 bg-white/5 rounded-lg">
+                        <div class="text-xs text-white/40 mb-2">TANPA AI:</div>
+                        <div class="text-sm text-white/60">Analyst membaca 50 halaman dokumen dari 5 sumber berbeda, menghabiskan 4-6 jam untuk menyusun summary yang koheren.</div>
+                      </div>
+                      <div class="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                        <div class="text-xs text-green-400 mb-2">DENGAN AI:</div>
+                        <div class="text-sm text-white/60">AI memproses semua dokumen dalam 5 menit, menghasilkan draft summary. Analyst review dan refine dalam 30 menit. Total: <strong class="text-green-400">~35 menit</strong>.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 4: Human-AI Relationship -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-mono text-sm font-bold">4</div>
+                    <h4 class="font-semibold text-lg">Posisi Human-AI dalam Pengambilan Keputusan</h4>
+                    <span class="text-xs text-white/40 font-mono">3 MENIT</span>
+                  </div>
+                  
+                  <div class="glass p-6 rounded-xl">
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+                      <div class="text-center">
+                        <div class="w-20 h-20 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center mx-auto mb-3">
+                          <span class="text-3xl">🧠</span>
+                        </div>
+                        <div class="font-semibold text-blue-400">HUMAN</div>
+                        <div class="text-xs text-white/50 mt-1">Judgment, Ethics, Accountability</div>
+                      </div>
+                      
+                      <div class="flex flex-col items-center gap-2">
+                        <svg class="w-8 h-8 text-purple-400 rotate-90 md:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                        <div class="px-3 py-1 bg-purple-500/20 rounded-full text-purple-400 text-xs font-mono">COLLABORATION</div>
+                      </div>
+                      
+                      <div class="text-center">
+                        <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center mx-auto mb-3">
+                          <span class="text-3xl">🤖</span>
+                        </div>
+                        <div class="font-semibold text-amber-400">AI</div>
+                        <div class="text-xs text-white/50 mt-1">Speed, Scale, Pattern Recognition</div>
+                      </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-tactical-amber/10 border border-tactical-amber/20 rounded-xl text-center">
+                      <div class="text-tactical-amber font-semibold mb-2">🎯 PRINSIP UTAMA</div>
+                      <p class="text-white/80">"AI adalah <strong class="text-white">force multiplier</strong>, bukan pengganti. Keputusan akhir dan tanggung jawab tetap di tangan <strong class="text-white">komandan</strong>."</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Discussion Questions -->
+                <div class="p-5 bg-gradient-to-r from-purple-500/10 to-transparent border border-purple-500/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-purple-400 font-semibold mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Pertanyaan Diskusi (Opsional)
+                  </div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="p-3 bg-white/5 rounded-lg text-sm text-white/70">
+                      "Di area mana AI bisa paling membantu dalam pekerjaan Anda sehari-hari?"
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-lg text-sm text-white/70">
+                      "Apa concern terbesar Anda tentang penggunaan AI dalam konteks militer?"
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="glass p-5 rounded-xl border-2 border-purple-500/30">
+                  <div class="flex items-center gap-2 text-purple-400 font-semibold mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Key Takeaways Sesi 1.1
+                  </div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                      <span class="text-purple-400 font-bold">1.</span>
+                      <span class="text-white/70 text-sm">AI adalah <strong class="text-white">pattern recognition at scale</strong>, bukan "pikiran buatan"</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-purple-400 font-bold">2.</span>
+                      <span class="text-white/70 text-sm">AI <strong class="text-white">sangat cepat</strong> tapi bisa <strong class="text-red-400">salah (halusinasi)</strong></span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-purple-400 font-bold">3.</span>
+                      <span class="text-white/70 text-sm">Gunakan AI untuk <strong class="text-white">mempercepat</strong>, bukan <strong class="text-white">menggantikan</strong> judgment Anda</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-purple-400 font-bold">4.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Selalu verifikasi</strong> output AI sebelum mengambil keputusan</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 2 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #22d3ee; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #22d3ee;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-tactical-cyan/20 flex items-center justify-center">
+                  <span class="font-display text-tactical-cyan text-xl">1.2</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-tactical-cyan mb-1">SESI 2 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Framework RISEN: Prompt Engineering untuk Militer</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-01-02-framework-risen.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-tactical-cyan/20 hover:bg-tactical-cyan/30 text-tactical-cyan text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-tactical-cyan/15 rounded-full text-tactical-cyan text-xs font-mono">FRAMEWORK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10 space-y-8">
+                
+                <!-- Learning Objectives -->
+                <div class="p-4 bg-tactical-cyan/10 border border-tactical-cyan/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-tactical-cyan font-semibold mb-3">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tujuan Pembelajaran Sesi Ini
+                  </div>
+                  <ul class="grid sm:grid-cols-2 gap-2 text-sm text-white/70">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-cyan"></span>
+                      Memahami 5 komponen framework RISEN secara mendalam
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-cyan"></span>
+                      Mampu menyusun prompt terstruktur untuk berbagai kebutuhan
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-cyan"></span>
+                      Menghindari kesalahan umum dalam prompting
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-cyan"></span>
+                      Menerapkan framework untuk konteks operasional militer
+                    </li>
+                  </ul>
+                </div>
+                
+                <!-- Why Framework Matters -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-cyan/20 flex items-center justify-center text-tactical-cyan font-mono text-sm font-bold">1</div>
+                    <h4 class="font-semibold text-lg">Mengapa Perlu Framework?</h4>
+                    <span class="text-xs text-white/40 font-mono">5 MENIT</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div class="glass p-5 rounded-xl border-l-4 border-red-500">
+                      <div class="text-sm text-red-400 font-mono mb-3">❌ PROMPT TANPA STRUKTUR</div>
+                      <div class="p-3 bg-white/5 rounded-lg font-mono text-sm text-white/60 mb-3">
+                        "Tolong analisis situasi di perbatasan utara"
+                      </div>
+                      <div class="text-xs text-white/50">
+                        <strong class="text-red-400">Masalah:</strong> Terlalu vague, tidak ada konteks role, tidak jelas output yang diinginkan, tidak ada batasan format.
+                      </div>
+                    </div>
+                    <div class="glass p-5 rounded-xl border-l-4 border-green-500">
+                      <div class="text-sm text-green-400 font-mono mb-3">✓ PROMPT DENGAN RISEN</div>
+                      <div class="p-3 bg-white/5 rounded-lg font-mono text-xs text-white/60 mb-3">
+                        "Sebagai analis intelijen senior, analisis data radar 48 jam terakhir di sektor utara. Identifikasi pola, nilai tingkat ancaman, rekomendasikan respons. Output: Brief 1 halaman dengan format Executive Summary + Analisis + Rekomendasi."
+                      </div>
+                      <div class="text-xs text-white/50">
+                        <strong class="text-green-400">Keuntungan:</strong> Spesifik, terstruktur, output jelas, mudah di-iterate.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- RISEN Deep Dive -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-cyan/20 flex items-center justify-center text-tactical-cyan font-mono text-sm font-bold">2</div>
+                    <h4 class="font-semibold text-lg">Deep Dive: 5 Komponen RISEN</h4>
+                    <span class="text-xs text-white/40 font-mono">25 MENIT</span>
+                  </div>
+                  
+                  <!-- R - Role -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-tactical-cyan">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-tactical-cyan/20 flex items-center justify-center">
+                        <span class="text-2xl font-display text-tactical-cyan">R</span>
+                      </div>
+                      <div>
+                        <h5 class="font-semibold text-lg text-tactical-cyan">Role — Siapa AI-nya?</h5>
+                        <p class="text-sm text-white/50">Memberikan konteks expertise dan perspektif</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-sm text-white/60 mb-3">
+                          <strong class="text-white">Mengapa penting?</strong> Role menentukan "lensa" yang digunakan AI untuk memproses informasi. 
+                          Seorang "analis intelijen" akan fokus pada pola ancaman, sementara "logistics officer" akan fokus pada supply chain.
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg mb-2">
+                          <div class="text-xs text-red-400 mb-1">❌ Kurang Efektif:</div>
+                          <div class="font-mono text-xs text-white/60">"Analisis data ini"</div>
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                          <div class="text-xs text-green-400 mb-1">✓ Lebih Efektif:</div>
+                          <div class="font-mono text-xs text-white/60">"Sebagai analis intelijen senior dengan 15 tahun pengalaman di bidang air defense..."</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm text-white/60 mb-3"><strong class="text-white">Contoh Role untuk Konteks Militer:</strong></div>
+                        <div class="space-y-2">
+                          <div class="px-3 py-2 bg-tactical-cyan/10 rounded-lg text-sm">
+                            <span class="text-tactical-cyan">●</span> Analis Intelijen Senior TNI AU
+                          </div>
+                          <div class="px-3 py-2 bg-tactical-cyan/10 rounded-lg text-sm">
+                            <span class="text-tactical-cyan">●</span> Staff Officer Operasi
+                          </div>
+                          <div class="px-3 py-2 bg-tactical-cyan/10 rounded-lg text-sm">
+                            <span class="text-tactical-cyan">●</span> Advisor Keamanan Nasional
+                          </div>
+                          <div class="px-3 py-2 bg-tactical-cyan/10 rounded-lg text-sm">
+                            <span class="text-tactical-cyan">●</span> Air Defense Specialist
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- I - Instructions -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-blue-500">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                        <span class="text-2xl font-display text-blue-400">I</span>
+                      </div>
+                      <div>
+                        <h5 class="font-semibold text-lg text-blue-400">Instructions — Apa Tugasnya?</h5>
+                        <p class="text-sm text-white/50">Perintah utama yang jelas dan spesifik</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-sm text-white/60 mb-3">
+                          <strong class="text-white">Tips Menulis Instructions:</strong>
+                        </div>
+                        <ul class="space-y-2 text-sm text-white/60">
+                          <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">→</span>
+                            Gunakan <strong class="text-white">kata kerja aktif</strong>: Analisis, Identifikasi, Evaluasi, Bandingkan, Sintesis
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">→</span>
+                            <strong class="text-white">Satu tugas utama</strong> per prompt. Jika kompleks, pecah menjadi beberapa prompt.
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">→</span>
+                            Hindari ambiguitas: "bahas" → ganti dengan "jelaskan penyebab dan dampak"
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div class="text-sm text-white/60 mb-3"><strong class="text-white">Contoh Instructions:</strong></div>
+                        <div class="space-y-2">
+                          <div class="p-3 bg-blue-500/10 rounded-lg">
+                            <div class="font-mono text-xs text-white/60">"<strong class="text-blue-400">Analisis</strong> pola pergerakan pesawat asing dalam 72 jam terakhir dan <strong class="text-blue-400">identifikasi</strong> anomali yang memerlukan perhatian."</div>
+                          </div>
+                          <div class="p-3 bg-blue-500/10 rounded-lg">
+                            <div class="font-mono text-xs text-white/60">"<strong class="text-blue-400">Bandingkan</strong> tiga opsi COA berikut berdasarkan kriteria: risiko, resource requirement, dan probability of success."</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- S - Steps -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-purple-500">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                        <span class="text-2xl font-display text-purple-400">S</span>
+                      </div>
+                      <div>
+                        <h5 class="font-semibold text-lg text-purple-400">Steps — Langkah-Langkah</h5>
+                        <p class="text-sm text-white/50">Breakdown proses yang harus dilakukan AI</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-sm text-white/60 mb-3">
+                          <strong class="text-white">Mengapa Steps penting?</strong>
+                        </div>
+                        <p class="text-sm text-white/60 mb-3">
+                          Steps memaksa AI untuk berpikir <strong class="text-white">secara sistematis</strong>. Tanpa steps, AI mungkin melompat ke kesimpulan tanpa analisis proper.
+                        </p>
+                        <div class="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                          <div class="text-xs text-purple-400 mb-2">💡 PRO TIP</div>
+                          <div class="text-xs text-white/60">Gunakan numbered list (1, 2, 3) untuk steps. AI akan mengikuti urutan dengan lebih konsisten.</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm text-white/60 mb-3"><strong class="text-white">Contoh Steps untuk Threat Assessment:</strong></div>
+                        <div class="p-3 bg-white/5 rounded-lg font-mono text-xs text-white/60 space-y-1">
+                          <div><span class="text-purple-400">1.</span> Review semua data yang tersedia</div>
+                          <div><span class="text-purple-400">2.</span> Identifikasi pola dan anomali</div>
+                          <div><span class="text-purple-400">3.</span> Korelasikan dengan data historis</div>
+                          <div><span class="text-purple-400">4.</span> Nilai tingkat ancaman (Low/Med/High)</div>
+                          <div><span class="text-purple-400">5.</span> Rekomendasikan respons</div>
+                          <div><span class="text-purple-400">6.</span> Identifikasi intelligence gaps</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- E - End Goal -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-amber-500">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                        <span class="text-2xl font-display text-amber-400">E</span>
+                      </div>
+                      <div>
+                        <h5 class="font-semibold text-lg text-amber-400">End Goal — Target Akhir</h5>
+                        <p class="text-sm text-white/50">Output spesifik yang diharapkan</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-sm text-white/60 mb-3">
+                          <strong class="text-white">Jelaskan output dengan detail:</strong>
+                        </div>
+                        <ul class="space-y-2 text-sm text-white/60">
+                          <li class="flex items-start gap-2">
+                            <span class="text-amber-400 mt-1">→</span>
+                            <strong class="text-white">Jenis dokumen:</strong> Brief, Report, Summary, Analysis, Recommendation
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="text-amber-400 mt-1">→</span>
+                            <strong class="text-white">Audience:</strong> Untuk siapa? Komandan? Staff meeting? Publik?
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="text-amber-400 mt-1">→</span>
+                            <strong class="text-white">Decision support:</strong> Apakah perlu actionable recommendations?
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div class="text-sm text-white/60 mb-3"><strong class="text-white">Contoh End Goal:</strong></div>
+                        <div class="space-y-2">
+                          <div class="p-3 bg-amber-500/10 rounded-lg">
+                            <div class="font-mono text-xs text-white/60">"Hasilkan <strong class="text-amber-400">intelligence brief 1 halaman</strong> yang bisa dipresentasikan kepada <strong class="text-amber-400">Panglima</strong> dalam morning briefing."</div>
+                          </div>
+                          <div class="p-3 bg-amber-500/10 rounded-lg">
+                            <div class="font-mono text-xs text-white/60">"Output berupa <strong class="text-amber-400">decision matrix</strong> dengan scoring untuk setiap COA agar <strong class="text-amber-400">mudah dibandingkan</strong>."</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- N - Narrowing -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-green-500">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                        <span class="text-2xl font-display text-green-400">N</span>
+                      </div>
+                      <div>
+                        <h5 class="font-semibold text-lg text-green-400">Narrowing — Batasan & Format</h5>
+                        <p class="text-sm text-white/50">Constraints yang membuat output lebih fokus</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-sm text-white/60 mb-3">
+                          <strong class="text-white">Jenis Narrowing:</strong>
+                        </div>
+                        <div class="space-y-2">
+                          <div class="p-2 bg-green-500/10 rounded-lg text-sm">
+                            <span class="text-green-400 font-semibold">Length:</span> <span class="text-white/60">"Maksimal 500 kata" / "1 halaman" / "3 paragraf"</span>
+                          </div>
+                          <div class="p-2 bg-green-500/10 rounded-lg text-sm">
+                            <span class="text-green-400 font-semibold">Format:</span> <span class="text-white/60">"Bullet points" / "Tabel" / "Executive Summary + Detail"</span>
+                          </div>
+                          <div class="p-2 bg-green-500/10 rounded-lg text-sm">
+                            <span class="text-green-400 font-semibold">Tone:</span> <span class="text-white/60">"Formal" / "Direct" / "Objective tanpa opini"</span>
+                          </div>
+                          <div class="p-2 bg-green-500/10 rounded-lg text-sm">
+                            <span class="text-green-400 font-semibold">Scope:</span> <span class="text-white/60">"Fokus pada 72 jam terakhir" / "Hanya sektor utara"</span>
+                          </div>
+                          <div class="p-2 bg-green-500/10 rounded-lg text-sm">
+                            <span class="text-green-400 font-semibold">Language:</span> <span class="text-white/60">"Bahasa Indonesia formal" / "Gunakan terminologi NATO"</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm text-white/60 mb-3"><strong class="text-white">Contoh Narrowing Lengkap:</strong></div>
+                        <div class="p-4 bg-white/5 rounded-lg font-mono text-xs text-white/60 space-y-2">
+                          <div>• Format: Executive Summary (50 kata) + Analisis (200 kata) + Rekomendasi (100 kata)</div>
+                          <div>• Gunakan bullet points untuk key findings</div>
+                          <div>• Sertakan confidence level (Low/Medium/High) untuk setiap assessment</div>
+                          <div>• Bahasa Indonesia formal, hindari jargon teknis berlebihan</div>
+                          <div>• Fokus pada ancaman prioritas tinggi saja</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Complete Example -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-cyan/20 flex items-center justify-center text-tactical-cyan font-mono text-sm font-bold">3</div>
+                    <h4 class="font-semibold text-lg">Contoh Prompt Lengkap dengan RISEN</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="glass p-6 rounded-xl bg-gradient-to-br from-tactical-cyan/10 to-purple-500/10 border border-tactical-cyan/20">
+                    <div class="text-sm text-tactical-cyan font-mono mb-4">📋 PROMPT TEMPLATE: INTELLIGENCE SUMMARY</div>
+                    <div class="p-4 bg-navy-900 rounded-lg font-mono text-sm leading-relaxed space-y-3">
+                      <div>
+                        <span class="text-tactical-cyan font-semibold">[ROLE]</span>
+                        <span class="text-white/70"> Kamu adalah analis intelijen senior TNI AU dengan spesialisasi air defense dan pengalaman 15 tahun dalam threat assessment.</span>
+                      </div>
+                      <div>
+                        <span class="text-blue-400 font-semibold">[INSTRUCTIONS]</span>
+                        <span class="text-white/70"> Analisis data pergerakan pesawat asing di sektor utara ADIZ Indonesia selama 48 jam terakhir. Identifikasi pola yang tidak biasa dan nilai potensi ancaman.</span>
+                      </div>
+                      <div>
+                        <span class="text-purple-400 font-semibold">[STEPS]</span>
+                        <span class="text-white/70"> Lakukan analisis dengan langkah berikut:</span>
+                        <div class="pl-4 text-white/60">
+                          1. Review data radar dan korelasikan dengan data ADS-B<br>
+                          2. Identifikasi pola flight path dan frekuensi<br>
+                          3. Bandingkan dengan baseline aktivitas normal<br>
+                          4. Nilai tingkat ancaman menggunakan skala Low/Medium/High<br>
+                          5. Rumuskan rekomendasi respons
+                        </div>
+                      </div>
+                      <div>
+                        <span class="text-amber-400 font-semibold">[END GOAL]</span>
+                        <span class="text-white/70"> Hasilkan intelligence brief 1 halaman yang siap dipresentasikan kepada Panglima Koopsudnas dalam morning briefing.</span>
+                      </div>
+                      <div>
+                        <span class="text-green-400 font-semibold">[NARROWING]</span>
+                        <span class="text-white/70"> Format output:</span>
+                        <div class="pl-4 text-white/60">
+                          • Executive Summary (maksimal 50 kata)<br>
+                          • Key Findings (3-5 bullet points)<br>
+                          • Threat Assessment dengan confidence level<br>
+                          • Recommended Actions (2-3 opsi)<br>
+                          • Intelligence Gaps yang perlu di-follow up<br>
+                          • Total maksimal 400 kata, bahasa Indonesia formal
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Common Mistakes -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 font-mono text-sm font-bold">!</div>
+                    <h4 class="font-semibold text-lg">Kesalahan Umum yang Harus Dihindari</h4>
+                    <span class="text-xs text-white/40 font-mono">5 MENIT</span>
+                  </div>
+                  
+                  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Terlalu Vague</div>
+                      <div class="text-xs text-white/50 mb-2">"Analisis situasi"</div>
+                      <div class="text-xs text-green-400">✓ "Analisis pola pergerakan pesawat di sektor X selama 48 jam"</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Tidak Ada Output Spec</div>
+                      <div class="text-xs text-white/50 mb-2">"Buat laporan"</div>
+                      <div class="text-xs text-green-400">✓ "Buat brief 1 halaman dengan format Exec Summary + Detail"</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Terlalu Banyak Sekaligus</div>
+                      <div class="text-xs text-white/50 mb-2">10 tugas dalam 1 prompt</div>
+                      <div class="text-xs text-green-400">✓ Pecah menjadi beberapa prompt terpisah</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Tidak Ada Konteks</div>
+                      <div class="text-xs text-white/50 mb-2">Tidak kasih background data</div>
+                      <div class="text-xs text-green-400">✓ Sertakan data atau paste dokumen yang perlu dianalisis</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Tidak Iterate</div>
+                      <div class="text-xs text-white/50 mb-2">Terima output pertama begitu saja</div>
+                      <div class="text-xs text-green-400">✓ Minta AI untuk refine, expand, atau adjust</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl border-t-2 border-red-500">
+                      <div class="text-red-400 font-semibold text-sm mb-2">❌ Tidak Verifikasi</div>
+                      <div class="text-xs text-white/50 mb-2">Percaya 100% output AI</div>
+                      <div class="text-xs text-green-400">✓ Selalu cross-check fakta dan angka penting</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="glass p-5 rounded-xl border-2 border-tactical-cyan/30">
+                  <div class="flex items-center gap-2 text-tactical-cyan font-semibold mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Key Takeaways Sesi 1.2
+                  </div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">1.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">RISEN</strong> = Role, Instructions, Steps, End Goal, Narrowing</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">2.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Role</strong> memberikan "lensa" analisis yang tepat</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">3.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Steps</strong> memastikan AI berpikir sistematis</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">4.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Narrowing</strong> membuat output actionable dan fokus</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">5.</span>
+                      <span class="text-white/70 text-sm">Prompt yang baik bisa di-<strong class="text-white">iterate dan improve</strong></span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-cyan font-bold">6.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Verifikasi</strong> output AI sebelum digunakan</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 3 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #10b981; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #10b981;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-tactical-green/20 flex items-center justify-center">
+                  <span class="font-display text-tactical-green text-xl">1.3</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-tactical-green mb-1">SESI 3 • 60 MENIT</div>
+                  <h3 class="text-xl font-semibold">Hands-On: Prompt untuk Analisis Situasi Taktis</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-01-03-hands-on-prompt.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-tactical-green/20 hover:bg-tactical-green/30 text-tactical-green text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-tactical-green/15 rounded-full text-tactical-green text-xs font-mono">PRAKTIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10 space-y-8">
+                
+                <!-- Learning Objectives -->
+                <div class="p-4 bg-tactical-green/10 border border-tactical-green/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-tactical-green font-semibold mb-3">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tujuan Pembelajaran Sesi Ini
+                  </div>
+                  <ul class="grid sm:grid-cols-2 gap-2 text-sm text-white/70">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-green"></span>
+                      Menerapkan framework RISEN dalam skenario operasional nyata
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-green"></span>
+                      Mampu menyusun prompt untuk analisis situasi taktis
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-green"></span>
+                      Praktik iterative prompting untuk menyempurnakan output
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-green"></span>
+                      Menghasilkan intelligence brief yang actionable
+                    </li>
+                  </ul>
+                </div>
+                
+                <!-- Part 1: Guided Demo -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-green/20 flex items-center justify-center text-tactical-green font-mono text-sm font-bold">1</div>
+                    <h4 class="font-semibold text-lg">Guided Demo: 3 Skenario Umum</h4>
+                    <span class="text-xs text-white/40 font-mono">20 MENIT</span>
+                  </div>
+                  
+                  <p class="text-white/60 text-sm mb-4">Instruktur mendemonstrasikan prompt untuk 3 skenario yang sering ditemui dalam operasi:</p>
+                  
+                  <!-- Scenario A: Summarizing Long Report -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-tactical-green">
+                    <div class="flex items-center gap-2 text-tactical-green font-semibold mb-3">
+                      <span class="w-6 h-6 rounded-full bg-tactical-green/20 flex items-center justify-center text-sm">A</span>
+                      Merangkum Laporan Intelijen Panjang
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">SKENARIO:</div>
+                        <p class="text-sm text-white/60 mb-3">Anda menerima laporan intelijen 15 halaman dari berbagai sumber. Perlu dirangkum untuk morning briefing dalam 5 menit.</p>
+                        
+                        <div class="text-xs text-white/40 mb-2">PROMPT TEMPLATE:</div>
+                        <div class="p-3 bg-navy-900 rounded-lg font-mono text-xs text-white/60 space-y-1">
+                          <div><span class="text-tactical-cyan">[R]</span> Analis intelijen senior</div>
+                          <div><span class="text-blue-400">[I]</span> Rangkum laporan ini untuk briefing 5 menit</div>
+                          <div><span class="text-purple-400">[S]</span> 1) Identifikasi 3-5 key points, 2) Highlight ancaman prioritas, 3) Note intelligence gaps</div>
+                          <div><span class="text-amber-400">[E]</span> Executive summary 150 kata</div>
+                          <div><span class="text-green-400">[N]</span> Format: BLUF + Key Points + Gaps. Bahasa Indonesia.</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">CONTOH OUTPUT:</div>
+                        <div class="p-3 bg-white/5 rounded-lg text-xs text-white/60">
+                          <div class="font-semibold text-tactical-green mb-2">BLUF:</div>
+                          <p class="mb-2">Aktivitas pesawat asing meningkat 40% di sektor utara. Tingkat ancaman: MEDIUM. Rekomendasi: Tingkatkan patroli.</p>
+                          <div class="font-semibold text-tactical-green mb-2">Key Points:</div>
+                          <ul class="list-disc list-inside space-y-1">
+                            <li>12 intercept dalam 72 jam (vs rata-rata 7)</li>
+                            <li>Pola baru: pendekatan dari arah NE</li>
+                            <li>2 pesawat belum teridentifikasi jenis</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Scenario B: Anomaly Detection -->
+                  <div class="glass p-5 rounded-xl mb-4 border-l-4 border-blue-500">
+                    <div class="flex items-center gap-2 text-blue-400 font-semibold mb-3">
+                      <span class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-sm">B</span>
+                      Mengidentifikasi Anomali dalam Data
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">SKENARIO:</div>
+                        <p class="text-sm text-white/60 mb-3">Data radar menunjukkan 100+ track dalam 48 jam. Perlu identifikasi mana yang anomali dan memerlukan perhatian.</p>
+                        
+                        <div class="text-xs text-white/40 mb-2">PROMPT TEMPLATE:</div>
+                        <div class="p-3 bg-navy-900 rounded-lg font-mono text-xs text-white/60 space-y-1">
+                          <div><span class="text-tactical-cyan">[R]</span> Radar analyst dengan expertise pattern recognition</div>
+                          <div><span class="text-blue-400">[I]</span> Identifikasi anomali dari data radar berikut</div>
+                          <div><span class="text-purple-400">[S]</span> 1) Bandingkan dengan baseline normal, 2) Flag deviasi >20%, 3) Prioritaskan berdasarkan risk</div>
+                          <div><span class="text-amber-400">[E]</span> Daftar anomali dengan severity rating</div>
+                          <div><span class="text-green-400">[N]</span> Tabel dengan kolom: Track ID, Anomali, Severity (High/Med/Low), Action Required</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">CONTOH OUTPUT:</div>
+                        <div class="p-3 bg-white/5 rounded-lg text-xs">
+                          <table class="w-full text-white/60">
+                            <thead>
+                              <tr class="border-b border-white/10">
+                                <th class="text-left py-1">Track</th>
+                                <th class="text-left py-1">Anomali</th>
+                                <th class="text-left py-1">Sev</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr class="border-b border-white/5">
+                                <td class="py-1">TR-047</td>
+                                <td>Altitude drop 5000ft dalam 30s</td>
+                                <td class="text-red-400">HIGH</td>
+                              </tr>
+                              <tr class="border-b border-white/5">
+                                <td class="py-1">TR-089</td>
+                                <td>No transponder, unusual path</td>
+                                <td class="text-red-400">HIGH</td>
+                              </tr>
+                              <tr>
+                                <td class="py-1">TR-112</td>
+                                <td>Speed inconsistent</td>
+                                <td class="text-amber-400">MED</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Scenario C: Multi-Source SITREP -->
+                  <div class="glass p-5 rounded-xl border-l-4 border-purple-500">
+                    <div class="flex items-center gap-2 text-purple-400 font-semibold mb-3">
+                      <span class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-sm">C</span>
+                      Menyusun SITREP dari Multiple Inputs
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">SKENARIO:</div>
+                        <p class="text-sm text-white/60 mb-3">Anda memiliki input dari: laporan radar, HUMINT field report, dan OSINT media monitoring. Perlu disatukan menjadi SITREP koheren.</p>
+                        
+                        <div class="text-xs text-white/40 mb-2">PROMPT TEMPLATE:</div>
+                        <div class="p-3 bg-navy-900 rounded-lg font-mono text-xs text-white/60 space-y-1">
+                          <div><span class="text-tactical-cyan">[R]</span> Staff officer Koopsudnas</div>
+                          <div><span class="text-blue-400">[I]</span> Susun SITREP dari 3 sumber intel berikut</div>
+                          <div><span class="text-purple-400">[S]</span> 1) Cross-reference semua sumber, 2) Identifikasi corroborating info, 3) Note contradictions, 4) Assess overall picture</div>
+                          <div><span class="text-amber-400">[E]</span> SITREP format standar untuk Panglima</div>
+                          <div><span class="text-green-400">[N]</span> Format: Situation + Enemy + Friendly + Assessment + Recommendation. Max 300 kata.</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-xs text-white/40 mb-2">ITERATIVE PROMPTING:</div>
+                        <div class="space-y-2">
+                          <div class="p-2 bg-white/5 rounded-lg text-xs text-white/60">
+                            <span class="text-tactical-green">Iteration 1:</span> "Bagus, tapi tolong tambahkan confidence level untuk setiap assessment"
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg text-xs text-white/60">
+                            <span class="text-tactical-green">Iteration 2:</span> "Highlight contradictions antara HUMINT dan OSINT"
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg text-xs text-white/60">
+                            <span class="text-tactical-green">Iteration 3:</span> "Tambahkan recommended actions yang lebih spesifik"
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 2: Simulation Data -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-green/20 flex items-center justify-center text-tactical-green font-mono text-sm font-bold">2</div>
+                    <h4 class="font-semibold text-lg">Data Simulasi untuk Latihan</h4>
+                    <span class="text-xs text-white/40 font-mono">5 MENIT REVIEW</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div class="glass p-4 rounded-xl">
+                      <div class="text-sm text-tactical-green font-mono mb-3">📊 DATA SET A: RADAR TRACKING (48 JAM)</div>
+                      <div class="p-3 bg-navy-900 rounded-lg font-mono text-xs text-white/50 max-h-40 overflow-y-auto">
+                        <pre>
+TRACK_ID | TIME_UTC | LAT | LON | ALT_FT | SPEED_KT | HEADING
+TR-001 | 2026-04-11 08:15 | -2.15 | 117.45 | 35000 | 450 | 270
+TR-002 | 2026-04-11 08:17 | -2.18 | 117.42 | 34500 | 455 | 268
+TR-003 | 2026-04-11 08:22 | -2.21 | 117.38 | 34000 | 460 | 265
+TR-004 | 2026-04-11 09:45 | -1.85 | 118.20 | 28000 | 380 | 185
+TR-005 | 2026-04-11 09:47 | -1.82 | 118.18 | 27500 | 385 | 183
+[ANOMALY] TR-006 | 2026-04-11 10:30 | -2.05 | 117.90 | 15000 | 250 | 090
+TR-007 | 2026-04-11 11:00 | -2.10 | 117.85 | 33000 | 440 | 275
+[ANOMALY] TR-008 | 2026-04-11 14:22 | -1.95 | 118.05 | NO_DATA | 0 | 0
+...
+(Total 87 tracks, 6 flagged anomalies)</pre>
+                      </div>
+                    </div>
+                    
+                    <div class="glass p-4 rounded-xl">
+                      <div class="text-sm text-blue-400 font-mono mb-3">📝 DATA SET B: FIELD REPORT</div>
+                      <div class="p-3 bg-navy-900 rounded-lg text-xs text-white/50 max-h-40 overflow-y-auto">
+                        <p class="mb-2"><strong class="text-white/70">FROM:</strong> Unit Patroli Sektor Utara</p>
+                        <p class="mb-2"><strong class="text-white/70">DTG:</strong> 112230Z APR 2026</p>
+                        <p class="mb-2"><strong class="text-white/70">SUBJ:</strong> Laporan Aktivitas Tidak Biasa</p>
+                        <p class="mb-2"><strong class="text-white/70">BODY:</strong></p>
+                        <p>1. Pada 112100Z, teramati pesawat tidak dikenal melintas di grid reference XY-4532. Estimasi ketinggian 15.000 ft.</p>
+                        <p>2. Pesawat tidak merespons komunikasi radio pada frekuensi standar.</p>
+                        <p>3. Durasi pengamatan: 4 menit sebelum hilang dari visual.</p>
+                        <p>4. Cuaca cerah, visibility >10km.</p>
+                        <p class="mt-2"><strong class="text-white/70">ASSESSMENT:</strong> Kemungkinan surveillance flight. Rekomendasi tingkatkan kewaspadaan.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 3: Independent Exercise -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-green/20 flex items-center justify-center text-tactical-green font-mono text-sm font-bold">3</div>
+                    <h4 class="font-semibold text-lg">Latihan Mandiri: Threat Assessment Brief</h4>
+                    <span class="text-xs text-white/40 font-mono">30 MENIT</span>
+                  </div>
+                  
+                  <div class="glass p-6 rounded-xl bg-gradient-to-br from-tactical-green/10 to-blue-500/10 border border-tactical-green/30">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-10 h-10 rounded-xl bg-tactical-green/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-tactical-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="font-semibold text-tactical-green">EXERCISE: GARUDA ALERT</div>
+                        <div class="text-sm text-white/50">Buat Threat Assessment Brief dari data simulasi</div>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h5 class="font-semibold text-sm mb-3 text-white/80">📋 Instruksi:</h5>
+                        <ol class="space-y-2 text-sm text-white/60">
+                          <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-tactical-green/20 flex items-center justify-center text-tactical-green text-xs flex-shrink-0">1</span>
+                            <span>Gunakan Data Set A (Radar) dan Data Set B (Field Report) di atas</span>
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-tactical-green/20 flex items-center justify-center text-tactical-green text-xs flex-shrink-0">2</span>
+                            <span>Susun prompt menggunakan framework RISEN</span>
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-tactical-green/20 flex items-center justify-center text-tactical-green text-xs flex-shrink-0">3</span>
+                            <span>Generate Threat Assessment Brief (1 halaman)</span>
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-tactical-green/20 flex items-center justify-center text-tactical-green text-xs flex-shrink-0">4</span>
+                            <span>Iterate minimal 2x untuk menyempurnakan output</span>
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-tactical-green/20 flex items-center justify-center text-tactical-green text-xs flex-shrink-0">5</span>
+                            <span>Presentasikan hasil ke kelompok (2 menit per orang)</span>
+                          </li>
+                        </ol>
+                      </div>
+                      
+                      <div>
+                        <h5 class="font-semibold text-sm mb-3 text-white/80">✅ Kriteria Sukses:</h5>
+                        <div class="space-y-2">
+                          <div class="p-2 bg-white/5 rounded-lg flex items-center justify-between">
+                            <span class="text-sm text-white/60">Prompt menggunakan RISEN lengkap</span>
+                            <span class="text-xs text-tactical-green font-mono">20%</span>
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg flex items-center justify-between">
+                            <span class="text-sm text-white/60">Output mencakup semua data sources</span>
+                            <span class="text-xs text-tactical-green font-mono">25%</span>
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg flex items-center justify-between">
+                            <span class="text-sm text-white/60">Threat level dengan justifikasi</span>
+                            <span class="text-xs text-tactical-green font-mono">20%</span>
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg flex items-center justify-between">
+                            <span class="text-sm text-white/60">Actionable recommendations</span>
+                            <span class="text-xs text-tactical-green font-mono">20%</span>
+                          </div>
+                          <div class="p-2 bg-white/5 rounded-lg flex items-center justify-between">
+                            <span class="text-sm text-white/60">Evidence of iteration/refinement</span>
+                            <span class="text-xs text-tactical-green font-mono">15%</span>
+                          </div>
+                        </div>
+                        <div class="mt-3 p-2 bg-tactical-green/10 rounded-lg text-center">
+                          <span class="text-sm text-tactical-green font-semibold">Passing Score: 70%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 4: Peer Review -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-green/20 flex items-center justify-center text-tactical-green font-mono text-sm font-bold">4</div>
+                    <h4 class="font-semibold text-lg">Peer Review & Feedback</h4>
+                    <span class="text-xs text-white/40 font-mono">5 MENIT</span>
+                  </div>
+                  
+                  <div class="grid sm:grid-cols-3 gap-4">
+                    <div class="glass p-4 rounded-xl text-center">
+                      <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Share Prompt</div>
+                      <div class="text-xs text-white/50">Bagikan prompt yang Anda gunakan dengan pasangan</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl text-center">
+                      <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Review Output</div>
+                      <div class="text-xs text-white/50">Evaluasi output berdasarkan kriteria sukses</div>
+                    </div>
+                    <div class="glass p-4 rounded-xl text-center">
+                      <div class="w-10 h-10 rounded-full bg-tactical-green/20 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-5 h-5 text-tactical-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                        </svg>
+                      </div>
+                      <div class="font-semibold text-sm mb-1">Give Feedback</div>
+                      <div class="text-xs text-white/50">Berikan 1 strength & 1 improvement area</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="glass p-5 rounded-xl border-2 border-tactical-green/30">
+                  <div class="flex items-center gap-2 text-tactical-green font-semibold mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Key Takeaways Sesi 1.3
+                  </div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-green font-bold">1.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Praktik langsung</strong> adalah cara terbaik menguasai prompting</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-green font-bold">2.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Iterasi</strong> adalah kunci — jarang sekali prompt pertama sempurna</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-green font-bold">3.</span>
+                      <span class="text-white/70 text-sm">Gunakan <strong class="text-white">data nyata/simulasi</strong> untuk context yang relevan</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-green font-bold">4.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Peer review</strong> membantu menemukan blind spots</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 4 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f59e0b; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f59e0b;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-tactical-amber/20 flex items-center justify-center">
+                  <span class="font-display text-tactical-amber text-xl">1.4</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-tactical-amber mb-1">SESI 4 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Etika AI dalam Pertahanan & Best Practices</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-01-04-etika-ai.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-tactical-amber/20 hover:bg-tactical-amber/30 text-tactical-amber text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-tactical-amber/15 rounded-full text-tactical-amber text-xs font-mono">DISKUSI</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10 space-y-8">
+                
+                <!-- Learning Objectives -->
+                <div class="p-4 bg-tactical-amber/10 border border-tactical-amber/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-tactical-amber font-semibold mb-3">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tujuan Pembelajaran Sesi Ini
+                  </div>
+                  <ul class="grid sm:grid-cols-2 gap-2 text-sm text-white/70">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-amber"></span>
+                      Memahami risiko etis penggunaan AI dalam konteks militer
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-amber"></span>
+                      Menerapkan prinsip keamanan informasi saat menggunakan AI
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-amber"></span>
+                      Membangun SOP penggunaan AI yang aman di unit
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-tactical-amber"></span>
+                      Mengembangkan best practices untuk tim
+                    </li>
+                  </ul>
+                </div>
+                
+                <!-- Part 1: Ethical Considerations -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-amber/20 flex items-center justify-center text-tactical-amber font-mono text-sm font-bold">1</div>
+                    <h4 class="font-semibold text-lg">Pertimbangan Etis AI dalam Pertahanan</h4>
+                    <span class="text-xs text-white/40 font-mono">15 MENIT</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <!-- Bias -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-red-500">
+                      <div class="flex items-center gap-2 text-red-400 font-semibold mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Risiko #1: Bias dalam Data & Output
+                      </div>
+                      <p class="text-sm text-white/60 mb-3">AI mewarisi bias dari data training-nya. Dalam konteks militer, ini bisa berarti:</p>
+                      <ul class="space-y-2 text-sm text-white/60">
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Bias terhadap threat assessment berdasarkan historical patterns yang sudah tidak relevan</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Underestimate ancaman baru yang belum ada dalam training data</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Overconfidence pada analisis yang sebenarnya memerlukan verifikasi</span>
+                        </li>
+                      </ul>
+                      <div class="mt-3 p-3 bg-tactical-green/10 rounded-lg">
+                        <div class="text-xs text-tactical-green font-semibold mb-1">✓ MITIGASI:</div>
+                        <div class="text-xs text-white/60">Selalu cross-check AI output dengan multiple sources dan human judgment. Jangan ambil keputusan kritis hanya berdasarkan AI.</div>
+                      </div>
+                    </div>
+                    
+                    <!-- Hallucination -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-red-500">
+                      <div class="flex items-center gap-2 text-red-400 font-semibold mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Risiko #2: Halusinasi (Confident Errors)
+                      </div>
+                      <p class="text-sm text-white/60 mb-3">AI bisa menghasilkan informasi yang <strong class="text-white">terdengar benar tapi faktanya salah</strong>:</p>
+                      <ul class="space-y-2 text-sm text-white/60">
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Menyebut nama, tanggal, lokasi yang tidak akurat</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Membuat statistik atau data yang tidak ada</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span class="text-red-400">•</span>
+                          <span>Menyimpulkan pola yang sebenarnya tidak ada</span>
+                        </li>
+                      </ul>
+                      <div class="mt-3 p-3 bg-tactical-green/10 rounded-lg">
+                        <div class="text-xs text-tactical-green font-semibold mb-1">✓ MITIGASI:</div>
+                        <div class="text-xs text-white/60">Verifikasi semua fakta, angka, dan nama. Minta AI menyertakan sumber. Jika ragu, tanyakan langsung: "Apakah informasi ini akurat?"</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Accountability -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-amber-500">
+                      <div class="flex items-center gap-2 text-tactical-amber font-semibold mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Risiko #3: Accountability & Decision Making
+                      </div>
+                      <p class="text-sm text-white/60 mb-3">AI tidak bisa dimintai pertanggungjawaban. Jika terjadi kesalahan:</p>
+                      <div class="p-3 bg-tactical-amber/10 rounded-lg text-sm text-white/70">
+                        <strong class="text-white">Prinsip:</strong> Manusia yang menggunakan output AI tetap bertanggung jawab penuh atas keputusan yang diambil.
+                      </div>
+                    </div>
+                    
+                    <!-- OPSEC -->
+                    <div class="glass p-5 rounded-xl border-l-4 border-amber-500">
+                      <div class="flex items-center gap-2 text-tactical-amber font-semibold mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Risiko #4: OPSEC & Information Security
+                      </div>
+                      <p class="text-sm text-white/60 mb-3">Data yang diinput ke AI publik bisa:</p>
+                      <ul class="space-y-1 text-sm text-white/60">
+                        <li class="flex items-center gap-2">
+                          <span class="text-tactical-amber">•</span>
+                          Disimpan dan digunakan untuk training
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="text-tactical-amber">•</span>
+                          Muncul di output untuk user lain
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="text-tactical-amber">•</span>
+                          Diakses oleh pihak penyedia layanan
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Part 2: Information Security -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-amber/20 flex items-center justify-center text-tactical-amber font-mono text-sm font-bold">2</div>
+                    <h4 class="font-semibold text-lg">Keamanan Informasi: Apa yang Boleh & Tidak Boleh</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass p-5 rounded-xl border-2 border-red-500/50">
+                      <div class="flex items-center gap-2 text-red-400 font-semibold mb-4">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        🚫 JANGAN INPUT KE AI PUBLIK
+                      </div>
+                      <div class="space-y-2">
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Data classified / rahasia negara
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Koordinat operasional real-time
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Nama personel aktif dalam operasi
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Detail teknis peralatan sensitif
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Rencana operasi aktual
+                        </div>
+                        <div class="p-3 bg-red-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-red-400 font-semibold">•</span> Intel source identities
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="glass p-5 rounded-xl border-2 border-green-500/50">
+                      <div class="flex items-center gap-2 text-tactical-green font-semibold mb-4">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        ✓ BOLEH INPUT KE AI PUBLIK
+                      </div>
+                      <div class="space-y-2">
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Informasi publik / open source
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Data simulasi / fiktif untuk training
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Template dan format dokumen (tanpa data)
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Pertanyaan prosedural / doktrin umum
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Draft dokumen tanpa info sensitif
+                        </div>
+                        <div class="p-3 bg-green-500/10 rounded-lg text-sm text-white/70">
+                          <span class="text-tactical-green font-semibold">•</span> Analisis historis yang sudah declassified
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4 p-4 bg-tactical-amber/10 border border-tactical-amber/30 rounded-xl">
+                    <div class="flex items-center gap-2 text-tactical-amber font-semibold mb-2">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                      </svg>
+                      💡 PRO TIP: Teknik Anonymization
+                    </div>
+                    <p class="text-sm text-white/70">Jika perlu menggunakan AI untuk menganalisis data sensitif, <strong class="text-white">anonymize</strong> terlebih dahulu: ganti nama dengan kode (ALPHA, BRAVO), ganti koordinat dengan grid generik, ganti tanggal dengan offset (+1, +2).</p>
+                  </div>
+                </div>
+                
+                <!-- Part 3: Human-in-the-Loop -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-amber/20 flex items-center justify-center text-tactical-amber font-mono text-sm font-bold">3</div>
+                    <h4 class="font-semibold text-lg">Prinsip Human-in-the-Loop</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="glass p-6 rounded-xl mb-4">
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-6">
+                      <div class="text-center p-4 bg-blue-500/10 rounded-xl w-40">
+                        <div class="text-3xl mb-2">🧠</div>
+                        <div class="font-semibold text-blue-400">HUMAN</div>
+                        <div class="text-xs text-white/50">Decision Maker</div>
+                      </div>
+                      <div class="flex flex-col items-center">
+                        <svg class="w-8 h-8 text-tactical-amber rotate-90 md:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                        </svg>
+                        <div class="text-xs text-white/40">validates</div>
+                      </div>
+                      <div class="text-center p-4 bg-purple-500/10 rounded-xl w-40">
+                        <div class="text-3xl mb-2">🤖</div>
+                        <div class="font-semibold text-purple-400">AI</div>
+                        <div class="text-xs text-white/50">Advisory Tool</div>
+                      </div>
+                      <div class="flex flex-col items-center">
+                        <svg class="w-8 h-8 text-tactical-amber rotate-90 md:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                        </svg>
+                        <div class="text-xs text-white/40">produces</div>
+                      </div>
+                      <div class="text-center p-4 bg-green-500/10 rounded-xl w-40">
+                        <div class="text-3xl mb-2">📊</div>
+                        <div class="font-semibold text-tactical-green">OUTPUT</div>
+                        <div class="text-xs text-white/50">Requires Review</div>
+                      </div>
+                    </div>
+                    
+                    <div class="grid sm:grid-cols-3 gap-4">
+                      <div class="p-4 bg-white/5 rounded-lg text-center">
+                        <div class="text-tactical-amber font-semibold mb-2">Level 1</div>
+                        <div class="text-sm text-white/60">AI suggests → Human decides</div>
+                        <div class="text-xs text-white/40 mt-2">COA recommendations</div>
+                      </div>
+                      <div class="p-4 bg-white/5 rounded-lg text-center">
+                        <div class="text-tactical-amber font-semibold mb-2">Level 2</div>
+                        <div class="text-sm text-white/60">AI drafts → Human reviews</div>
+                        <div class="text-xs text-white/40 mt-2">SITREP, briefs</div>
+                      </div>
+                      <div class="p-4 bg-white/5 rounded-lg text-center">
+                        <div class="text-tactical-amber font-semibold mb-2">Level 3</div>
+                        <div class="text-sm text-white/60">AI assists → Human owns</div>
+                        <div class="text-xs text-white/40 mt-2">Analysis, research</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                    <div class="flex items-center gap-2 text-red-400 font-semibold mb-2">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                      </svg>
+                      ⚠️ ATURAN MUTLAK
+                    </div>
+                    <p class="text-sm text-white/70">Keputusan yang melibatkan <strong class="text-white">use of force, life-or-death situations, atau strategic consequences</strong> tidak boleh didelegasikan ke AI. AI hanya sebagai advisory — keputusan dan accountability tetap di human commander.</p>
+                  </div>
+                </div>
+                
+                <!-- Part 4: Best Practices Checklist -->
+                <div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-tactical-amber/20 flex items-center justify-center text-tactical-amber font-mono text-sm font-bold">4</div>
+                    <h4 class="font-semibold text-lg">Best Practices Checklist</h4>
+                    <span class="text-xs text-white/40 font-mono">10 MENIT</span>
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div class="glass p-5 rounded-xl">
+                      <div class="text-sm text-tactical-green font-mono mb-4">✓ SEBELUM MENGGUNAKAN AI</div>
+                      <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-tactical-green">
+                          <span class="text-sm text-white/70">Apakah data ini boleh diinput ke AI publik?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-tactical-green">
+                          <span class="text-sm text-white/70">Apakah saya sudah anonymize data sensitif?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-tactical-green">
+                          <span class="text-sm text-white/70">Apakah prompt saya menggunakan RISEN?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-tactical-green">
+                          <span class="text-sm text-white/70">Apakah saya punya sumber lain untuk cross-check?</span>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="glass p-5 rounded-xl">
+                      <div class="text-sm text-blue-400 font-mono mb-4">✓ SETELAH MENDAPAT OUTPUT</div>
+                      <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-blue-400">
+                          <span class="text-sm text-white/70">Apakah fakta dan angka sudah diverifikasi?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-blue-400">
+                          <span class="text-sm text-white/70">Apakah output masuk akal berdasarkan pengalaman saya?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-blue-400">
+                          <span class="text-sm text-white/70">Apakah perlu iterate untuk menyempurnakan?</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                          <input type="checkbox" class="mt-1 accent-blue-400">
+                          <span class="text-sm text-white/70">Apakah saya siap bertanggung jawab atas keputusan ini?</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4 glass p-5 rounded-xl">
+                    <div class="text-sm text-purple-400 font-mono mb-4">📚 BUILDING TEAM KNOWLEDGE BASE</div>
+                    <div class="grid sm:grid-cols-3 gap-4">
+                      <div class="p-3 bg-purple-500/10 rounded-lg text-center">
+                        <div class="text-2xl mb-2">📝</div>
+                        <div class="font-semibold text-sm mb-1">Document Prompts</div>
+                        <div class="text-xs text-white/50">Simpan prompt yang berhasil</div>
+                      </div>
+                      <div class="p-3 bg-purple-500/10 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🔄</div>
+                        <div class="font-semibold text-sm mb-1">Share Learnings</div>
+                        <div class="text-xs text-white/50">Bagikan tips ke tim</div>
+                      </div>
+                      <div class="p-3 bg-purple-500/10 rounded-lg text-center">
+                        <div class="text-2xl mb-2">📊</div>
+                        <div class="font-semibold text-sm mb-1">Track Errors</div>
+                        <div class="text-xs text-white/50">Catat kesalahan AI</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="glass p-5 rounded-xl border-2 border-tactical-amber/30">
+                  <div class="flex items-center gap-2 text-tactical-amber font-semibold mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Key Takeaways Sesi 1.4
+                  </div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">1.</span>
+                      <span class="text-white/70 text-sm">AI bisa <strong class="text-white">bias dan berhalusinasi</strong> — selalu verifikasi</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">2.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-red-400">Jangan</strong> input data classified ke AI publik</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">3.</span>
+                      <span class="text-white/70 text-sm">AI adalah <strong class="text-white">advisor</strong>, bukan decision-maker</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">4.</span>
+                      <span class="text-white/70 text-sm"><strong class="text-white">Human tetap accountable</strong> untuk setiap keputusan</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">5.</span>
+                      <span class="text-white/70 text-sm">Gunakan <strong class="text-white">checklist</strong> sebelum dan sesudah menggunakan AI</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="text-tactical-amber font-bold">6.</span>
+                      <span class="text-white/70 text-sm">Bangun <strong class="text-white">knowledge base tim</strong> dari lessons learned</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Frameworks Section -->
+  <section id="frameworks" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          FRAMEWORK & TEMPLATE
+        </div>
+        <h2 class="section-title">
+          TEMPLATE PROMPT<br>
+          <span class="text-purple-400">SIAP PAKAI</span>
+        </h2>
+        <p class="text-white/50 max-w-2xl mx-auto mt-4">
+          Copy dan modifikasi template berikut untuk kebutuhan operasional Anda.
+        </p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Template 1 -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-purple-400">TEMPLATE 01</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Intelligence Summary</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template1')" 
+                    :class="copiedPrompt === 'template1' ? 'bg-tactical-green/30 text-tactical-green' : ''"
+                    @click="copiedPrompt = 'template1'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template1' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template1">Kamu adalah <span class="prompt-var">[ROLE: analis intelijen senior]</span> dengan pengalaman dalam operasi pertahanan udara.
+
+TUGAS: Rangkum laporan intelijen berikut menjadi executive summary untuk briefing komandan.
+
+INPUT DATA:
+<span class="prompt-var">[PASTE DATA INTELIJEN DI SINI]</span>
+
+LANGKAH ANALISIS:
+1. Identifikasi informasi kritis (threats, anomalies, changes)
+2. Kategorikan berdasarkan urgency (immediate/short-term/long-term)
+3. Ekstrak actionable insights
+
+OUTPUT FORMAT:
+- Executive Summary (max 100 kata)
+- Key Findings (bullet points, max 5)
+- Threat Assessment (LOW/MEDIUM/HIGH + justifikasi)
+- Recommended Actions (prioritized list)
+
+CONSTRAINTS: Gunakan bahasa formal militer. Fokus pada facts, bukan spekulasi.</div>
+        </div>
+        
+        <!-- Template 2 -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-purple-400">TEMPLATE 02</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Threat Assessment</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template2')"
+                    :class="copiedPrompt === 'template2' ? 'bg-tactical-green/30 text-tactical-green' : ''"
+                    @click="copiedPrompt = 'template2'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template2' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template2">Kamu adalah <span class="prompt-var">[ROLE: threat analyst]</span> di Koopsudnas.
+
+TUGAS: Lakukan threat assessment berdasarkan data aktivitas berikut.
+
+DATA AKTIVITAS:
+<span class="prompt-var">[PASTE DATA: koordinat, waktu, jenis aktivitas]</span>
+
+ANALISIS YANG DIPERLUKAN:
+1. Pattern Recognition: Apakah ada pola dalam aktivitas ini?
+2. Historical Comparison: Bandingkan dengan baseline normal
+3. Intent Assessment: Apa kemungkinan tujuan dari aktivitas ini?
+4. Capability Assessment: Apa kapabilitas yang terindikasi?
+
+OUTPUT:
+- Threat Level: [MINIMAL/LOW/MEDIUM/HIGH/CRITICAL]
+- Confidence Score: [0-100%]
+- Pattern Summary: [1-2 kalimat]
+- Recommended Response: [Immediate actions required]
+- Watch Items: [Apa yang perlu dimonitor lebih lanjut]</div>
+        </div>
+        
+        <!-- Template 3 -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-purple-400">TEMPLATE 03</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">SITREP Generator</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template3')"
+                    :class="copiedPrompt === 'template3' ? 'bg-tactical-green/30 text-tactical-green' : ''"
+                    @click="copiedPrompt = 'template3'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template3' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template3">Kamu adalah <span class="prompt-var">[ROLE: staff officer]</span> yang menyusun SITREP.
+
+TUGAS: Susun Situation Report berdasarkan input berikut.
+
+PERIODE: <span class="prompt-var">[WAKTU: contoh "0600-1200 WIB"]</span>
+SEKTOR: <span class="prompt-var">[AREA: contoh "Sektor Timur"]</span>
+
+INPUT DATA:
+<span class="prompt-var">[PASTE: laporan patrol, data radar, komunikasi, dll]</span>
+
+FORMAT SITREP:
+1. DTG (Date-Time Group)
+2. SITUATION
+   - Enemy: Activities observed
+   - Friendly: Status of our forces
+   - Environment: Weather, terrain factors
+3. ASSESSMENT: Overall situation evaluation
+4. ACTIONS TAKEN: Responses executed
+5. ACTIONS REQUIRED: Recommendations for command
+6. NEXT REPORT: Scheduled update time
+
+TONE: Concise, factual, actionable.</div>
+        </div>
+        
+        <!-- Template 4 -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-purple-400">TEMPLATE 04</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Quick Analysis</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template4')"
+                    :class="copiedPrompt === 'template4' ? 'bg-tactical-green/30 text-tactical-green' : ''"
+                    @click="copiedPrompt = 'template4'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template4' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template4">Analisis cepat untuk data berikut:
+
+<span class="prompt-var">[PASTE DATA]</span>
+
+Berikan dalam format:
+• WHAT: Apa yang terjadi? (1 kalimat)
+• SO WHAT: Mengapa ini penting? (1 kalimat)
+• NOW WHAT: Apa yang harus dilakukan? (1-3 actions)
+
+Batasan: Total max 100 kata. Fokus pada actionable insight.</div>
+        </div>
+      </div>
+      
+      <!-- RISEN Framework Card -->
+      <div class="mt-12 glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <h3 class="text-xl font-semibold">RISEN Framework Quick Reference</h3>
+          <button class="copy-btn" onclick="copyPrompt('risen')"
+                  :class="copiedPrompt === 'risen' ? 'bg-tactical-green/30 text-tactical-green' : ''"
+                  @click="copiedPrompt = 'risen'; setTimeout(() => copiedPrompt = null, 2000)">
+            <span x-text="copiedPrompt === 'risen' ? '✓ Copied' : 'Copy Framework'"></span>
+          </button>
+        </div>
+        
+        <div class="grid sm:grid-cols-5 gap-4" id="risen">
+          <div class="glass p-4 rounded-xl">
+            <div class="text-3xl font-display text-purple-400 mb-2">R</div>
+            <div class="font-semibold mb-1">Role</div>
+            <div class="text-sm text-white/50">"Kamu adalah [role] dengan [expertise]..."</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-3xl font-display text-tactical-cyan mb-2">I</div>
+            <div class="font-semibold mb-1">Instructions</div>
+            <div class="text-sm text-white/50">"TUGAS: [specific action verb] [object]..."</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-3xl font-display text-tactical-green mb-2">S</div>
+            <div class="font-semibold mb-1">Steps</div>
+            <div class="text-sm text-white/50">"LANGKAH: 1) ... 2) ... 3) ..."</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-3xl font-display text-tactical-amber mb-2">E</div>
+            <div class="font-semibold mb-1">End Goal</div>
+            <div class="text-sm text-white/50">"OUTPUT: [format] untuk [audience/purpose]"</div>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <div class="text-3xl font-display text-pink-400 mb-2">N</div>
+            <div class="font-semibold mb-1">Narrowing</div>
+            <div class="text-sm text-white/50">"CONSTRAINTS: Max [X] kata, format [Y], tone [Z]"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Exercises Section -->
+  <section id="exercises" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          HANDS-ON EXERCISES
+        </div>
+        <h2 class="section-title">
+          3 LATIHAN PRAKTIK<br>
+          <span class="text-purple-400">SIMULASI OPERASIONAL</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Exercise 1 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-tactical-green/20 flex items-center justify-center">
+              <span class="font-display text-tactical-green">E1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-tactical-green">EXERCISE 01</div>
+              <div class="text-xs text-white/40">Difficulty: Beginner</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Intelligence Summary</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan laporan intelijen 3 halaman. Gunakan Template 01 untuk menghasilkan executive summary.
+          </p>
+          
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-tactical-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 15 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-tactical-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: 1 halaman brief</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Exercise 2 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-tactical-amber/20 flex items-center justify-center">
+              <span class="font-display text-tactical-amber">E2</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-tactical-amber">EXERCISE 02</div>
+              <div class="text-xs text-white/40">Difficulty: Intermediate</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Threat Assessment</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan data simulasi radar (20 data points). Identifikasi pattern dan assess threat level.
+          </p>
+          
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-tactical-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 20 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-tactical-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Threat assessment + recommendations</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Exercise 3 -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="font-display text-purple-400">E3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">EXERCISE 03</div>
+              <div class="text-xs text-white/40">Difficulty: Challenge</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">SITREP Compilation</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan 5 input berbeda (patrol report, radar data, SIGINT, weather, logistics). Compile menjadi SITREP kohesif.
+          </p>
+          
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 25 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Complete SITREP document</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Assessment Criteria -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="text-center mb-8">
+          <div class="module-badge inline-flex mb-4">
+            <span class="status-dot"></span>
+            KRITERIA PENILAIAN
+          </div>
+          <h3 class="section-title">
+            RUBRIK ASSESSMENT<br>
+            <span class="text-purple-400">MODUL 01</span>
+          </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Kriteria</th>
+                <th class="text-center py-3 px-4 text-white/60 font-medium">Bobot</th>
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Indikator Sukses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Struktur Prompt (RISEN)</td>
+                <td class="py-4 px-4 text-center text-purple-400 font-semibold">30%</td>
+                <td class="py-4 px-4 text-white/60">Semua 5 komponen RISEN ada dan relevan</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Kualitas Output</td>
+                <td class="py-4 px-4 text-center text-purple-400 font-semibold">30%</td>
+                <td class="py-4 px-4 text-white/60">Output actionable, concise, dan sesuai format</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Iteration Skills</td>
+                <td class="py-4 px-4 text-center text-purple-400 font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">Mampu refine prompt untuk improve output</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium">Konteks Militer</td>
+                <td class="py-4 px-4 text-center text-purple-400 font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">Terminology dan format sesuai standar militer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 text-center">
+          <div class="text-sm text-white/40 mb-2">Passing Score</div>
+          <div class="text-4xl font-display text-tactical-green">70%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Navigation -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <a href="index.html" class="cta-secondary">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Kembali ke Overview
+        </a>
+        
+        <div class="text-center">
+          <div class="text-sm text-white/40">Modul Selanjutnya</div>
+          <div class="font-semibold text-tactical-cyan">Intelligence Analysis dengan AI</div>
+        </div>
+        
+        <a href="#" class="cta-primary">
+          Modul 02
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Copy prompt function
+    function copyPrompt(id) {
+      const element = document.getElementById(id);
+      const text = element.innerText;
+      navigator.clipboard.writeText(text);
+    }
+    
+    // Scroll reveal animations
+    gsap.utils.toArray('[data-reveal]').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

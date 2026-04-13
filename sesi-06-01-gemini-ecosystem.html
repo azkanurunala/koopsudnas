@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.1 | Gemini Ecosystem Overview</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+
+    .model-card { transition: all 0.3s ease; }
+    .model-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.4); }
+
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 7, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">40 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">KONSEP</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="text-xs text-white/40 hover:text-white/60">← Overview</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-02-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 1 • EKOSISTEM</span>
+      </div>
+
+      <h1 class="slide-title mb-6">
+        GEMINI<br>
+        <span class="text-accent">ECOSYSTEM OVERVIEW</span>
+      </h1>
+
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Peta lengkap keluarga Gemini: <strong class="text-white">kapabilitas unik</strong>, model variants, thinking mode, multimodal input, dan kapan Gemini <strong class="text-accent">lebih tajam</strong> dibanding Claude.
+      </p>
+
+      <div class="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-2xl mb-2">🧠</div>
+          <div class="text-accent font-mono text-xs mb-1">THINKING MODE</div>
+          <div class="text-sm text-white/70">Native reasoning trace</div>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-2xl mb-2">🎥</div>
+          <div class="text-accent font-mono text-xs mb-1">MULTIMODAL</div>
+          <div class="text-sm text-white/70">Image + video + audio</div>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-2xl mb-2">🔍</div>
+          <div class="text-accent font-mono text-xs mb-1">SEARCH GROUNDING</div>
+          <div class="text-sm text-white/70">Native Google Search</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-accent font-bold">1</span>
+            </div>
+            <div>
+              <div class="font-semibold text-white mb-1">Mapping Model Variants</div>
+              <div class="text-sm text-white/60">Tahu kapan pakai Gemini 2.5 Pro vs Flash vs Flash-Lite, dan trade-off speed/quality/cost</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-accent font-bold">2</span>
+            </div>
+            <div>
+              <div class="font-semibold text-white mb-1">Kapabilitas Unik</div>
+              <div class="text-sm text-white/60">Identifikasi fitur yang hanya ada di Gemini (thinking mode, search grounding, native multimodal)</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-accent font-bold">3</span>
+            </div>
+            <div>
+              <div class="font-semibold text-white mb-1">Platform Access</div>
+              <div class="text-sm text-white/60">gemini.google.com vs AI Studio vs Vertex AI — mana yang cocok untuk Pamen, mana untuk dev</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-accent font-bold">4</span>
+            </div>
+            <div>
+              <div class="font-semibold text-white mb-1">Decision Framework</div>
+              <div class="text-sm text-white/60">Bisa jawab: "untuk task X, Gemini atau Claude?" dengan alasan yang defensible</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: MODEL FAMILY -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MODEL FAMILY</div>
+        <h2 class="slide-title">GEMINI <span class="text-accent">2.5 FAMILY</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">3 model utama — pilih berdasarkan <strong class="text-white">speed/quality/cost</strong> trade-off</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Pro -->
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+              <span class="font-display text-accent text-2xl">2.5</span>
+            </div>
+            <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full font-mono">PRO</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Pro</h3>
+          <p class="text-sm text-white/60 mb-4">Flagship — reasoning tertinggi, 1M+ context, native thinking mode.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M–2M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-amber-400">⚡ Moderate</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-red-400">$$$ Premium</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Strategic</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg text-xs text-white/70">
+            <strong class="text-accent">Best for:</strong> COA analysis kompleks, multi-doc intel synthesis, long-form briefing.
+          </div>
+        </div>
+
+        <!-- Flash -->
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+              <span class="font-display text-accent text-2xl">⚡</span>
+            </div>
+            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-mono">FLASH</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Flash</h3>
+          <p class="text-sm text-white/60 mb-4">Workhorse — 80% kualitas Pro dengan kecepatan 3x dan cost jauh lebih murah.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-green-400">⚡⚡⚡ Fast</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-green-400">$ Cheap</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Daily ops</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-green-500/10 rounded-lg text-xs text-white/70">
+            <strong class="text-green-400">Best for:</strong> SITREP harian, quick summary, pattern scan, bulk processing.
+          </div>
+        </div>
+
+        <!-- Flash-Lite -->
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+              <span class="font-display text-accent text-2xl">⚡⚡</span>
+            </div>
+            <span class="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full font-mono">FLASH-LITE</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Flash-Lite</h3>
+          <p class="text-sm text-white/60 mb-4">Ultra-fast — real-time, edge-friendly, cocok untuk task sederhana bervolume tinggi.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-cyan-400">⚡⚡⚡⚡ Ultra</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-cyan-400">¢ Very cheap</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Mass ingest</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-cyan-500/10 rounded-lg text-xs text-white/70">
+            <strong class="text-cyan-400">Best for:</strong> Mass classification, OCR, short Q&A, triage pipeline.
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 p-5 glass rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">💡</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Rule of thumb untuk Pamen</div>
+            <div class="text-sm text-white/70">
+              Mulai dari <strong class="text-accent">Flash</strong> (sweet spot). Naik ke <strong class="text-accent">Pro</strong> hanya kalau reasoning-nya tidak cukup tajam atau konteks dokumen di atas ~500k tokens. <strong class="text-accent">Flash-Lite</strong> untuk automation/skrip, bukan untuk analisis strategis.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: KAPABILITAS UNIK -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">UNIQUE CAPABILITIES</div>
+        <h2 class="slide-title">YANG <span class="text-accent">TIDAK ADA</span> DI CLAUDE</h2>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Thinking Mode -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div>
+              <div class="text-4xl mb-2">🧠</div>
+              <h3 class="text-xl font-semibold text-accent mb-1">Thinking Mode (2.5 Pro)</h3>
+              <div class="text-xs text-white/40 font-mono">NATIVE REASONING TRACE</div>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">
+                Gemini 2.5 Pro punya <strong class="text-white">explicit thinking tokens</strong> — model berpikir step-by-step sebelum jawab, dan Anda bisa lihat trace-nya. Mirip chain-of-thought, tapi native (tidak perlu prompt "think step by step").
+              </p>
+              <div class="p-4 bg-navy-900/50 rounded-lg border border-white/5">
+                <div class="text-xs font-mono text-accent mb-2">CONTOH OUTPUT:</div>
+                <div class="text-sm text-white/70 font-mono">
+                  <span class="text-white/40">&lt;thinking&gt;</span><br>
+                  &nbsp;&nbsp;Let me analyze threat indicators...<br>
+                  &nbsp;&nbsp;Step 1: baseline posture is X<br>
+                  &nbsp;&nbsp;Step 2: deviation observed is Y<br>
+                  &nbsp;&nbsp;Step 3: historical pattern suggests Z<br>
+                  <span class="text-white/40">&lt;/thinking&gt;</span><br><br>
+                  <span class="text-green-400">Final assessment: ...</span>
+                </div>
+              </div>
+              <p class="mt-3 text-xs text-white/50"><strong>Ops value:</strong> audit trail built-in untuk intel komandan — tidak perlu minta "show your reasoning".</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multimodal -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div>
+              <div class="text-4xl mb-2">🎥</div>
+              <h3 class="text-xl font-semibold text-accent mb-1">Native Multimodal</h3>
+              <div class="text-xs text-white/40 font-mono">VIDEO + AUDIO + IMAGE</div>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">
+                Gemini adalah satu-satunya major LLM yang bisa menerima <strong class="text-white">video mentah</strong> (hingga ~1 jam) dan <strong class="text-white">audio mentah</strong> sebagai input, bukan cuma transcript. Claude hanya bisa image static.
+              </p>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="p-3 bg-accent/10 rounded-lg text-center">
+                  <div class="text-2xl mb-1">📹</div>
+                  <div class="text-xs text-white/70"><strong>Video</strong><br>hingga 1 jam</div>
+                </div>
+                <div class="p-3 bg-accent/10 rounded-lg text-center">
+                  <div class="text-2xl mb-1">🎙️</div>
+                  <div class="text-xs text-white/70"><strong>Audio</strong><br>direct ingest</div>
+                </div>
+                <div class="p-3 bg-accent/10 rounded-lg text-center">
+                  <div class="text-2xl mb-1">🖼️</div>
+                  <div class="text-xs text-white/70"><strong>Image</strong><br>multi-frame</div>
+                </div>
+              </div>
+              <p class="mt-3 text-xs text-white/50"><strong>Ops value:</strong> analisis langsung drone footage, intercept audio, surveillance video tanpa pre-processing manual.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Grounding -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div>
+              <div class="text-4xl mb-2">🔍</div>
+              <h3 class="text-xl font-semibold text-accent mb-1">Search Grounding</h3>
+              <div class="text-xs text-white/40 font-mono">REAL-TIME GOOGLE SEARCH</div>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">
+                Aktifkan toggle <strong class="text-white">"Grounding with Google Search"</strong> dan Gemini akan otomatis query Google live, cite sumber URL, dan refuse jawab kalau tidak ada data real. Berbeda dari training-data recall yang statis.
+              </p>
+              <div class="p-4 bg-navy-900/50 rounded-lg border border-accent/20">
+                <div class="text-xs font-mono text-accent mb-2">CONTOH:</div>
+                <div class="text-sm text-white/70">Q: "Status terbaru latihan gabungan ASEAN di laut Natuna minggu ini?"</div>
+                <div class="text-sm text-green-400 mt-2">→ Gemini live-search, jawab dengan citation [1][2][3] ke sumber berita aktual.</div>
+              </div>
+              <p class="mt-3 text-xs text-white/50"><strong>Ops value:</strong> intel OSINT real-time tanpa keluar dari chat. Claude (standard) tidak punya ini tanpa MCP setup.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Execution -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div>
+              <div class="text-4xl mb-2">🧮</div>
+              <h3 class="text-xl font-semibold text-accent mb-1">Code Execution</h3>
+              <div class="text-xs text-white/40 font-mono">SANDBOXED PYTHON</div>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">
+                Gemini bisa <strong class="text-white">eksekusi Python</strong> untuk hitung/plot data tanpa hallucination. Upload CSV intel metrics → "plot trend senjata selama 6 bulan" → dapat actual chart.
+              </p>
+              <p class="text-xs text-white/50"><strong>Ops value:</strong> data analysis tanpa perlu tools separate (Excel/Python notebook).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: PLATFORM ACCESS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PLATFORM</div>
+        <h2 class="slide-title">DI MANA <span class="text-accent">AKSES</span>?</h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Gemini bisa diakses dari 3 platform berbeda — pilih sesuai kebutuhan</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">💬</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">gemini.google.com</h3>
+          <div class="text-xs text-blue-400 font-mono mb-3">CONSUMER UI</div>
+          <p class="text-sm text-white/60 mb-4">Chat interface end-user. Free tier dengan 2.5 Flash, Pro butuh Google One AI Premium.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: Pamen operasional</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Setup: zero, pakai akun Google</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Fitur: Canvas, Deep Research, Gems</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-red-400">✗</span> Tidak bisa adjust parameter lanjutan</div>
+          </div>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🛠️</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">AI Studio</h3>
+          <div class="text-xs text-accent font-mono mb-3">DEVELOPER PLAYGROUND</div>
+          <p class="text-sm text-white/60 mb-4">Sandbox untuk eksplorasi teknis: adjust temperature, system instructions, tools, function calling.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: analyst/tech-savvy Pamen</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Free tier generous</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Test prompt sebelum deploy</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-amber-400">⚠</span> URL: aistudio.google.com</div>
+          </div>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🏢</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Vertex AI</h3>
+          <div class="text-xs text-purple-400 font-mono mb-3">ENTERPRISE / CLOUD</div>
+          <p class="text-sm text-white/60 mb-4">Enterprise tier: data residency, audit logs, VPC-SC, customer-managed keys. Untuk integrasi ke sistem internal.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: institutional deployment</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Compliance-ready</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Bisa host di region Asia</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-red-400">✗</span> Butuh GCP admin & setup</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 p-5 glass rounded-xl border border-accent/20">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">🎯</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Rekomendasi untuk training Pamen</div>
+            <div class="text-sm text-white/70">
+              Mulai dari <strong class="text-accent">gemini.google.com</strong> (lowest friction, fitur Canvas + Deep Research built-in). Naik ke <strong class="text-accent">AI Studio</strong> kalau perlu eksperimen system prompt / RISEN framework dengan parameter kontrol. Vertex AI hanya kalau deployment institusional.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: CLAUDE VS GEMINI DECISION TREE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DECISION TREE</div>
+        <h2 class="slide-title">CLAUDE <span class="text-accent">ATAU</span> GEMINI?</h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Pertanyaan cepat untuk routing tool</p>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Input-nya video, audio, atau bundle foto?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-accent font-semibold">Gemini (native multimodal)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Butuh real-time web search dengan citation?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-accent font-semibold">Gemini (search grounding native)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Butuh generate gambar/infografis?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-accent font-semibold">Gemini (Imagen built-in)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Deep reasoning + ethical judgment (COA, risk wargaming)?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-purple-400 font-semibold">Claude (superior nuance)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Narrative writing yang nuanced (commander brief, condolence letter)?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-purple-400 font-semibold">Claude (better prose)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 text-violet-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Input-nya 50+ dokumen dan butuh citation ketat?</div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-green-400">YA</span>
+                <span class="text-white/40">→</span>
+                <span class="text-violet-400 font-semibold">NotebookLM (lihat Sesi 6.2)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-accent/10 border border-accent/30 rounded-xl">
+          <div class="text-center text-accent font-semibold mb-2">🎯 Default answer kalau ragu</div>
+          <div class="text-center text-white/70 text-sm">Mulai dengan <strong class="text-accent">Claude</strong> (reasoning kuat, safe). Switch ke <strong class="text-accent">Gemini</strong> kalau butuh multimodal, search, atau visual generation.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Model Selection</div>
+              <div class="text-sm text-white/60">Default Flash (sweet spot), naik ke Pro hanya untuk strategic / long context</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Unique Strengths</div>
+              <div class="text-sm text-white/60">Thinking mode, native multimodal, search grounding, Imagen built-in</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Platform</div>
+              <div class="text-sm text-white/60">Consumer: gemini.google.com — tech: AI Studio — enterprise: Vertex AI</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Tool Routing</div>
+              <div class="text-sm text-white/60">Multimodal/search/visual → Gemini. Reasoning/ethics/prose → Claude. Multi-doc → NotebookLM.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">NotebookLM</strong> — kapabilitas unik untuk multi-source intel synthesis</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Overview Modul 06
+        </a>
+        <a href="sesi-06-02-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">
+          Sesi 6.2: NotebookLM Deep Dive →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

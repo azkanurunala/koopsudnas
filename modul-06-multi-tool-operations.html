@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 06 | Multi-Tool Operations: Gemini + NotebookLM Deep Dive</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'tactical-indigo': '#6366f1',
+            'tactical-violet': '#8b5cf6',
+            'tactical-rose': '#f43f5e',
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(140px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: #6366f1; opacity: 0.14; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -80px; background: #8b5cf6; opacity: 0.12; animation-delay: -4s; }
+    .blob-3 { width: 400px; height: 400px; top: 40%; left: 40%; background: #f43f5e; opacity: 0.08; animation-delay: -2s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.08); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.05; }
+    .subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+
+    .tactical-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #818cf8; letter-spacing: 0.1em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 12px #6366f1; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .module-card { position: relative; overflow: hidden; transition: transform 0.3s ease; }
+    .module-card:hover { transform: translateY(-8px); }
+    .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--session-color) 0%, transparent 100%); opacity: 0.9; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 12px; font-weight: 600; color: #fff; transition: all 0.3s ease; box-shadow: 0 4px 24px rgba(99,102,241,0.25); text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(99,102,241,0.4); }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-weight: 500; color: rgba(255,255,255,0.9); transition: all 0.3s ease; text-decoration: none; }
+    .cta-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
+    .vs-pill { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 2px solid rgba(255,255,255,0.2); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.05em; color: #fff; }
+
+    .tool-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; transition: all 0.3s ease; }
+    .tool-card:hover { border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.05); }
+  </style>
+</head>
+<body>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+  <div class="grid-pattern"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <span class="text-sm">Kembali ke Landing</span>
+      </a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#sessions" class="text-sm text-white/60 hover:text-white transition-colors">Sesi</a>
+        <a href="#when-to-use" class="text-sm text-white/60 hover:text-white transition-colors">When to Use</a>
+        <a href="#cross-ref" class="text-sm text-white/60 hover:text-white transition-colors">Cross-Ref</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative pt-32 pb-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="tactical-badge mb-6">
+          <span class="status-dot"></span>
+          MODUL 06 • STANDALONE • DEEP DIVE
+        </div>
+        <h1 class="section-title mb-6">
+          MULTI-TOOL OPERATIONS:<br>
+          <span class="text-tactical-indigo">GEMINI</span> + <span class="text-tactical-violet">NOTEBOOKLM</span>
+        </h1>
+        <p class="text-xl text-white/60 max-w-3xl mx-auto">
+          Deep-dive eksplorasi ekosistem <strong class="text-white">Google AI</strong> — kapan Gemini lebih unggul dari Claude, kapan NotebookLM jadi senjata rahasia untuk intel synthesis, dan bagaimana menggabungkan ketiganya menjadi <strong class="text-tactical-indigo">multi-tool operator workflow</strong> yang realistis.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="#sessions" class="cta-primary">
+          Lihat 4 Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </a>
+        <a href="sesi-06-01-gemini-ecosystem.html" class="cta-secondary">
+          Mulai Sesi 6.1 →
+        </a>
+      </div>
+
+      <!-- Metrics bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="glass p-5 rounded-xl text-center">
+          <div class="font-display text-4xl text-tactical-indigo mb-1">4</div>
+          <div class="text-xs text-white/60 font-mono">SESI</div>
+        </div>
+        <div class="glass p-5 rounded-xl text-center">
+          <div class="font-display text-4xl text-tactical-violet mb-1">180</div>
+          <div class="text-xs text-white/60 font-mono">MENIT</div>
+        </div>
+        <div class="glass p-5 rounded-xl text-center">
+          <div class="font-display text-4xl text-tactical-rose mb-1">2</div>
+          <div class="text-xs text-white/60 font-mono">TOOLS UTAMA</div>
+        </div>
+        <div class="glass p-5 rounded-xl text-center">
+          <div class="font-display text-4xl text-tactical-indigo mb-1">∞</div>
+          <div class="text-xs text-white/60 font-mono">WORKFLOWS</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY THIS MODULE -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-tactical-indigo font-mono text-sm mb-4">WHY THIS MODULE</div>
+        <h2 class="section-title">KENAPA <span class="text-tactical-indigo">MULTI-TOOL</span>?</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 mb-12">
+        <div class="tool-card">
+          <div class="text-3xl mb-3">🎯</div>
+          <h3 class="font-semibold text-lg mb-2 text-tactical-indigo">No Tool is King</h3>
+          <p class="text-sm text-white/60 leading-relaxed">
+            Claude unggul di reasoning, Gemini unggul di multimodal & search grounding, NotebookLM unggul di <strong class="text-white">sourced synthesis dari dokumen besar</strong>. Operator yang hanya kuasai 1 tool = battle-ready cuma di sebagian front.
+          </p>
+        </div>
+        <div class="tool-card">
+          <div class="text-3xl mb-3">📚</div>
+          <h3 class="font-semibold text-lg mb-2 text-tactical-violet">Unique Capabilities</h3>
+          <p class="text-sm text-white/60 leading-relaxed">
+            NotebookLM <strong class="text-white">audio overview</strong>, <strong class="text-white">mind map auto-generated</strong>, dan <strong class="text-white">zero halusinasi</strong> (citation wajib) adalah kapabilitas yang <em>tidak ada</em> di Claude/ChatGPT standard. Miss satu fitur = miss satu vector operasional.
+          </p>
+        </div>
+        <div class="tool-card">
+          <div class="text-3xl mb-3">🔄</div>
+          <h3 class="font-semibold text-lg mb-2 text-tactical-rose">Real Operator Workflow</h3>
+          <p class="text-sm text-white/60 leading-relaxed">
+            Pamen di lapangan jarang pakai 1 tool saja. Modul ini melatih <strong class="text-white">tool-switching discipline</strong> — tahu kapan pindah dari Claude ke NotebookLM ke Gemini Imagen, tanpa lose context.
+          </p>
+        </div>
+      </div>
+
+      <!-- Positioning: Modul 01-05 vs Modul 06 -->
+      <div class="glass-lit p-8 rounded-2xl">
+        <h3 class="subtitle mb-6 text-center">POSISI MODUL 06 DALAM <span class="text-tactical-indigo">CURRICULUM</span></h3>
+        <div class="grid md:grid-cols-3 gap-6 items-center">
+          <div class="text-center">
+            <div class="tactical-badge mb-3" style="background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3); color: #c084fc;">
+              MODUL 01-05 (CORE)
+            </div>
+            <p class="text-sm text-white/60">
+              Konsep, framework, hands-on dengan <strong class="text-white">Claude sebagai primary vehicle</strong>. Coverage: fundamental, intel, visual, reasoning, capstone.
+            </p>
+          </div>
+          <div class="flex justify-center">
+            <div class="vs-pill">+</div>
+          </div>
+          <div class="text-center">
+            <div class="tactical-badge mb-3">
+              MODUL 06 (DEEP DIVE)
+            </div>
+            <p class="text-sm text-white/60">
+              Tool-focused deep dive <strong class="text-white">Gemini + NotebookLM</strong>. Lebih luas daripada sekadar "Gemini alternative" — eksplorasi kapabilitas yang tidak dimiliki Claude.
+            </p>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-tactical-indigo/10 border border-tactical-indigo/30 rounded-xl text-center">
+          <div class="text-tactical-indigo font-semibold mb-1">💡 Access Model</div>
+          <div class="text-sm text-white/70"><strong>Standalone</strong> — tidak locked behind Modul 01-05. Peserta bebas akses langsung dari landing. Recommended setelah minimal Modul 01 (untuk konteks RISEN framework).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SESSIONS -->
+  <section id="sessions" class="relative py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-tactical-indigo font-mono text-sm mb-4">4 SESI</div>
+        <h2 class="section-title">STRUCTURED <span class="text-tactical-indigo">DEEP DIVE</span></h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Session 6.1 -->
+        <a href="sesi-06-01-gemini-ecosystem.html" class="module-card glass-lit p-6 rounded-2xl" style="--session-color: #6366f1;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-indigo-400">6.1</span>
+              </div>
+              <div>
+                <div class="text-xs text-indigo-400 font-mono">SESI 1 • 40 MENIT</div>
+                <h3 class="font-semibold text-lg">Gemini Ecosystem Overview</h3>
+              </div>
+            </div>
+            <span class="px-2 py-1 bg-indigo-500/20 rounded text-indigo-400 text-xs font-mono">KONSEP</span>
+          </div>
+          <p class="text-sm text-white/60 mb-4">
+            Peta lengkap keluarga <strong class="text-white">Gemini 2.5 Pro / Flash / Flash-Lite</strong>, thinking mode, multimodal input (image/video/audio), search grounding, code execution, dan free-tier vs AI Studio vs Vertex.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Model Variants</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Thinking Mode</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Multimodal</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Search Grounding</span>
+          </div>
+          <div class="flex items-center text-indigo-400 text-sm font-semibold">
+            Mulai Sesi 6.1 →
+          </div>
+        </a>
+
+        <!-- Session 6.2 -->
+        <a href="sesi-06-02-notebooklm-deep-dive.html" class="module-card glass-lit p-6 rounded-2xl" style="--session-color: #8b5cf6;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-violet-400">6.2</span>
+              </div>
+              <div>
+                <div class="text-xs text-violet-400 font-mono">SESI 2 • 50 MENIT</div>
+                <h3 class="font-semibold text-lg">NotebookLM untuk Intel Synthesis</h3>
+              </div>
+            </div>
+            <span class="px-2 py-1 bg-violet-500/20 rounded text-violet-400 text-xs font-mono">HANDS-ON</span>
+          </div>
+          <p class="text-sm text-white/60 mb-4">
+            Master NotebookLM sebagai <strong class="text-white">intelligence workbench</strong>: upload 50+ sources, briefing doc generation, audio overview (dua host auto-podcast), mind map visual, custom analyst persona, dan sharing ke tim.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Sources</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Audio Overview</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Mind Map</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Briefing Doc</span>
+          </div>
+          <div class="flex items-center text-violet-400 text-sm font-semibold">
+            Mulai Sesi 6.2 →
+          </div>
+        </a>
+
+        <!-- Session 6.3 -->
+        <a href="sesi-06-03-gemini-visual-generation.html" class="module-card glass-lit p-6 rounded-2xl" style="--session-color: #f43f5e;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-rose-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-rose-400">6.3</span>
+              </div>
+              <div>
+                <div class="text-xs text-rose-400 font-mono">SESI 3 • 40 MENIT</div>
+                <h3 class="font-semibold text-lg">Gemini Visual Generation</h3>
+              </div>
+            </div>
+            <span class="px-2 py-1 bg-rose-500/20 rounded text-rose-400 text-xs font-mono">VISUAL</span>
+          </div>
+          <p class="text-sm text-white/60 mb-4">
+            Generate <strong class="text-white">infografis, sitrep visual, schematic</strong> dengan Imagen 4; dashboard interaktif via <strong class="text-white">Gemini Canvas</strong>; video brief via Veo. Prompting disiplin untuk reproducible visuals.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Imagen 4</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Canvas</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Veo</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">OPSEC</span>
+          </div>
+          <div class="flex items-center text-rose-400 text-sm font-semibold">
+            Mulai Sesi 6.3 →
+          </div>
+        </a>
+
+        <!-- Session 6.4 -->
+        <a href="sesi-06-04-multi-tool-workflow.html" class="module-card glass-lit p-6 rounded-2xl" style="--session-color: #a78bfa;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-purple-400">6.4</span>
+              </div>
+              <div>
+                <div class="text-xs text-purple-400 font-mono">SESI 4 • 50 MENIT</div>
+                <h3 class="font-semibold text-lg">Multi-Tool Workflow Integration</h3>
+              </div>
+            </div>
+            <span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400 text-xs font-mono">CAPSTONE</span>
+          </div>
+          <p class="text-sm text-white/60 mb-4">
+            End-to-end exercise: <strong class="text-white">NotebookLM</strong> ingest multi-source → <strong class="text-white">Claude/Gemini</strong> strategic analysis → <strong class="text-white">Gemini Imagen</strong> visual package → final intel brief. Tool-switching discipline.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">End-to-End</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Tool Handoff</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">OPSEC Gate</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/60 text-xs">Production</span>
+          </div>
+          <div class="flex items-center text-purple-400 text-sm font-semibold">
+            Mulai Sesi 6.4 →
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- WHEN TO USE -->
+  <section id="when-to-use" class="relative py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-tactical-indigo font-mono text-sm mb-4">DECISION FRAMEWORK</div>
+        <h2 class="section-title">KAPAN <span class="text-tactical-indigo">PAKAI APA</span>?</h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left py-4 px-3 text-white/60 font-mono text-xs">TASK</th>
+              <th class="text-left py-4 px-3 text-purple-400 font-mono text-xs">CLAUDE</th>
+              <th class="text-left py-4 px-3 text-indigo-400 font-mono text-xs">GEMINI</th>
+              <th class="text-left py-4 px-3 text-violet-400 font-mono text-xs">NOTEBOOKLM</th>
+              <th class="text-left py-4 px-3 text-green-400 font-mono text-xs">WINNER</th>
+            </tr>
+          </thead>
+          <tbody class="text-white/70">
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Deep reasoning / COA analysis</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐</td>
+              <td class="py-3 px-3 text-purple-400 font-semibold">Claude</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Multi-doc sourced synthesis</td>
+              <td class="py-3 px-3">⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐</td>
+              <td class="py-3 px-3 text-violet-400 font-semibold">NotebookLM</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Image generation (sitrep, infografis)</td>
+              <td class="py-3 px-3">❌</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐ (Imagen)</td>
+              <td class="py-3 px-3">❌</td>
+              <td class="py-3 px-3 text-indigo-400 font-semibold">Gemini</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Real-time web search grounding</td>
+              <td class="py-3 px-3">⭐⭐⭐ (via MCP)</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐ (native)</td>
+              <td class="py-3 px-3">❌ (fixed sources)</td>
+              <td class="py-3 px-3 text-indigo-400 font-semibold">Gemini</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Video / audio analysis</td>
+              <td class="py-3 px-3">⭐⭐⭐ (image only)</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐ (native)</td>
+              <td class="py-3 px-3">⭐⭐⭐ (transcript)</td>
+              <td class="py-3 px-3 text-indigo-400 font-semibold">Gemini</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Briefing doc dari 50+ dokumen</td>
+              <td class="py-3 px-3">⭐⭐⭐ (context limit)</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐ (2M tokens)</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐ (designed for)</td>
+              <td class="py-3 px-3 text-violet-400 font-semibold">NotebookLM</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Audio briefing (voice-first consumption)</td>
+              <td class="py-3 px-3">❌</td>
+              <td class="py-3 px-3">⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐ (audio overview)</td>
+              <td class="py-3 px-3 text-violet-400 font-semibold">NotebookLM</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-3 font-semibold text-white">Creative writing / narrative brief</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐ (source-locked)</td>
+              <td class="py-3 px-3 text-purple-400 font-semibold">Claude</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-semibold text-white">Ethical judgment / hedged advice</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐⭐</td>
+              <td class="py-3 px-3">⭐⭐⭐</td>
+              <td class="py-3 px-3 text-purple-400 font-semibold">Claude</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 text-center text-white/50 text-sm italic">
+        Catatan: rating ini snapshot per 2026-04 dan bisa bergeser seiring model update. Gunakan sebagai <em>starting heuristic</em>, bukan doktrin kaku.
+      </div>
+    </div>
+  </section>
+
+  <!-- CROSS-REFERENCE ke Modul 01-05 -->
+  <section id="cross-ref" class="relative py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-tactical-indigo font-mono text-sm mb-4">CROSS-REFERENCE</div>
+        <h2 class="section-title">
+          TERKAIT SESI DI <span class="text-tactical-indigo">MODUL LAIN</span>
+        </h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-4">
+          Beberapa sesi di Modul 01-05 memiliki <strong class="text-white">Tool Comparison callout</strong> yang cross-reference ke konten Modul 06. Lompat bolak-balik sesuai kebutuhan.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="sesi-01-02-framework-risen.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400 text-xs font-mono">SESI 1.2</span>
+            <span class="text-xs text-white/40">RISEN Framework</span>
+          </div>
+          <div class="text-sm text-white/70">→ RISEN works across LLMs (Claude vs Gemini)</div>
+        </a>
+        <a href="sesi-02-01-deep-research.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-teal-500/20 rounded text-teal-400 text-xs font-mono">SESI 2.1</span>
+            <span class="text-xs text-white/40">Deep Research</span>
+          </div>
+          <div class="text-sm text-white/70">→ When NotebookLM beats general chat</div>
+        </a>
+        <a href="sesi-02-04-multi-source-fusion.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-amber-500/20 rounded text-amber-400 text-xs font-mono">SESI 2.4</span>
+            <span class="text-xs text-white/40">Multi-Source Fusion</span>
+          </div>
+          <div class="text-sm text-white/70">→ NotebookLM sebagai fusion engine</div>
+        </a>
+        <a href="sesi-03-02-sitrep-visual.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-green-500/20 rounded text-green-400 text-xs font-mono">SESI 3.2</span>
+            <span class="text-xs text-white/40">Sitrep Visual</span>
+          </div>
+          <div class="text-sm text-white/70">→ Imagen sebagai visual generator</div>
+        </a>
+        <a href="sesi-03-03-dashboard-infografis.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-amber-500/20 rounded text-amber-400 text-xs font-mono">SESI 3.3</span>
+            <span class="text-xs text-white/40">Dashboard & Infografis</span>
+          </div>
+          <div class="text-sm text-white/70">→ Gemini Canvas untuk dashboard interaktif</div>
+        </a>
+        <a href="sesi-04-01-deep-thinking.html" class="glass p-5 rounded-xl hover:bg-white/5 transition-all">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2 py-1 bg-amber-500/20 rounded text-amber-400 text-xs font-mono">SESI 4.1</span>
+            <span class="text-xs text-white/40">Deep Thinking</span>
+          </div>
+          <div class="text-sm text-white/70">→ Gemini 2.5 thinking mode comparison</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA to start -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="glass-lit p-12 rounded-2xl">
+        <h2 class="subtitle mb-4">SIAP <span class="text-tactical-indigo">MULAI</span>?</h2>
+        <p class="text-white/60 mb-8">
+          Mulai dari Sesi 6.1 untuk ecosystem overview, atau langsung loncat ke topik spesifik yang Anda butuhkan.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="sesi-06-01-gemini-ecosystem.html" class="cta-primary">
+            Sesi 6.1: Gemini Ecosystem →
+          </a>
+          <a href="index.html" class="cta-secondary">
+            ← Kembali ke Landing
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas • Modul 06 (Deep Dive)</p>
+    </div>
+  </footer>
+
+</body>
+</html>
