@@ -60,13 +60,55 @@
 
     .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
 
-    .prompt-block { background: #0a0f1a; border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
     .prompt-block .label { color: #fb7185; font-weight: 600; }
+
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(244,63,94,0.2); border: 1px solid rgba(244,63,94,0.4); color: #fb7185; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(244,63,94,0.35); }
+    .copy-btn.copied { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); color: #10b981; }
+
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+
+    .step-badge { width: 36px; height: 36px; border-radius: 50%; background: rgba(244,63,94,0.2); border: 2px solid rgba(244,63,94,0.4); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fb7185; flex-shrink: 0; }
 
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 7, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{
+  currentSlide: 0,
+  totalSlides: 11,
+  progress: 0,
+  copied: null,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' });
+  },
+  copyText(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    navigator.clipboard.writeText(el.innerText).then(() => {
+      this.copied = id;
+      setTimeout(() => { if (this.copied === id) this.copied = null; }, 2000);
+    });
+  }
+}">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -89,7 +131,7 @@
         <div class="text-sm">
           <span class="text-accent font-mono">SESI 6.3</span>
           <span class="text-white/40 mx-2">•</span>
-          <span class="text-white/60">40 Menit</span>
+          <span class="text-white/60">50 Menit</span>
           <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">VISUAL</span>
         </div>
       </div>
@@ -118,7 +160,7 @@
         Imagen, Canvas, dan Veo — tiga kapabilitas visual Gemini untuk produce <strong class="text-white">sitrep infografis, dashboard interaktif, dan video brief</strong> yang tidak bisa dilakukan Claude.
       </p>
 
-      <div class="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+      <div class="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
         <div class="glass p-4 rounded-xl">
           <div class="text-3xl mb-2">🖼️</div>
           <div class="text-accent font-mono text-xs mb-1">IMAGEN 4</div>
@@ -133,6 +175,18 @@
           <div class="text-3xl mb-2">🎬</div>
           <div class="text-accent font-mono text-xs mb-1">VEO</div>
           <div class="text-sm text-white/70">Video brief generation</div>
+        </div>
+      </div>
+
+      <div class="glass p-5 rounded-xl max-w-2xl mx-auto">
+        <div class="text-accent font-mono text-xs mb-3">SESI INI MENCAKUP</div>
+        <div class="grid sm:grid-cols-2 gap-2 text-sm text-white/70 text-left">
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Imagen prompt framework 4-komponen</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> 5 prompt template siap pakai</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Canvas step-by-step tutorial</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Teknik iterative prompting</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> OPSEC 5-checks mandatory</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Hands-on exercise 20 menit</div>
         </div>
       </div>
     </div>
@@ -186,7 +240,10 @@
         <h3 class="text-xl font-semibold mb-4">🎯 Prompting Framework: <span class="text-accent">SUBJECT + STYLE + COMPOSITION + CONSTRAINT</span></h3>
         <p class="text-sm text-white/60 mb-4">Prompt image harus 4 komponen untuk reproducible, professional output.</p>
 
-        <div class="prompt-block mb-4">
+        <div class="prompt-block mb-4 relative" id="framework-template">
+          <button class="copy-btn" :class="copied === 'framework-template' ? 'copied' : ''" @click="copyText('framework-template')">
+            <span x-text="copied === 'framework-template' ? '✓ copied' : 'copy'"></span>
+          </button>
           <div class="mb-2"><span class="label">SUBJECT:</span> Tactical situational awareness infographic</div>
           <div class="mb-2"><span class="label">STYLE:</span> Modern military briefing, dark navy background, amber + cyan accent colors, flat vector illustration style</div>
           <div class="mb-2"><span class="label">COMPOSITION:</span> Top-down map view, 16:9 landscape, labeled zones with callout lines, legend in bottom-right corner</div>
@@ -215,7 +272,162 @@
     </div>
   </section>
 
-  <!-- SLIDE 3: CANVAS -->
+  <!-- SLIDE 3: IMAGEN PROMPT LIBRARY -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">IMAGEN <span class="text-accent">5 TEMPLATE SIAP PAKAI</span></h2>
+        <p class="text-white/50 mt-3 text-sm">Semua template sudah melewati OPSEC pre-check — generic, non-classified, safe for training materials</p>
+      </div>
+
+      <div class="space-y-4" x-data="{ open: null }">
+
+        <!-- Template I-01 -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'i01' ? null : 'i01'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">I-01</div>
+              <div class="text-left">
+                <div class="font-semibold">Air Situation Awareness Infographic</div>
+                <div class="text-xs text-white/40 mt-0.5">Sitrep visual 16:9 untuk briefing komandan</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'i01' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'i01' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="img-i01">
+                <button class="copy-btn" :class="copied === 'img-i01' ? 'copied' : ''" @click="copyText('img-i01')">
+                  <span x-text="copied === 'img-i01' ? '✓ copied' : 'copy'"></span>
+                </button>
+                <div class="mb-2"><span class="label">SUBJECT:</span> Air situational awareness overview infographic for a military region, showing patrol sectors, coverage zones, and detection rings</div>
+                <div class="mb-2"><span class="label">STYLE:</span> Dark navy background, amber and cyan color palette, flat vector map style, clean military cartography aesthetic, no photorealism</div>
+                <div class="mb-2"><span class="label">COMPOSITION:</span> 16:9 landscape format, top-down map projection, numbered sectors with dashed boundary lines, small aircraft silhouette icons (generic), legend panel bottom-right, title bar top-left</div>
+                <div><span class="label">CONSTRAINT:</span> No country names or specific geographic locations, generic aircraft silhouettes only (no squadron markings), no classified range rings or real frequencies, professional non-sensationalized tone, label as ILLUSTRATION ONLY</div>
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">USE CASE: Pembuka briefing komandan — visual situasi umum sebelum detail intel</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template I-02 -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'i02' ? null : 'i02'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">I-02</div>
+              <div class="text-left">
+                <div class="font-semibold">Threat Assessment Matrix Visual</div>
+                <div class="text-xs text-white/40 mt-0.5">Risk matrix infografis dengan probability vs impact</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'i02' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'i02' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="img-i02">
+                <button class="copy-btn" :class="copied === 'img-i02' ? 'copied' : ''" @click="copyText('img-i02')">
+                  <span x-text="copied === 'img-i02' ? '✓ copied' : 'copy'"></span>
+                </button>
+                <div class="mb-2"><span class="label">SUBJECT:</span> 4x4 threat assessment risk matrix showing probability vs impact quadrants, with 6 generic threat indicators plotted as labeled circles</div>
+                <div class="mb-2"><span class="label">STYLE:</span> Dark background (#050810), red-amber-green gradient quadrant coloring, clean minimal chart design, military intelligence briefing aesthetic</div>
+                <div class="mb-2"><span class="label">COMPOSITION:</span> Square 1:1 format, X-axis = probability (Low to High), Y-axis = impact (Low to High), threat indicators labeled T1-T6, color legend at bottom</div>
+                <div><span class="label">CONSTRAINT:</span> Generic placeholder labels only (T1, T2...), no real threat actor names, no specific geographic indicators, no classified capability descriptors</div>
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">USE CASE: Slide visual untuk threat assessment briefing — replace T1-T6 dengan nama generic sesuai konteks</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template I-03 -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'i03' ? null : 'i03'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">I-03</div>
+              <div class="text-left">
+                <div class="font-semibold">Force Disposition Diagram</div>
+                <div class="text-xs text-white/40 mt-0.5">Skema taktis unit disposition untuk planning</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'i03' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'i03' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="img-i03">
+                <button class="copy-btn" :class="copied === 'img-i03' ? 'copied' : ''" @click="copyText('img-i03')">
+                  <span x-text="copied === 'img-i03' ? '✓ copied' : 'copy'"></span>
+                </button>
+                <div class="mb-2"><span class="label">SUBJECT:</span> Tactical force disposition schematic showing blue force elements in defensive positions around a generic airbase, with supporting elements indicated by icons</div>
+                <div class="mb-2"><span class="label">STYLE:</span> Military topographic map style, muted terrain colors (brown-green), blue force markers, clean NATO-style symbology (simplified), dark outline aesthetic</div>
+                <div class="mb-2"><span class="label">COMPOSITION:</span> Top-down schematic 16:9, north indicator top-right, generic airbase outline center, unit markers using simplified NATO symbols, dashed movement arrows</div>
+                <div><span class="label">CONSTRAINT:</span> Generic airbase only — no real location names, no unit designators beyond generic "Alpha/Bravo/Charlie", no specific weapon system callouts, labeled "TRAINING SCENARIO — NOT REAL OPERATIONS"</div>
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">USE CASE: Doctrine class dan scenario planning — visual pembuka sebelum peta detail di briefing room</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template I-04 -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'i04' ? null : 'i04'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">I-04</div>
+              <div class="text-left">
+                <div class="font-semibold">OSINT Timeline Infographic</div>
+                <div class="text-xs text-white/40 mt-0.5">Visualisasi timeline events dari sumber terbuka</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'i04' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'i04' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="img-i04">
+                <button class="copy-btn" :class="copied === 'img-i04' ? 'copied' : ''" @click="copyText('img-i04')">
+                  <span x-text="copied === 'img-i04' ? '✓ copied' : 'copy'"></span>
+                </button>
+                <div class="mb-2"><span class="label">SUBJECT:</span> Horizontal timeline infographic showing 8 key events over a 12-month period, with event severity indicated by icon size and color intensity</div>
+                <div class="mb-2"><span class="label">STYLE:</span> Dark navy background, timeline as glowing horizontal line, events as circles with connecting lines to descriptor boxes, amber/red severity gradient, minimal modern design</div>
+                <div class="mb-2"><span class="label">COMPOSITION:</span> 16:9 widescreen, timeline centered horizontally, event dates as YYYY-MM labels, event descriptor boxes alternating above/below line, "CLASSIFIED: UNCLASSIFIED" watermark bottom</div>
+                <div><span class="label">CONSTRAINT:</span> Generic event labels (Event A through H), no real dates or place names, severity colors only (no specific casualty numbers), placeholder text in descriptor boxes</div>
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">USE CASE: Briefing OSINT trend report — timeline visual sebelum detail analisis per event</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template I-05 -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'i05' ? null : 'i05'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">I-05</div>
+              <div class="text-left">
+                <div class="font-semibold">COA Comparison Infographic</div>
+                <div class="text-xs text-white/40 mt-0.5">Visual perbandingan 3 Course of Action</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'i05' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'i05' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="img-i05">
+                <button class="copy-btn" :class="copied === 'img-i05' ? 'copied' : ''" @click="copyText('img-i05')">
+                  <span x-text="copied === 'img-i05' ? '✓ copied' : 'copy'"></span>
+                </button>
+                <div class="mb-2"><span class="label">SUBJECT:</span> Three-column comparison infographic for military course of action analysis — COA Alpha (offensive), COA Bravo (defensive), COA Charlie (diplomatic), each with pros/cons listed</div>
+                <div class="mb-2"><span class="label">STYLE:</span> Dark professional military briefing, each COA column has distinct color (blue/amber/green), header icons representing the approach type, rating bars at bottom</div>
+                <div class="mb-2"><span class="label">COMPOSITION:</span> 16:9, three equal-width columns, header at top with COA name + icon, 4 criteria rows with checkmark/x indicators, overall recommendation highlighted bottom center</div>
+                <div><span class="label">CONSTRAINT:</span> Generic criteria only (Risk, Speed, Resources, Reversibility), no operational specifics, no unit names, placeholder text in detail cells, labeled "PLANNING TOOL — TRAINING USE"</div>
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">USE CASE: Decision brief kepada komandan — visual COA sebelum rekomendasi tertulis</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: CANVAS -->
   <section class="slide-section">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-12">
@@ -260,17 +472,110 @@
       </div>
 
       <div class="glass-lit p-6 rounded-2xl">
-        <h3 class="font-semibold text-accent mb-3">💡 Canvas vs NotebookLM vs Claude</h3>
+        <h3 class="font-semibold text-accent mb-3">💡 Canvas vs NotebookLM vs Claude Artifacts</h3>
         <div class="text-sm text-white/70 space-y-2">
-          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">Canvas:</strong><span>Live interactive output — user klik, iterate, export. Ideal untuk dashboard & prototype.</span></div>
-          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">NotebookLM:</strong><span>Source-grounded research. Bukan untuk build interactive output.</span></div>
-          <div class="flex items-start gap-2"><strong class="text-white min-w-[140px]">Claude Artifacts:</strong><span>Serupa Canvas — juga bisa build interactive HTML. Claude Artifacts umumnya lebih kuat di reasoning code-nya, Canvas lebih cepat iterate.</span></div>
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[160px]">Canvas (Gemini):</strong><span>Live interactive output — user klik, iterate, export. Ideal untuk dashboard & prototype. Built into chat.</span></div>
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[160px]">NotebookLM:</strong><span>Source-grounded research. Bukan untuk build interactive output — ini tools analisis dokumen.</span></div>
+          <div class="flex items-start gap-2"><strong class="text-white min-w-[160px]">Claude Artifacts:</strong><span>Serupa Canvas — juga bisa build interactive HTML. Claude Artifacts umumnya lebih kuat di reasoning code-nya, Canvas lebih cepat iterate dengan Gemini ecosystem.</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SLIDE 4: VEO -->
+  <!-- SLIDE 5: CANVAS STEP-BY-STEP -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CANVAS TUTORIAL</div>
+        <h2 class="slide-title">STEP-BY-STEP <span class="text-accent">WORKFLOW</span></h2>
+        <p class="text-white/50 mt-3 text-sm">Dari zero ke interactive intel dashboard dalam 7 langkah</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <!-- Steps 1-4 -->
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">1</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Buka Canvas Mode</div>
+              <div class="text-sm text-white/60">Di gemini.google.com → klik ikon Canvas (dua kotak) di toolbar sebelah kiri input box. Canvas panel terbuka di kanan layar.</div>
+              <div class="mt-2 text-xs text-amber-400 font-mono">⚠ Pastikan tidak ada data classified di tab browser yang sama</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">2</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Set Context di Chat</div>
+              <div class="text-sm text-white/60">Berikan konteks di chat box sebelum minta Canvas generate. Semakin spesifik konteks → semakin relevan output.</div>
+              <div class="mt-2 font-mono text-xs text-white/50 bg-black/30 p-2 rounded">"Saya perlu dashboard intel untuk monitoring sortie count harian. Data: [paste data]. Buat interactive HTML."</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">3</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Generate Pertama</div>
+              <div class="text-sm text-white/60">Gemini generate HTML/CSS/JS dan render langsung di Canvas panel kanan. Anda bisa lihat hasilnya real-time sambil kode ditulis.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">4</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Inspect & Interact</div>
+              <div class="text-sm text-white/60">Klik elemen di Canvas preview — filter, sorting, hover tooltip. Kalau ada yang tidak benar atau kurang, catat spesifik apa yang mau diubah.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Steps 5-7 + Export -->
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">5</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Iterate via Chat</div>
+              <div class="text-sm text-white/60">Gunakan chat untuk refine — tidak perlu re-prompt dari awal. Canvas ingat context dari iterasi sebelumnya.</div>
+              <div class="mt-2 font-mono text-xs text-white/50 bg-black/30 p-2 rounded">"Ubah warna header jadi navy dark, tambahkan filter dropdown per tanggal, pindahkan summary cards ke atas chart"</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">6</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Preview Full Screen</div>
+              <div class="text-sm text-white/60">Klik ikon expand di Canvas panel untuk full-screen preview. Test semua interaksi: click, hover, filter, sort sebelum export.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 p-4 glass-lit rounded-xl">
+            <div class="step-badge">7</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Export & Deploy</div>
+              <div class="text-sm text-white/60 mb-2">Pilih export format sesuai kebutuhan:</div>
+              <div class="space-y-1 text-xs text-white/50 font-mono">
+                <div>• <span class="text-accent">Download HTML</span> → standalone file, bisa buka tanpa internet</div>
+                <div>• <span class="text-accent">Export to Google Docs</span> → kolaborasi + komentar</div>
+                <div>• <span class="text-accent">Share link</span> → view-only, cocok untuk distribusi ke komandan</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+            <div class="font-mono text-xs text-accent mb-2">PRO TIP: Prompt Template Canvas Dashboard</div>
+            <div class="prompt-block relative text-xs" id="canvas-dashboard">
+              <button class="copy-btn" :class="copied === 'canvas-dashboard' ? 'copied' : ''" @click="copyText('canvas-dashboard')">
+                <span x-text="copied === 'canvas-dashboard' ? '✓ copied' : 'copy'"></span>
+              </button>
+              Buat interactive HTML dashboard untuk [TOPIK]. Data: [paste atau deskripsi data]. Tampilkan: [list komponen — chart, table, summary cards]. Warna scheme: dark navy, accent [warna]. Bahasa Indonesia. Self-contained single HTML file, tidak perlu CDN.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: VEO -->
   <section class="slide-section">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-12">
@@ -312,19 +617,133 @@
 
         <div class="p-5 glass rounded-xl">
           <h4 class="font-semibold mb-3">🎯 Contoh Prompt Veo (acceptable)</h4>
-          <div class="prompt-block">
-            <div class="mb-2"><span class="label">SUBJECT:</span> Generic military aircraft silhouette at sunset</div>
-            <div class="mb-2"><span class="label">CAMERA:</span> Slow aerial tracking shot, cinematic, 24fps</div>
-            <div class="mb-2"><span class="label">MOOD:</span> Professional, inspiring, not sensationalized</div>
-            <div class="mb-2"><span class="label">DURATION:</span> 8 seconds, loop-ready</div>
-            <div><span class="label">CONSTRAINT:</span> No specific country markings, no identifiable squadron insignia, no real-world locations. Training material only.</div>
+          <div class="prompt-block relative" id="veo-template">
+            <button class="copy-btn" :class="copied === 'veo-template' ? 'copied' : ''" @click="copyText('veo-template')">
+              <span x-text="copied === 'veo-template' ? '✓ copied' : 'copy'"></span>
+            </button>
+            <div class="mb-2"><span class="label">SUBJECT:</span> Generic military aircraft silhouette at sunset, training sortie returning to base</div>
+            <div class="mb-2"><span class="label">CAMERA:</span> Slow aerial tracking shot, cinematic, 24fps, golden hour lighting</div>
+            <div class="mb-2"><span class="label">MOOD:</span> Professional, inspiring, disciplined — not action-movie sensationalized</div>
+            <div class="mb-2"><span class="label">DURATION:</span> 8 seconds, loop-ready composition</div>
+            <div><span class="label">CONSTRAINT:</span> No specific country markings, no identifiable squadron insignia, no real-world locations recognizable, no weapons shown. Training/recruitment material only.</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SLIDE 5: OPSEC -->
+  <!-- SLIDE 7: ITERATIVE PROMPTING -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK LANJUTAN</div>
+        <h2 class="slide-title">ITERATIVE <span class="text-accent">PROMPTING</span></h2>
+        <p class="text-white/50 mt-3 text-sm">First output adalah starting point, bukan finish line — ini cara iterate menuju hasil professional</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <!-- Left: Iteration pattern -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Pattern: Generate → Critique → Refine</h3>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm flex-shrink-0">G</div>
+              <div>
+                <div class="font-semibold text-sm mb-1">Generate (Round 1)</div>
+                <div class="text-xs text-white/60">Pakai prompt 4-komponen. Generate 4 variant. Pilih base terbaik — jangan terlalu lama memilih, ini hanya starting point.</div>
+              </div>
+            </div>
+            <div class="w-px h-6 bg-white/10 ml-4"></div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm flex-shrink-0">C</div>
+              <div>
+                <div class="font-semibold text-sm mb-1">Critique Spesifik</div>
+                <div class="text-xs text-white/60">Identifikasi 2-3 masalah konkret. Hindari feedback vague seperti "kurang bagus" — tulis apa tepatnya yang salah.</div>
+                <div class="mt-2 text-xs font-mono text-white/40 bg-black/30 p-2 rounded">❌ "Kurang profesional"<br>✓ "Warna background terlalu terang, teks legend terlalu kecil, tidak ada north indicator"</div>
+              </div>
+            </div>
+            <div class="w-px h-6 bg-white/10 ml-4"></div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm flex-shrink-0">R</div>
+              <div>
+                <div class="font-semibold text-sm mb-1">Refine Prompt</div>
+                <div class="text-xs text-white/60">Tambahkan correction ke prompt. Tambahkan ke bagian CONSTRAINT atau STYLE sesuai masalah. Generate ulang hanya elemen yang bermasalah jika bisa.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Refinement vocabulary -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Vocabulary Refinement</h3>
+          <p class="text-xs text-white/50 mb-4">Kata-kata ini di prompt image menghasilkan perubahan yang predictable:</p>
+          <div class="space-y-3">
+            <div>
+              <div class="text-xs text-accent font-mono mb-1">UNTUK GAYA / ESTETIKA</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">editorial quality</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">highly detailed</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">minimalist clean</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">flat vector art</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">isometric view</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-accent font-mono mb-1">UNTUK SKEMA WARNA</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">monochromatic</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">dark mode palette</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">amber accent on navy</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">desaturated muted</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-accent font-mono mb-1">UNTUK KOMPOSISI</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">rule of thirds</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">centered symmetrical</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">full bleed background</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">negative space heavy</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-accent font-mono mb-1">UNTUK TEKS DI GAMBAR</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">readable labels</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">callout lines with text</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">monospace font labels</span>
+                <span class="text-xs bg-white/10 px-2 py-1 rounded font-mono">no text in image</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-round example -->
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-4">Contoh Iterasi 3-Ronde: Sitrep Infografis</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+            <div class="text-xs text-white/40 font-mono mb-2">ROUND 1 — BASELINE</div>
+            <div class="text-sm text-white/70 mb-3">Prompt minimal: "tactical map infographic, dark theme, military style"</div>
+            <div class="text-xs text-white/50">Output: generic, warna terlalu cerah, tidak ada detail militer, teks tidak readable</div>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl border border-accent/20">
+            <div class="text-xs text-accent font-mono mb-2">ROUND 2 — REFINED</div>
+            <div class="text-sm text-white/70 mb-3">Tambah: "flat vector, navy #050810 background, amber accent, labeled sectors A-D, north indicator, monospace labels, no photorealism"</div>
+            <div class="text-xs text-white/50">Output: jauh lebih baik, tapi legend masih kurang jelas dan tidak ada scale indicator</div>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl border border-green-500/20">
+            <div class="text-xs text-green-400 font-mono mb-2">ROUND 3 — FINAL</div>
+            <div class="text-sm text-white/70 mb-3">Tambah: "bottom-right legend panel with 4 icon types, scale bar bottom-left in km, editorial quality, print-ready resolution"</div>
+            <div class="text-xs text-white/50">Output: briefing-ready, semua elemen ada, konsisten dengan standar visual militer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: OPSEC -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-12">
@@ -377,71 +796,238 @@
           </div>
         </div>
       </div>
+
+      <div class="glass p-5 rounded-xl">
+        <div class="font-mono text-xs text-accent mb-3">DECISION TREE: BOLEH GENERATE?</div>
+        <div class="text-sm text-white/70 space-y-2">
+          <div class="flex items-center gap-3"><span class="text-green-400 font-bold w-4">✓</span> Generic, tidak ada country/unit/spec spesifik → <strong class="text-green-400">BOLEH</strong></div>
+          <div class="flex items-center gap-3"><span class="text-amber-400 font-bold w-4">?</span> Ada konteks operasional tapi masih bisa digeneralize → <strong class="text-amber-400">GENERALIZE DULU, lalu generate</strong></div>
+          <div class="flex items-center gap-3"><span class="text-red-400 font-bold w-4">✗</span> Classified detail tidak bisa dihapus tanpa kehilangan fungsi → <strong class="text-red-400">JANGAN GENERATE</strong></div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- SLIDE 6: EXERCISE -->
+  <!-- SLIDE 9: EXERCISE -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-12">
-        <div class="text-accent font-mono text-sm mb-4">EXERCISE</div>
-        <h2 class="slide-title">HANDS-ON <span class="text-accent">15 MENIT</span></h2>
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON EXERCISE</div>
+        <h2 class="slide-title">VISUAL INTEL <span class="text-accent">PACKAGE</span></h2>
+        <p class="text-white/50 mt-3">20 Menit • Produce 2 visual product dari skenario yang sama</p>
       </div>
 
-      <div class="glass-lit p-8 rounded-2xl">
-        <div class="p-4 bg-accent/10 rounded-xl mb-6">
-          <div class="font-semibold text-accent mb-2">🎯 Tasking</div>
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <div class="p-5 bg-accent/10 border border-accent/30 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">📋 Skenario Tasking</div>
           <p class="text-sm text-white/70">
-            Generate <strong class="text-white">infografis sitrep</strong> sederhana untuk brief komandan — visualisasi "Air Situation Awareness Indo-Pasifik Q1 2026" (generic, non-classified). Gunakan Imagen dulu, lalu coba rebuild dengan Canvas untuk perbandingan.
+            Anda diminta menyiapkan visual package untuk briefing "Situasi Udara Indo-Pasifik Q1 2026" kepada Komandan. Package harus terdiri dari: (1) Infografis statis sitrep menggunakan Imagen, dan (2) Interactive summary dashboard menggunakan Canvas. Semua konten <strong class="text-white">harus lolos OPSEC 5-checks</strong>.
           </p>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <div class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">1</div>
             <div class="flex-1">
-              <div class="font-semibold text-white mb-1">Tulis prompt 4-komponen (3 min)</div>
-              <p class="text-sm text-white/60">Pakai framework Subject + Style + Composition + Constraint. Subject harus <strong class="text-white">generic</strong> — tidak boleh country name, squadron, atau specific aircraft type.</p>
+              <div class="font-semibold text-white mb-1">OPSEC Pre-Check (2 min)</div>
+              <p class="text-sm text-white/60">Sebelum mulai, tentukan: apa saja yang <strong class="text-white">tidak boleh ada</strong> di visual ini? Tulis 3-5 constraint OPSEC spesifik untuk skenario briefing ini. Ini akan masuk ke CONSTRAINT block semua prompt Anda.</p>
             </div>
           </div>
 
           <div class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">2</div>
             <div class="flex-1">
-              <div class="font-semibold text-white mb-1">Generate via Imagen (3 min)</div>
-              <p class="text-sm text-white/60">Di gemini.google.com, paste prompt, select Imagen model. Generate 4 variant. Pick best one.</p>
+              <div class="font-semibold text-white mb-1">Imagen — Sitrep Infografis (6 min)</div>
+              <p class="text-sm text-white/60">Tulis prompt 4-komponen (Subject + Style + Composition + Constraint). Generate 4 variant. Pilih 1 baseline. <strong class="text-white">Critique 2 masalah spesifik.</strong> Lakukan 1 iterasi refinement. Target: visual yang siap masuk briefing deck.</p>
+              <div class="mt-2 text-xs text-white/40 font-mono">Hint: Template I-01 adalah starting point yang baik — adapt dan personalisasi</div>
             </div>
           </div>
 
           <div class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">3</div>
             <div class="flex-1">
-              <div class="font-semibold text-white mb-1">Rebuild di Canvas (5 min)</div>
-              <p class="text-sm text-white/60">Prompt baru: "buatkan infografis SVG tentang [topic] dengan Gemini Canvas". Bandingkan hasil — mana yang lebih professional untuk slide briefing?</p>
+              <div class="font-semibold text-white mb-1">Canvas — Interactive Dashboard (8 min)</div>
+              <p class="text-sm text-white/60">Buka Canvas mode. Tulis prompt spesifik: dashboard dengan minimal 3 elemen (summary cards, chart, dan tabel). Gunakan data placeholder (angka generic). Iterate 1 kali untuk improve satu elemen yang kurang. <strong class="text-white">Download sebagai HTML file.</strong></p>
+              <div class="mt-2 text-xs text-white/40 font-mono">Hint: Template Canvas Dashboard di slide sebelumnya — copy dan adapt</div>
             </div>
           </div>
 
           <div class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">4</div>
             <div class="flex-1">
-              <div class="font-semibold text-white mb-1">OPSEC Review (2 min)</div>
-              <p class="text-sm text-white/60">Jalankan 5 OPSEC checks di slide sebelumnya. Apakah output Anda lolos? Jika tidak, iterate prompt untuk generalize lebih jauh.</p>
+              <div class="font-semibold text-white mb-1">Final OPSEC Audit (2 min)</div>
+              <p class="text-sm text-white/60">Jalankan 5 OPSEC checks untuk <strong class="text-white">kedua output</strong>. Apakah lolos semua? Jika ada yang gagal, iterate prompt sekali lagi untuk generalize.</p>
             </div>
           </div>
 
           <div class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">5</div>
             <div class="flex-1">
-              <div class="font-semibold text-white mb-1">Reflect (2 min)</div>
-              <p class="text-sm text-white/60">Mana lebih cocok untuk produk Koopsudnas: Imagen (photoreal/ilustrasi) atau Canvas (SVG/structured)? Kenapa?</p>
+              <div class="font-semibold text-white mb-1">Reflection (2 min)</div>
+              <p class="text-sm text-white/60">Untuk skenario briefing komandan ini: kapan Imagen lebih tepat vs Canvas? Mana yang lebih efisien untuk produksi regular di Koopsudnas? Ada gap capability yang masih butuh tools lain?</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-accent font-mono text-xs mb-1">TARGET OUTPUT</div>
+          <div class="text-sm text-white/70">1 infografis Imagen (sitrep) + 1 HTML dashboard Canvas</div>
+        </div>
+        <div class="glass p-4 rounded-xl text-center">
+          <div class="text-accent font-mono text-xs mb-1">SUCCESS CRITERIA</div>
+          <div class="text-sm text-white/70">Kedua output lolos 5 OPSEC checks dan siap digunakan sebagai draft briefing material</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SLIDE 7: WRAP UP -->
+  <!-- SLIDE 10: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      const keys = { q1: 'b', q2: 'c', q3: 'd', q4: 'a' };
+      for (const [q, a] of Object.entries(keys)) {
+        if (this.answers[q] === a) this.score++;
+      }
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.3</span></h2>
+        <p class="text-white/50 mt-3 text-sm">4 pertanyaan • Pilih jawaban terbaik</p>
+      </div>
+
+      <div class="space-y-6">
+
+        <!-- Q1 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 1 / 4</div>
+          <p class="font-semibold mb-4">Seorang Pamen ingin membuat infografis threat assessment untuk briefing Komandan. Komponen mana yang WAJIB ada dalam prompt Imagen untuk hasil yang reproducible dan professional?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Style dan Mood saja — yang paling visual' },
+              { id: 'b', text: 'Subject, Style, Composition, dan Constraint — semua 4 komponen' },
+              { id: 'c', text: 'Subject dan Resolution — konten dan kualitas teknis' },
+              { id: 'd', text: 'Style, Color scheme, dan Duration untuk video' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'b',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q1 === opt.id && opt.id !== 'b',
+                  'bg-white/5': submitted && answers.q1 !== opt.id && opt.id !== 'b'
+                }">
+                <input type="radio" name="q1" :value="opt.id" x-model="answers.q1" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Subject + Style + Composition + Constraint — 4 komponen untuk output yang predictable dan briefing-ready</p>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 2 / 4</div>
+          <p class="font-semibold mb-4">Kapan Gemini Canvas lebih tepat digunakan dibanding Imagen untuk produk intel visual?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Ketika butuh photorealistic image untuk laporan tertulis' },
+              { id: 'b', text: 'Ketika butuh video brief untuk public affairs' },
+              { id: 'c', text: 'Ketika butuh dashboard interaktif dengan data yang bisa di-filter dan di-sort' },
+              { id: 'd', text: 'Ketika butuh icon militer untuk PowerPoint slide' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'c',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q2 === opt.id && opt.id !== 'c',
+                  'bg-white/5': submitted && answers.q2 !== opt.id && opt.id !== 'c'
+                }">
+                <input type="radio" name="q2" :value="opt.id" x-model="answers.q2" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Canvas unggul untuk interactive output — dashboard dengan filter, chart, sorting. Imagen untuk static illustration.</p>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 3 / 4</div>
+          <p class="font-semibold mb-4">Seorang Pamen ingin membuat video Veo untuk training doctrine class. Mana scenario yang AMAN dari perspektif OPSEC?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Rekonstruksi insiden border tahun lalu, dengan nama lokasi yang disamarkan' },
+              { id: 'b', text: 'Video dengan voice-over meniru suara pejabat TNI AU yang dikenal' },
+              { id: 'c', text: 'Visualisasi kemampuan sistem radar spesifik yang sedang dalam procurement' },
+              { id: 'd', text: 'Generic aircraft silhouette di sunset, tanpa marking negara atau skuadron, untuk inspirational training clip' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'd',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q3 === opt.id && opt.id !== 'd',
+                  'bg-white/5': submitted && answers.q3 !== opt.id && opt.id !== 'd'
+                }">
+                <input type="radio" name="q3" :value="opt.id" x-model="answers.q3" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Generic silhouette tanpa marking — lolos semua 5 OPSEC checks. Tiga lainnya punya deception/classification risk.</p>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 4 / 4</div>
+          <p class="font-semibold mb-4">Dalam teknik iterative prompting, langkah apa yang dilakukan setelah melihat output Round 1 yang masih kurang baik?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Identifikasi 2-3 masalah spesifik (bukan vague), tambahkan correction ke CONSTRAINT atau STYLE, generate ulang' },
+              { id: 'b', text: 'Hapus semua prompt dan mulai ulang dari awal dengan prompt yang lebih panjang' },
+              { id: 'c', text: 'Ganti ke tools lain karena Imagen tidak bisa produce output yang diinginkan' },
+              { id: 'd', text: 'Langsung accept output Round 1 karena AI tidak bisa melakukan yang lebih baik' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'a',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q4 === opt.id && opt.id !== 'a',
+                  'bg-white/5': submitted && answers.q4 !== opt.id && opt.id !== 'a'
+                }">
+                <input type="radio" name="q4" :value="opt.id" x-model="answers.q4" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Iterative prompting = critique spesifik → tambah correction ke prompt → generate lagi. Bukan mulai ulang dari nol.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Submit / Score -->
+      <div class="mt-8 text-center">
+        <button x-show="!submitted" @click="submit()"
+          :disabled="Object.keys(answers).length < 4"
+          class="px-8 py-3 bg-accent rounded-xl font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-accent-light transition-colors">
+          Submit Jawaban
+        </button>
+        <div x-show="submitted" class="glass-lit p-6 rounded-2xl inline-block min-w-[280px]">
+          <div class="text-4xl font-display mb-2" :class="score >= 3 ? 'text-green-400' : score === 2 ? 'text-amber-400' : 'text-red-400'" x-text="score + ' / 4'"></div>
+          <div class="text-white/70 text-sm" x-text="score === 4 ? '🎖 Sempurna — siap produce visual intel!' : score === 3 ? '✅ Bagus — satu konsep perlu diperdalam' : score === 2 ? '📚 Review ulang materi OPSEC dan iterative prompting' : '🔄 Review ulang sesi ini sebelum lanjut'"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: WRAP UP -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-12">
@@ -455,35 +1041,42 @@
             <span class="text-accent font-bold text-xl">1</span>
             <div>
               <div class="font-semibold text-white mb-1">3 Tools, 3 Purposes</div>
-              <div class="text-sm text-white/60">Imagen = ilustrasi / infografis • Canvas = interactive / SVG • Veo = video</div>
+              <div class="text-sm text-white/60">Imagen = ilustrasi / infografis statis • Canvas = interactive HTML / SVG • Veo = video</div>
             </div>
           </div>
           <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
             <span class="text-accent font-bold text-xl">2</span>
             <div>
-              <div class="font-semibold text-white mb-1">4-Part Prompt</div>
-              <div class="text-sm text-white/60">Subject + Style + Composition + Constraint — reproducible output</div>
+              <div class="font-semibold text-white mb-1">4-Part Prompt Mandatory</div>
+              <div class="text-sm text-white/60">Subject + Style + Composition + Constraint — tanpa 4 komponen ini output tidak reproducible</div>
             </div>
           </div>
           <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
             <span class="text-accent font-bold text-xl">3</span>
             <div>
-              <div class="font-semibold text-white mb-1">OPSEC Mandatory</div>
-              <div class="text-sm text-white/60">5 checks sebelum generate — classification, attribution, deception, retention, watermark</div>
+              <div class="font-semibold text-white mb-1">OPSEC 5-Checks Wajib</div>
+              <div class="text-sm text-white/60">Classification, Attribution, Deception, Retention, Watermark — semua visual keluar organisasi wajib lolos 5 checks ini</div>
             </div>
           </div>
           <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
             <span class="text-accent font-bold text-xl">4</span>
             <div>
-              <div class="font-semibold text-white mb-1">Label AI-Generated</div>
-              <div class="text-sm text-white/60">Selalu tambahkan disclaimer "AI GENERATED • ILUSTRASI" di produk yang keluar organisasi</div>
+              <div class="font-semibold text-white mb-1">Iterative, Bukan Sekali</div>
+              <div class="text-sm text-white/60">First output adalah starting point. Critique spesifik → refine prompt → iterate. 2-3 ronde untuk hasil briefing-ready.</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl sm:col-span-2">
+            <span class="text-accent font-bold text-xl">5</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Canvas = Interactive Intelligence</div>
+              <div class="text-sm text-white/60">Untuk dashboard yang bisa di-filter komandan real-time, Canvas adalah tool terbaik. Download sebagai standalone HTML — tidak perlu internet untuk present di briefing room.</div>
             </div>
           </div>
         </div>
 
         <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
           <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
-          <div class="text-sm text-white/60">Capstone Modul 06: <strong class="text-white">Multi-Tool Workflow</strong> — gabungkan NotebookLM + Claude/Gemini + Imagen dalam 1 pipeline end-to-end</div>
+          <div class="text-sm text-white/60">Capstone Modul 06: <strong class="text-white">Multi-Tool Workflow</strong> — gabungkan NotebookLM + Claude/Gemini + Imagen/Canvas dalam 1 pipeline end-to-end intel production</div>
         </div>
       </div>
 
