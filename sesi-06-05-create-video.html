@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.5 | Create Video — Veo untuk Brief Visual</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.5</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CREATE VIDEO</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-04-deep-research.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.4</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-06-create-music.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.6 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 5 • CREATE VIDEO</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">CREATE VIDEO</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Buat <strong class="text-white">video brief singkat</strong> untuk briefing package komandan, visualisasi timeline operasi, skenario exercise, dan training material satuan — menggunakan <strong class="text-accent">Veo</strong>, model video generatif Google.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🎬</div><div class="text-accent font-mono text-xs mb-1">TEXT-TO-VIDEO</div><div class="text-sm text-white/70">Deskripsi teks → video</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🖼️</div><div class="text-accent font-mono text-xs mb-1">IMAGE-TO-VIDEO</div><div class="text-sm text-white/70">Gambar statis → bergerak</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">⏱️</div><div class="text-accent font-mono text-xs mb-1">5–8 DETIK</div><div class="text-sm text-white/70">Clip singkat berkualitas</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📊</div><div class="text-accent font-mono text-xs mb-1">BRIEFING USE</div><div class="text-sm text-white/70">Embed ke presentasi</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div><div><div class="font-semibold text-white mb-1">Kapabilitas Veo</div><div class="text-sm text-white/60">Pahami apa yang bisa dan tidak bisa dilakukan Veo — resolusi, durasi, gaya visual, limitasi konten</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div><div><div class="font-semibold text-white mb-1">Teknik Video Prompting</div><div class="text-sm text-white/60">Cara menulis deskripsi video yang menghasilkan output berkualitas — motion, camera angle, style, lighting</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div><div><div class="font-semibold text-white mb-1">4 Use Case Koopsudnas</div><div class="text-sm text-white/60">Briefing package, exercise scenario animation, SAR timeline, dan training material visual</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div><div><div class="font-semibold text-white mb-1">Workflow Produksi</div><div class="text-sm text-white/60">Dari storyboard teks → generate clips → combine dengan Create Music → embed ke Google Slides</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div><div><div class="font-semibold text-white mb-1">OPSEC & Batasan Konten</div><div class="text-sm text-white/60">Apa yang tidak bisa di-generate (violence, realistic weapons, identifiable individuals), cara workaround untuk konteks training</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div><div><div class="font-semibold text-white mb-1">Hands-on + Quiz</div><div class="text-sm text-white/60">Generate 2–3 video clips untuk scenario briefing, evaluasi kualitas, identifikasi best prompt</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: APA ITU VEO -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNOLOGI</div>
+        <h2 class="slide-title">APA ITU <span class="text-accent">VEO?</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 items-start">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="text-xl font-semibold text-accent mb-4">Veo — Google's Video Generation Model</h3>
+          <div class="space-y-4 text-sm text-white/70">
+            <p>Veo adalah model AI generatif Google yang mengkonversi <strong class="text-white">teks deskriptif atau gambar</strong> menjadi video pendek berkualitas tinggi. Diakses melalui Gemini Create Video.</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="p-3 bg-accent/10 rounded-lg"><div class="font-mono text-xs text-accent mb-1">RESOLUSI</div><div class="text-white">720p–1080p</div></div>
+              <div class="p-3 bg-accent/10 rounded-lg"><div class="font-mono text-xs text-accent mb-1">DURASI</div><div class="text-white">5–8 detik/clip</div></div>
+              <div class="p-3 bg-accent/10 rounded-lg"><div class="font-mono text-xs text-accent mb-1">INPUT</div><div class="text-white">Teks / Gambar</div></div>
+              <div class="p-3 bg-accent/10 rounded-lg"><div class="font-mono text-xs text-accent mb-1">OUTPUT</div><div class="text-white">MP4 download</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="glass-lit p-5 rounded-2xl border-green-500/30">
+            <div class="font-semibold text-green-400 mb-2">✓ Ideal Untuk</div>
+            <ul class="space-y-1.5 text-sm text-white/70">
+              <li>→ Ilustrasi konsep taktis yang abstrak</li>
+              <li>→ Visualisasi terrain dan area operasi (generic)</li>
+              <li>→ Simulasi cuaca/kondisi yang dihadapi SAR</li>
+              <li>→ Training material visual non-sensitif</li>
+              <li>→ Intro/outro animasi untuk briefing package</li>
+              <li>→ Timeline operasi dalam format animasi</li>
+            </ul>
+          </div>
+          <div class="glass-lit p-5 rounded-2xl border-red-500/30">
+            <div class="font-semibold text-red-400 mb-2">✗ Tidak Bisa / Tidak Boleh</div>
+            <ul class="space-y-1.5 text-sm text-white/70">
+              <li>→ Video dengan senjata nyata atau combat violence</li>
+              <li>→ Wajah orang yang bisa diidentifikasi</li>
+              <li>→ Alutsista militer spesifik dengan markings</li>
+              <li>→ Konten yang bisa disalahgunakan untuk propaganda</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: VIDEO PROMPTING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK PROMPTING</div>
+        <h2 class="slide-title">CARA MENULIS <span class="text-accent">VIDEO PROMPT</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <p class="text-white/70 mb-6">Video prompt berbeda dari teks biasa — Anda harus mendeskripsikan <strong class="text-white">scene secara sinematik</strong>. Gunakan formula berikut:</p>
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">Formula Video Prompt</div>
+          <div class="font-mono text-sm text-white/80">[SUBJEK] [AKSI/GERAKAN] [SETTING/ENVIRONMENT] [CAMERA ANGLE] [LIGHTING/ATMOSPHERE] [GAYA VISUAL]</div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <div class="font-mono text-xs text-red-400 mb-3">✗ PROMPT BURUK</div>
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div class="text-sm text-white/70 mb-2">"Buat video tentang operasi udara militer Indonesia"</div>
+              <div class="text-xs text-red-400">→ Terlalu generik, AI bingung apa yang harus divisualisasikan. Kemungkinan besar di-reject karena "military operations"</div>
+            </div>
+          </div>
+          <div>
+            <div class="font-mono text-xs text-green-400 mb-3">✓ PROMPT EFEKTIF</div>
+            <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div class="text-sm text-white/70 mb-2">"A search and rescue helicopter flying over dense tropical jungle canopy, aerial view, golden hour lighting, cinematic style, smooth camera movement, misty mountains in background"</div>
+              <div class="text-xs text-green-400">→ Spesifik, tidak trigger content filter, deskripsi sinematik jelas</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-white/5 rounded-xl">
+          <div class="font-semibold text-white mb-3">Kata Kunci untuk Kualitas Visual</div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">cinematic</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">aerial view</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">golden hour</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">smooth pan</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">wide shot</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">close-up</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">dramatic lighting</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">8K ultra detailed</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">photorealistic</span>
+            <span class="px-3 py-1 bg-accent/20 text-accent text-xs rounded-full">slow motion</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: 4 USE CASES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">USE CASES</div>
+        <h2 class="slide-title">4 USE CASE <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 text-xl">🛡️</div><div><div class="font-mono text-xs text-red-400 mb-0.5">DOMAIN A — HANUD</div><h3 class="font-semibold text-white">Briefing Package Visual</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Intro video untuk command briefing — menampilkan kondisi lingkungan operasi (aerial coastal view, radar installations at night) sebelum masuk ke slide SITREP.</p>
+          <div class="prompt-block mt-3 text-xs" id="v5-a1">
+            <button class="copy-btn text-xs" @click="copyText('v5-a1')" x-text="copied === 'v5-a1' ? '✓ Copied!' : 'Copy'"></button>
+            Aerial view of Indonesian archipelago coastline at dusk, radar installation silhouette on hilltop, dramatic clouds, cinematic wide shot, slow pan right
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-xl">🚁</div><div><div class="font-mono text-xs text-green-400 mb-0.5">DOMAIN B — OMSP/SAR</div><h3 class="font-semibold text-white">SAR Scenario Animation</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Video ilustrasi kondisi medan SAR — hutan lebat, pegunungan, cuaca buruk — untuk briefing koordinasi tim SAR sebelum deployment ke lokasi.</p>
+          <div class="prompt-block mt-3 text-xs" id="v5-b1">
+            <button class="copy-btn text-xs" @click="copyText('v5-b1')" x-text="copied === 'v5-b1' ? '✓ Copied!' : 'Copy'"></button>
+            Dense tropical rainforest in Papua mountains, thick morning fog, helicopter flying low over tree canopy, rescue operation setting, overcast dramatic sky, cinematic
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-blue-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 text-xl">📊</div><div><div class="font-mono text-xs text-blue-400 mb-0.5">DOMAIN C — PEMBINAAN</div><h3 class="font-semibold text-white">Training Material Visual</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Video ilustratif untuk materi pelatihan personel — menampilkan kondisi operasional, terrain challenge, atau skenario tabletop exercise secara visual.</p>
+          <div class="prompt-block mt-3 text-xs" id="v5-c1">
+            <button class="copy-btn text-xs" @click="copyText('v5-c1')" x-text="copied === 'v5-c1' ? '✓ Copied!' : 'Copy'"></button>
+            Control room with multiple screens showing maps and data, operators working at stations, professional atmosphere, blue lighting, smooth camera dolly, modern technology
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 text-xl">📖</div><div><div class="font-mono text-xs text-purple-400 mb-0.5">DOMAIN D — DOKTRIN</div><h3 class="font-semibold text-white">Exercise Scenario Intro</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Video pembuka untuk exercise briefing — suasana taktis yang immersive untuk membawa peserta ke dalam skenario sebelum read-out formal.</p>
+          <div class="prompt-block mt-3 text-xs" id="v5-d1">
+            <button class="copy-btn text-xs" @click="copyText('v5-d1')" x-text="copied === 'v5-d1' ? '✓ Copied!' : 'Copy'"></button>
+            Maritime surveillance aircraft flying over vast ocean at sunset, long-range patrol, beautiful clouds below, peaceful but watchful atmosphere, wide cinematic shot
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: WORKFLOW PRODUKSI -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WORKFLOW</div>
+        <h2 class="slide-title">WORKFLOW <span class="text-accent">PRODUKSI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-6">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">1</div>
+            <div><div class="font-semibold text-white mb-1">Storyboard Teks (Canvas)</div><div class="text-sm text-white/60">Buat storyboard singkat di Canvas: berapa clip, apa isi tiap clip, urutan, durasi. Pastikan setiap clip punya tujuan naratif yang jelas dalam briefing.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">2</div>
+            <div><div class="font-semibold text-white mb-1">Generate Clips (Create Video)</div><div class="text-sm text-white/60">Generate setiap clip satu per satu. Biasanya butuh 2–3 percobaan per clip untuk hasil terbaik. Download semua clip yang approved.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">3</div>
+            <div><div class="font-semibold text-white mb-1">Audio Scoring (Create Music)</div><div class="text-sm text-white/60">Buat audio background yang sesuai dengan Create Music — minimal score tanpa lirik, tone profesional. Download sebagai audio file.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">4</div>
+            <div><div class="font-semibold text-white mb-1">Combine di Google Slides / PowerPoint</div><div class="text-sm text-white/60">Insert video clips ke slide briefing. Tambahkan audio track. Atur timing. Output akhir: presentasi dengan video element yang immersive tanpa perlu video editor professional.</div></div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-accent/10 rounded-xl">
+          <div class="font-semibold text-accent mb-2">⏱️ Time Estimate per Briefing Video Package</div>
+          <div class="text-sm text-white/70">Storyboard: 15 menit | Generate + iterate 3 clips: 30 menit | Audio: 10 menit | Assembly: 15 menit = <strong class="text-accent">~70 menit total</strong> untuk briefing package yang sebelumnya butuh videografer profesional</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PROMPT LIBRARY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">VIDEO PROMPTS <span class="text-accent">SIAP PAKAI</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded font-mono">V-01</span><span class="font-semibold">Command Briefing Intro — Aerial Archipelago</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="v5-v01">
+                <button class="copy-btn" @click="copyText('v5-v01')" x-text="copied === 'v5-v01' ? '✓ Copied!' : 'Copy'"></button>
+                [CLIP 1] Aerial view of Indonesian islands at dawn, sea between islands catching first light, dramatic clouds, wide cinematic shot, slow pan right, photorealistic<br><br>
+                [CLIP 2] Ground-level view of radar dish silhouette against orange sunset sky, rotation motion, dramatic low-angle shot, cinematic lighting<br><br>
+                [CLIP 3] Time-lapse of storm clouds building over ocean horizon, surveillance perspective, fast motion clouds, epic atmosphere, dark dramatic tones
+              </div>
+              <p class="text-xs text-white/50 mt-3">Generate setiap clip secara terpisah. Pilih yang terbaik dari 2–3 percobaan per clip.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">V-02</span><span class="font-semibold">SAR CENDRAWASIH RESCUE — Terrain Overview</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="v5-v02">
+                <button class="copy-btn" @click="copyText('v5-v02')" x-text="copied === 'v5-v02' ? '✓ Copied!' : 'Copy'"></button>
+                [CLIP 1] Aerial view flying over vast untouched tropical rainforest in mountainous terrain, early morning mist filling valleys, cinematic drone shot, slow forward movement<br><br>
+                [CLIP 2] Thick cloud layer engulfing mountain peaks, low visibility conditions, moody overcast atmosphere, dramatic and challenging environment feel<br><br>
+                [CLIP 3] Search helicopter flying over dense green jungle canopy, searching motion (banking left and right), golden afternoon light, hope and determination atmosphere
+              </div>
+              <p class="text-xs text-white/50 mt-3">Digunakan sebagai visual untuk briefing koordinasi SAR sebelum deployment.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">V-03</span><span class="font-semibold">Exercise Intro — Maritime Patrol</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="v5-v03">
+                <button class="copy-btn" @click="copyText('v5-v03')" x-text="copied === 'v5-v03' ? '✓ Copied!' : 'Copy'"></button>
+                [CLIP 1] Military patrol aircraft flying over vast blue ocean, solo flight, dramatic cumulus clouds, wide establishing shot, powerful cinematic feel<br><br>
+                [CLIP 2] View from aircraft window looking down at ocean surface, searching look, sun reflection on water, contemplative and alert atmosphere<br><br>
+                [CLIP 3] Night sky over ocean, stars visible, aircraft navigation lights blinking, long-duration patrol atmosphere, peaceful but vigilant
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: HANDS-ON -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">GENERATE VIDEO</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka gemini.google.com → klik "Create Video" (atau "Veo") di Tools. Pilih aspek ratio: 16:9 untuk briefing/presentasi, 9:16 untuk mobile/whatsapp share.</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div><div><div class="font-semibold text-white">Generate CLIP 1 dari V-01</div><div class="text-xs text-accent font-mono">15 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Copy prompt V-01 CLIP 1 (aerial archipelago dawn). Generate. Evaluasi: apakah motion smooth? Apakah kualitas baik? Jika tidak puas, generate ulang. Simpan yang terbaik.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div><div><div class="font-semibold text-white">Coba Image-to-Video</div><div class="text-xs text-green-400 font-mono">10 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Ambil salah satu gambar yang sudah pernah di-generate di Sesi 6.2 (Create Image). Upload ke Create Video sebagai input. Tambahkan motion deskripsi: "slow zoom out, cinematic". Lihat hasilnya.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div><div><div class="font-semibold text-white">Identifikasi Best Prompt Pattern</div><div class="text-xs text-purple-400 font-mono">5 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Bandingkan 2 clip yang Anda generate. Prompt mana yang hasilkan output lebih baik? Apa perbedaannya? Catat pattern untuk diaplikasikan di produksi briefing berikutnya.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'b') this.score++;
+      if (this.answers.q2 === 'c') this.score++;
+      if (this.answers.q3 === 'd') this.score++;
+      if (this.answers.q4 === 'a') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.5</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman Create Video</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Batas durasi per clip untuk Veo saat ini adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">30–60 detik per clip</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">5–8 detik per clip</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">1–2 menit per clip</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">10–15 detik per clip</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Untuk video prompt yang paling efektif, elemen yang WAJIB ada adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Nama unit militer dan lokasi spesifik untuk konteks</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Kata "military" dan "combat" untuk konteks yang tepat</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Deskripsi sinematik: subjek, gerakan, setting, camera angle, lighting, dan gaya visual</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Resolusi dan frame rate yang diinginkan</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Cara paling efisien untuk menggabungkan beberapa video clips menjadi briefing package adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Generate video panjang sekaligus dalam satu prompt</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Minta Gemini langsung edit dan combine semua clips</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Upload ke YouTube dan embed link</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Download individual clips, insert ke Google Slides/PowerPoint, tambahkan audio dari Create Music</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Mengapa prompt "aerial view of SAR helicopter over tropical jungle" lebih aman dari "military helicopter combat operation"?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">SAR/rescue framing tidak trigger content filter karena bukan konteks kekerasan; hasilnya lebih diizinkan dan lebih mudah di-generate</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Kata "jungle" menghasilkan kualitas visual lebih baik</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Tidak ada perbedaan, kedua prompt sama-sama efektif</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Kata "aerial" menghasilkan footage yang lebih berkualitas</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Siap ke Create Music.' : score >= 3 ? 'Baik! Review 1 topik yang missed.' : score >= 2 ? 'Cukup. Ulang slide Video Prompting.' : 'Kembali ke slide 4-5.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q1 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'b' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong><span class="text-white/60 ml-2">— Veo menghasilkan clips 5–8 detik per generasi</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q2 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'c' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong><span class="text-white/60 ml-2">— Deskripsi sinematik lengkap menghasilkan output berkualitas konsisten</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q3 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'd' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong><span class="text-white/60 ml-2">— Download individual clips + Google Slides + Create Music adalah workflow paling praktis</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q4 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'a' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong><span class="text-white/60 ml-2">— SAR/rescue framing melewati content filter dan menghasilkan video yang relevan untuk ops briefing</span></div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">5–8 Detik per Clip</div><div class="text-sm text-white/60">Veo optimal untuk clip pendek. Buat storyboard dulu, generate clip per clip, combine di presentasi.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Sinematik Prompt = Kualitas Baik</div><div class="text-sm text-white/60">Selalu sertakan camera angle, lighting, atmosphere, dan gaya visual dalam prompt video.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">SAR/Patrol Framing Aman</div><div class="text-sm text-white/60">Gunakan framing humanitarian (SAR, patrol, surveillance) bukan combat untuk melewati content filter.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Workflow End-to-End</div><div class="text-sm text-white/60">Canvas (storyboard) → Create Video → Create Music → Google Slides = briefing package visual dalam ~70 menit.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">Create Music</strong> — buat audio scoring untuk video brief, background music untuk presentasi, dan audio cue untuk training material</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-04-deep-research.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.4: Deep Research</a>
+        <a href="sesi-06-06-create-music.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.6: Create Music →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🖼️</span><div class="font-semibold text-indigo-300">Create Image</div></div><div class="text-xs text-white/60">Generate infografis dan ilustrasi briefing via Imagen 4.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📋</span><div class="font-semibold text-indigo-300">Canvas</div></div><div class="text-xs text-white/60">Workspace interaktif untuk draft dan iterasi dokumen.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🔎</span><div class="font-semibold text-indigo-300">Deep Research</div></div><div class="text-xs text-white/60">Riset OSINT otomatis multi-source dengan citation.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/40 bg-indigo-500/10"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎬</span><div class="font-semibold text-indigo-300">Create Video</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">SESI INI</span></div><div class="text-xs text-white/60">Video brief via Veo untuk briefing package visual.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎵</span><div class="font-semibold text-indigo-300">Create Music</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span></div><div class="text-xs text-white/60">Audio scoring untuk video brief dan presentasi.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📖</span><div class="font-semibold text-indigo-300">Guided Learning</div></div><div class="text-xs text-white/60">Self-paced walkthrough untuk onboarding dan training.</div></div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

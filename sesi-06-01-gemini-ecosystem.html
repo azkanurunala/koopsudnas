@@ -110,7 +110,7 @@
       <div class="flex items-center gap-4">
         <a href="modul-06-multi-tool-operations.html" class="text-xs text-white/40 hover:text-white/60">← Overview</a>
         <span class="text-white/20">|</span>
-        <a href="sesi-06-02-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.2 →</a>
+        <a href="sesi-06-02-create-image.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.2 →</a>
       </div>
     </div>
   </nav>
@@ -813,29 +813,29 @@
           <p class="text-sm text-white/70">Buka dua tab browser: <strong class="text-white">claude.ai</strong> dan <strong class="text-white">gemini.google.com</strong>. Anda akan menjalankan prompt yang sama (atau mirip) di kedua tools dan membandingkan hasilnya. Tujuan: merasakan langsung perbedaan, bukan sekadar membaca teorinya.</p>
         </div>
         <div class="space-y-5">
-          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-red-500">
             <div class="flex items-center gap-3 mb-3">
-              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div>
-              <div><div class="font-semibold text-white">Skenario: Real-Time OSINT Update (5 menit)</div><div class="text-xs text-accent font-mono">EXPECTED WINNER: GEMINI</div></div>
+              <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">1</div>
+              <div><div class="font-semibold text-white">Skenario Hanud: Threat Assessment Brief (6 menit)</div><div class="text-xs text-red-400 font-mono">CONTEXT: OPS PERTAHANAN UDARA</div></div>
             </div>
-            <div class="text-sm text-white/70 mb-3">Gunakan prompt T-01 (Search Grounding) di Gemini. Di Claude, coba prompt yang sama tanpa search grounding.</div>
-            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini akan cite live sources dengan URL. Claude akan jawab berdasarkan training data (mungkin outdated). Kapan ini matters untuk ops nyata?</div>
-          </div>
-          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">2</div>
-              <div><div class="font-semibold text-white">Skenario: COA Analysis Kompleks (7 menit)</div><div class="text-xs text-purple-400 font-mono">EXPECTED WINNER: CLAUDE</div></div>
-            </div>
-            <div class="text-sm text-white/70 mb-3">Buat skenario operasional fiktif (non-classified): "Ada insiden pelanggaran ADIZ di utara, belum teridentifikasi. 3 COA yang mungkin." Kirim ke Claude dan Gemini.</div>
-            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Bandingkan kualitas ethical nuance, consideration of second-order effects, dan struktur reasoning. Mana yang lebih "commander-ready"?</div>
+            <div class="text-sm text-white/70 mb-3">Skenario fiktif (non-classified): "Kontak udara unidentified approaching FIR Ujung Pandang dari arah timur laut. Buat threat assessment brief 1 halaman + rekomendasi tindakan." Kirim prompt yang sama ke Claude &amp; Gemini. Gemini pakai search grounding untuk cek recent activity di area.</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini cite live OSINT sources. Claude beri struktur reasoning &amp; ethical nuance lebih dalam. Mana yang lebih commander-ready untuk hanud real-time?</div>
           </div>
           <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
             <div class="flex items-center gap-3 mb-3">
-              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">3</div>
-              <div><div class="font-semibold text-white">Skenario: Thinking Mode Deep Trace (6 menit)</div><div class="text-xs text-green-400 font-mono">FEATURE: GEMINI PRO ONLY</div></div>
+              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div>
+              <div><div class="font-semibold text-white">Skenario OMSP: SAR Coordination Brief — CENDRAWASIH RESCUE (7 menit)</div><div class="text-xs text-green-400 font-mono">CONTEXT: SAR MULTI-AGENCY</div></div>
             </div>
-            <div class="text-sm text-white/70 mb-3">Di Gemini 2.5 Pro, aktifkan thinking mode. Gunakan prompt T-03. Expand thinking trace — baca 5-10 baris pertama reasoning.</div>
-            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Reflect: Apakah trace-nya convincing? Adakah langkah yang Anda anggap missed? Bagaimana Anda akan gunakan trace ini saat brief komandan?</div>
+            <div class="text-sm text-white/70 mb-3">Skenario: "Pesawat sipil hilang kontak di Pegunungan Bintang, Papua. Susun SAR coordination brief: prioritas search area, aset yang dibutuhkan, timeline, koordinasi dengan BASARNAS &amp; Pemda." Bandingkan output Claude vs Gemini — Gemini cek cuaca &amp; terrain real-time, Claude bantu struktur koordinasi multi-agency.</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini unggul di data-aktual (weather, NOTAM). Claude unggul di reasoning prioritisasi &amp; koordinasi antar-instansi. Pilih yang mana untuk SAR ops?</div>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div>
+              <div><div class="font-semibold text-white">Skenario Doktrin: IADS Review Synthesis Memo (7 menit)</div><div class="text-xs text-purple-400 font-mono">CONTEXT: PENGEMBANGAN DOKTRIN</div></div>
+            </div>
+            <div class="text-sm text-white/70 mb-3">Skenario: "Review doktrin IADS (Integrated Air Defense System) 3 negara regional — susun memo sintesis best practice yang applicable untuk Koopsudnas." Di Gemini 2.5 Pro, aktifkan thinking mode untuk reasoning trace. Di Claude, manfaatkan long-context untuk ingest beberapa dokumen sekaligus.</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini thinking trace transparan untuk audit reasoning. Claude lebih konsisten long-form synthesis. Mana yang lebih dipakai untuk doctrine paper akademik?</div>
           </div>
         </div>
         <div class="mt-6 p-4 bg-white/5 rounded-xl">
@@ -1019,7 +1019,75 @@
       </div>
       <div class="flex flex-col sm:flex-row gap-4">
         <a href="modul-06-multi-tool-operations.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Overview Modul 06</a>
-        <a href="sesi-06-02-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.2: NotebookLM Deep Dive →</a>
+        <a href="sesi-06-02-create-image.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.2: Create Image →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

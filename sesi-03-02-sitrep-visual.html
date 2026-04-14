@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 3.2 | SITREP Visual & Threat Map Creation</title>
+  <title>Sesi 3.2 | SITREP Visual Lintas Domain Koopsudnas</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,7 +81,7 @@
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -129,10 +129,18 @@
         <span class="text-accent">THREAT MAP CREATION</span>
       </h1>
       
-      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
-        Teknik membuat <strong class="text-white">visual SITREP</strong> yang informatif 
-        dan <strong class="text-white">threat maps</strong> yang bisa dibaca dalam hitungan detik.
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Teknik membuat <strong class="text-white">visual SITREP</strong> yang informatif
+        dan <strong class="text-white">threat / SAR / bencana map</strong> yang bisa dibaca dalam hitungan detik —
+        lintas 4 domain tugas Koopsudnas.
       </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-8 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT (Hanud)</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">SAR (OMSP)</span>
+        <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full">BENCANA (OMSP)</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">READINESS (Pembinaan)</span>
+      </div>
       
       <div class="flex flex-wrap justify-center gap-6 mb-12">
         <div class="glass px-6 py-4 rounded-xl text-center">
@@ -504,6 +512,190 @@ OUTPUT: Complete SVG or HTML Canvas code</pre>
     </div>
   </section>
 
+  <!-- SLIDE 6.5: SITREP VARIANTS — 4 Domain Koopsudnas -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">SITREP LINTAS DOMAIN</div>
+        <h2 class="slide-subtitle">4 VARIANT SITREP KOOPSUDNAS</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          6-element framework (Header/DTG, Level Indicator, Status Card, Friendly Card, Timeline, Actions)
+          tetap universal. Yang berubah: <em>apa yang ditampilkan</em> di tiap card dan stakeholder siapa yang dilayani.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5" x-data="{ variant: 'threat' }">
+        <div class="md:col-span-2 flex flex-wrap justify-center gap-2 mb-2">
+          <button @click="variant = 'threat'" :class="variant === 'threat' ? 'bg-red-500/30 border-red-500 text-red-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🎯 THREAT SITREP</button>
+          <button @click="variant = 'sar'" :class="variant === 'sar' ? 'bg-blue-500/30 border-blue-500 text-blue-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🆘 SAR SITREP</button>
+          <button @click="variant = 'bencana'" :class="variant === 'bencana' ? 'bg-green-500/30 border-green-500 text-green-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🌊 BENCANA SITREP</button>
+          <button @click="variant = 'readiness'" :class="variant === 'readiness' ? 'bg-purple-500/30 border-purple-500 text-purple-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🛠️ READINESS SITREP</button>
+        </div>
+
+        <!-- THREAT VARIANT -->
+        <template x-if="variant === 'threat'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-red-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-red-400 font-mono text-xs mb-2">VARIANT A • OPERASI PERTAHANAN UDARA</div>
+                <h3 class="font-semibold text-lg mb-3">Threat SITREP (Existing Default)</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> LOW / MED / HIGH (threat ke wilayah udara)</div>
+                  <div><strong class="text-white">Status Card 1 (RED):</strong> Enemy activity — contact count, altitude, behavior pattern</div>
+                  <div><strong class="text-white">Status Card 2 (BLUE):</strong> Friendly — CAP availability, radar coverage, ROE posture</div>
+                  <div><strong class="text-white">Timeline:</strong> Kronologi kontak anomali 24h terakhir</div>
+                  <div><strong class="text-white">Actions:</strong> Deploy CAP / request SIGINT / alert air defense</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Pangkoopsudnas, Pusatkodal, ops crew</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant A):
+
+Level: HIGH/MED/LOW (threat)
+Enemy card (RED):
+  - Contact count & trend
+  - Altitude band
+  - Behavior (reconn/transit/
+    evasive)
+Friendly card (BLUE):
+  - CAP status & numbers
+  - Radar coverage %
+  - Sector ready state
+Timeline: kontak anomali 24h
+Actions:
+  - Immediate (deploy/alert)
+  - Short-term (ISR request)</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- SAR VARIANT -->
+        <template x-if="variant === 'sar'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-blue-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-blue-400 font-mono text-xs mb-2">VARIANT B • OMSP / CENDRAWASIH RESCUE</div>
+                <h3 class="font-semibold text-lg mb-3">SAR SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Survivor risk (TIME-CRITICAL / CRITICAL / STABLE)</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Search progress — sektor checked, debris found, last known position</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Survivor & weather — pax count, BMKG outlook, visibility</div>
+                  <div><strong class="text-white">Timeline:</strong> Key events (lost contact, asset launch, debris found, etc.)</div>
+                  <div><strong class="text-white">Actions:</strong> Expand search sector / reposition asset / request BASARNAS</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Basarnas, Kemenhub, TNI AL, keluarga via Posko Krisis</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant B):
+
+Level: TIME-CRITICAL/CRITICAL/
+       STABLE (survivor risk)
+Progress card:
+  - Sektor checked (x/y)
+  - Debris / signs of life
+  - Last known position
+Conditions card:
+  - Pax count
+  - BMKG forecast (6h)
+  - Visibility / wave height
+Timeline: lost contact → now
+Actions (multi-agency):
+  - Koopsudnas airlift
+  - Basarnas coordination
+  - BMKG update request</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- BENCANA VARIANT -->
+        <template x-if="variant === 'bencana'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-green-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-green-400 font-mono text-xs mb-2">VARIANT C • OMSP / BANJIR SULAWESI</div>
+                <h3 class="font-semibold text-lg mb-3">Bencana SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Humanitarian severity (RED/AMBER/GREEN)</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Affected area — jumlah pengungsi, shelter aktif, logistik shortfall</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Lift capacity — C-130 sortie, cargo delivered, next ETA</div>
+                  <div><strong class="text-white">Timeline:</strong> Sortie log 24h + shelter resupply milestone</div>
+                  <div><strong class="text-white">Actions:</strong> Re-prioritize shelter / tambah sortie / koordinasi BNPB</div>
+                  <div><strong class="text-white">Stakeholder:</strong> BNPB, Pemda, PMI, Kemenkes, media publik</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant C):
+
+Level: RED/AMBER/GREEN
+       (humanitarian severity)
+Impact card:
+  - Pengungsi (jumlah, lokasi)
+  - Shelter aktif & kapasitas
+  - Logistik shortfall
+Lift card:
+  - Sortie dilaksanakan
+  - Cargo delivered (ton)
+  - Aset on-ground / enroute
+Timeline: sortie + resupply log
+Actions:
+  - Re-prioritize shelter
+  - Tambah sortie window
+  - Koordinasi BNPB/Pemda</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- READINESS VARIANT -->
+        <template x-if="variant === 'readiness'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-purple-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-purple-400 font-mono text-xs mb-2">VARIANT D • PEMBINAAN SATUAN / ADEX</div>
+                <h3 class="font-semibold text-lg mb-3">Readiness SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Overall readiness (GREEN/AMBER/RED) menjelang ADEX</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Serviceability — % aircraft operational, maintenance backlog</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Crew currency — flight hours, training gap, qualification status</div>
+                  <div><strong class="text-white">Timeline:</strong> Training milestone + logistik milestone menuju exercise</div>
+                  <div><strong class="text-white">Actions:</strong> Remediation priorities, resource request, training schedule adjustment</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Pangkoopsudnas, Dinas Teknik, Dinas Operasi</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant D):
+
+Level: GREEN/AMBER/RED
+       (readiness menjelang ADEX)
+Serviceability card:
+  - % aircraft ops (per tipe)
+  - Maintenance backlog
+  - Spare parts critical list
+Currency card:
+  - Flight hours vs standar
+  - Training gap (skill matrix)
+  - Qualification status
+Timeline: milestone menuju
+          exercise D-day
+Actions:
+  - Remediation priority
+  - Resource / budget request</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">Catatan:</strong> Color-coding juga beradaptasi — untuk SAR/Bencana,
+        warna hijau/biru = "progress positif" (sektor aman, shelter tercover), bukan "friendly unit".
+        Pastikan legend eksplisit di tiap variant agar command audience tidak salah baca.
+      </div>
+    </div>
+  </section>
+
   <!-- SLIDE 7: VISUAL STANDARDS -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
@@ -778,12 +970,80 @@ OUTPUT: Complete SVG or HTML Canvas code</pre>
           </div>
 
           <div class="pt-4 border-t border-white/5">
-            <a href="sesi-06-03-gemini-visual-generation.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.3 — Gemini Visual Generation →
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.2 — Create Image (Imagen 4) →
             </a>
           </div>
         </div>
       </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
     </div>
   </section>
 

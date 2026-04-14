@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.7 | Guided Learning — Interactive Walkthrough</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.7</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">GUIDED LEARNING</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-06-create-music.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.6</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.8 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 7 • GUIDED LEARNING</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">GUIDED LEARNING</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Self-paced <strong class="text-white">interactive walkthrough</strong> untuk onboarding doktrin baru, prosedur SOP, refresher training, dan transfer pengetahuan lintas satuan — <strong class="text-accent">training yang adapt ke individu</strong>, bukan one-size-fits-all.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🎓</div><div class="text-accent font-mono text-xs mb-1">ADAPTIVE</div><div class="text-sm text-white/70">Menyesuaikan level peserta</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📝</div><div class="text-accent font-mono text-xs mb-1">INTERACTIVE</div><div class="text-sm text-white/70">Q&A di setiap tahap</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">⏱️</div><div class="text-accent font-mono text-xs mb-1">SELF-PACED</div><div class="text-sm text-white/70">Peserta atur kecepatan sendiri</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">✅</div><div class="text-accent font-mono text-xs mb-1">KNOWLEDGE CHECK</div><div class="text-sm text-white/70">Validasi pemahaman built-in</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div><div><div class="font-semibold text-white mb-1">Konsep Guided Learning</div><div class="text-sm text-white/60">Pahami perbedaan Guided Learning vs training biasa vs e-learning statis</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div><div><div class="font-semibold text-white mb-1">Cara Memulai Sesi</div><div class="text-sm text-white/60">Buka Guided Learning, set topik, tingkat kesulitan, dan format output yang diinginkan</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div><div><div class="font-semibold text-white mb-1">Design Learning Path</div><div class="text-sm text-white/60">Teknik menyusun modul yang logis: prerequisite → core concept → application → assessment</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div><div><div class="font-semibold text-white mb-1">5 Use Case Koopsudnas</div><div class="text-sm text-white/60">Doktrin onboarding, SOP refresher, prosedur ROE walkthrough, safety training, dan new equipment familiarization</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div><div><div class="font-semibold text-white mb-1">Distribusi ke Satuan</div><div class="text-sm text-white/60">Cara share Guided Learning ke personel satuan — link, screenshot, atau adaptasi menjadi modul e-learning tersendiri</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div><div><div class="font-semibold text-white mb-1">Hands-on + Quiz</div><div class="text-sm text-white/60">Buat satu Guided Learning untuk topik doktrin ringan, jalankan sendiri, evaluasi efektifitas</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: GUIDED LEARNING vs ALTERNATIF -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">POSITIONING</div>
+        <h2 class="slide-title">GUIDED LEARNING <span class="text-accent">vs ALTERNATIF</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left py-3 px-4 text-accent font-mono text-xs">ASPEK</th>
+              <th class="text-left py-3 px-4 text-white/70">Training Tatap Muka</th>
+              <th class="text-left py-3 px-4 text-white/70">E-Learning Statis</th>
+              <th class="text-left py-3 px-4 text-accent">Guided Learning</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">PACE</td><td class="py-3 px-4 text-white/70">Fixed (instruktur)</td><td class="py-3 px-4 text-white/70">Self-paced, fixed content</td><td class="py-3 px-4 text-white">Self-paced + adaptive</td></tr>
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">ADAPTASI</td><td class="py-3 px-4 text-white/70">Terbatas (level rata-rata)</td><td class="py-3 px-4 text-white/70">Tidak ada</td><td class="py-3 px-4 text-green-400">Menyesuaikan pemahaman peserta</td></tr>
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">Q&A</td><td class="py-3 px-4 text-white/70">Real-time, terbatas waktu</td><td class="py-3 px-4 text-white/70">Tidak ada</td><td class="py-3 px-4 text-green-400">Unlimited, context-aware</td></tr>
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">SCALE</td><td class="py-3 px-4 text-white/70">Terbatas ruangan</td><td class="py-3 px-4 text-white/70">Unlimited</td><td class="py-3 px-4 text-white">Unlimited</td></tr>
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">UPDATE</td><td class="py-3 px-4 text-white/70">Re-train instruktur</td><td class="py-3 px-4 text-white/70">Re-produce material</td><td class="py-3 px-4 text-green-400">Re-prompt, instant update</td></tr>
+            <tr><td class="py-3 px-4 text-white/50 font-mono text-xs">COST</td><td class="py-3 px-4 text-white/70">Tinggi (ruang, instruktur, waktu)</td><td class="py-3 px-4 text-white/70">Moderate (produksi awal)</td><td class="py-3 px-4 text-green-400">Rendah (prompt + AI)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-6 p-5 glass rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">💡</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Kapan Guided Learning Paling Efektif</div>
+            <div class="text-sm text-white/70">Untuk <strong class="text-accent">onboarding doktrin baru</strong> ke banyak personel dengan level berbeda — di mana instruktur terbatas, waktu terbatas, dan satuan tersebar secara geografis. Bukan pengganti training tempur, tapi sangat kuat untuk pengetahuan konseptual dan prosedural.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: CARA MEMULAI -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HOW TO START</div>
+        <h2 class="slide-title">CARA MEMBUAT <span class="text-accent">SESI GUIDED LEARNING</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-5">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">1</div>
+            <div><div class="font-semibold text-white mb-1">Buka gemini.google.com → "Guided Learning"</div><div class="text-sm text-white/60">Sidebar Tools → klik Guided Learning. Atau ketik langsung di chat: <span class="font-mono text-xs text-accent">"Buat sesi Guided Learning untuk [topik]"</span></div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">2</div>
+            <div><div class="font-semibold text-white mb-1">Tentukan Topik dan Scope</div><div class="text-sm text-white/60">Spesifik: bukan "doktrin hanud" tapi "prosedur response time untuk kontak unidentified di FIR sektor timur — untuk pamen penerbang baru"</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">3</div>
+            <div><div class="font-semibold text-white mb-1">Tentukan Audience Level</div><div class="text-sm text-white/60">"Untuk pamen baru tanpa background hanud" atau "untuk pamen senior yang sudah familiar" — AI akan menyesuaikan kedalaman penjelasan dan jargon yang dipakai</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">4</div>
+            <div><div class="font-semibold text-white mb-1">Tentukan Format Output</div><div class="text-sm text-white/60">Step-by-step walkthrough, Q&A interaktif, scenario-based learning, atau combination. Sebutkan di awal prompt.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">5</div>
+            <div><div class="font-semibold text-white mb-1">AI Generate Learning Path, Peserta Ikuti</div><div class="text-sm text-white/60">AI akan menyusun modul, bertanya untuk cek pemahaman, menjawab pertanyaan peserta, dan beradaptasi sesuai respons. Peserta bisa "ulangi", "jelaskan lebih detail", atau "lanjut".</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: DESIGN LEARNING PATH -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">INSTRUCTIONAL DESIGN</div>
+        <h2 class="slide-title">4 FASE <span class="text-accent">LEARNING PATH</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-display text-2xl mb-4">1</div>
+          <h3 class="text-xl font-semibold text-white mb-2">Prerequisite Check</h3>
+          <p class="text-sm text-white/60 mb-3">AI tanyakan dulu apa yang sudah diketahui peserta. Sesi yang efektif mulai dari level pemahaman aktual, bukan asumsi.</p>
+          <div class="p-3 bg-accent/10 rounded-lg text-xs text-white/70 font-mono">"Sebelum kita mulai, seberapa familiar Anda dengan istilah IFF dan ROE?"</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-display text-2xl mb-4">2</div>
+          <h3 class="text-xl font-semibold text-white mb-2">Core Concept</h3>
+          <p class="text-sm text-white/60 mb-3">Penjelasan konsep utama dalam chunks kecil — satu konsep per turn — sehingga peserta bisa confirm pemahaman sebelum lanjut.</p>
+          <div class="p-3 bg-accent/10 rounded-lg text-xs text-white/70 font-mono">"Konsep #1: Response time ladder — saya jelaskan dulu, baru saya tanya untuk memastikan Anda paham."</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-display text-2xl mb-4">3</div>
+          <h3 class="text-xl font-semibold text-white mb-2">Application / Scenario</h3>
+          <p class="text-sm text-white/60 mb-3">Terapkan konsep dalam skenario konkret. AI berikan skenario, peserta merespons, AI beri feedback dan koreksi jika perlu.</p>
+          <div class="p-3 bg-accent/10 rounded-lg text-xs text-white/70 font-mono">"Skenario: kontak tidak merespons IFF dalam 90 detik. Tindakan Anda selanjutnya?"</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-display text-2xl mb-4">4</div>
+          <h3 class="text-xl font-semibold text-white mb-2">Assessment + Recap</h3>
+          <p class="text-sm text-white/60 mb-3">Knowledge check final di akhir sesi. AI merangkum apa yang sudah dipelajari dan identifikasi area yang mungkin perlu re-review.</p>
+          <div class="p-3 bg-accent/10 rounded-lg text-xs text-white/70 font-mono">"5 pertanyaan quick check. Jika ≥ 4 benar, Anda siap ke modul berikutnya."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: 5 USE CASES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">USE CASES</div>
+        <h2 class="slide-title">5 USE CASE <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 text-xl flex-shrink-0">📖</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Onboarding Doktrin Baru</div><span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">DOKTRIN</span></div>
+              <p class="text-sm text-white/60 mb-2">Saat doktrin IADS atau prosedur hanud diupdate, gunakan Guided Learning untuk onboarding ratusan personel tersebar di 3 Koopsud tanpa harus mengumpulkan di satu tempat.</p>
+              <div class="text-xs text-purple-400 font-mono">→ Skalabilitas: 500+ peserta, self-paced, consistency 100%</div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 text-xl flex-shrink-0">🛡️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">ROE Walkthrough Interaktif</div><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded font-mono">HANUD</span></div>
+              <p class="text-sm text-white/60 mb-2">Rules of Engagement untuk skenario hanud — interaktif dengan skenario: peserta tentukan tindakan, AI beri feedback berdasarkan ROE yang berlaku. Aman untuk latihan judgment tanpa risiko operasional.</p>
+              <div class="text-xs text-red-400 font-mono">→ Judgment calibration tanpa resiko real-world</div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-xl flex-shrink-0">🚁</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">SAR Procedure Refresher</div><span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded font-mono">OMSP</span></div>
+              <p class="text-sm text-white/60 mb-2">Refresher quarterly untuk tim SAR — phase check, koordinasi multi-agency, protocol komunikasi. Peserta yang sudah mahir bisa skip ke bagian yang relevan; peserta baru dapat deep walkthrough.</p>
+              <div class="text-xs text-green-400 font-mono">→ Adaptive: mahir dan baru sama-sama valuable</div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 text-xl flex-shrink-0">⚠️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Safety & Emergency Procedures</div><span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded font-mono">PEMBINAAN</span></div>
+              <p class="text-sm text-white/60 mb-2">Safety briefing untuk ground crew dan personel non-penerbang — flight line safety, FOD, bahaya fuel handling. Dibuat sebagai modul mandatory annual training.</p>
+              <div class="text-xs text-amber-400 font-mono">→ Compliance tracking lebih mudah dari classroom</div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 text-xl flex-shrink-0">⚙️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">New Equipment Familiarization</div><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded font-mono">PEMBINAAN</span></div>
+              <p class="text-sm text-white/60 mb-2">Saat satuan menerima equipment baru (radar, radio, system C2), Guided Learning bisa walk personnel through konsep operasi, SOP, dan troubleshooting dasar sebelum hands-on training.</p>
+              <div class="text-xs text-blue-400 font-mono">→ Pre-training preparation, mempercepat hands-on session</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PROMPT TEMPLATES -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">TEMPLATE <span class="text-accent">GUIDED LEARNING</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">GL-01</span><span class="font-semibold">Doktrin Onboarding — IADS Update</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="gl7-gl01">
+                <button class="copy-btn" @click="copyText('gl7-gl01')" x-text="copied === 'gl7-gl01' ? '✓ Copied!' : 'Copy'"></button>
+                Buat sesi Guided Learning untuk onboarding doktrin IADS (Integrated Air Defense System) update terbaru.<br><br>
+                Audience: Pamen penerbang dan staf operasi baru yang belum familiar dengan perubahan doktrin.<br>
+                Duration target: 30 menit self-paced.<br>
+                Format: 4 fase (prerequisite check, core concept, application scenario, assessment).<br><br>
+                Konten yang harus dicakup:<br>
+                1. Latar belakang mengapa doktrin diupdate<br>
+                2. Perubahan utama dari versi sebelumnya (5 poin kunci)<br>
+                3. Implikasi operasional untuk pamen di lapangan<br>
+                4. Skenario aplikasi: bagaimana merespons kontak unidentified di bawah doktrin baru<br>
+                5. Common misconception yang perlu dihindari<br><br>
+                Gaya: interaktif, tanyakan pemahaman peserta setiap 5 menit. Jika peserta bingung, berikan penjelasan ulang dengan analogi yang berbeda. Di akhir, berikan 5 quiz pertanyaan + ringkasan.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">GL-02</span><span class="font-semibold">SAR Phase Check — Refresher</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="gl7-gl02">
+                <button class="copy-btn" @click="copyText('gl7-gl02')" x-text="copied === 'gl7-gl02' ? '✓ Copied!' : 'Copy'"></button>
+                Buat sesi Guided Learning refresher untuk tim SAR tentang SAR Phase Check (INCERFA / ALERFA / DETRESFA).<br><br>
+                Audience: Personel SAR yang sudah aktif minimal 1 tahun — refresher, bukan intro.<br>
+                Duration: 20 menit.<br>
+                Format: scenario-based. Berikan skenario, peserta harus identifikasi phase yang sesuai, lalu AI beri feedback.<br><br>
+                Tahapan:<br>
+                1. Quick recap 3 phase (2 menit)<br>
+                2. 5 skenario progresif:<br>
+                   - Skenario 1: aircraft overdue 30 menit (expected: INCERFA)<br>
+                   - Skenario 2: kontak radar hilang + cuaca memburuk (expected: ALERFA)<br>
+                   - Skenario 3: emergency beacon aktif (expected: DETRESFA)<br>
+                   - Skenario 4 & 5: edge cases yang ambiguous<br>
+                3. Diskusi trade-off di edge cases — kapan escalate, kapan tunggu<br>
+                4. Quick check 5 pertanyaan<br><br>
+                Gaya: seperti tabletop exercise, challenging tapi suportif.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-mono">GL-03</span><span class="font-semibold">Flight Line Safety — Annual Refresher</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="gl7-gl03">
+                <button class="copy-btn" @click="copyText('gl7-gl03')" x-text="copied === 'gl7-gl03' ? '✓ Copied!' : 'Copy'"></button>
+                Buat sesi Guided Learning annual refresher untuk Flight Line Safety.<br><br>
+                Audience: Semua personel yang akses flight line (ground crew, maintenance, support). Mix dari baru dan senior.<br>
+                Duration: 25 menit.<br>
+                Format: chunked — 5 modul pendek, setiap modul 4-5 menit dengan quick check di akhir.<br><br>
+                Modul:<br>
+                1. FOD prevention (Foreign Object Damage)<br>
+                2. Jet blast dan intake safety<br>
+                3. Fuel handling dan hot refueling protocol<br>
+                4. Electrical hazards dan static grounding<br>
+                5. Emergency response (fire, medical, accident)<br><br>
+                Setiap modul: konsep dasar → visual description (ilustrasi yang bisa dibayangkan) → 2 common mistake → quick check 2 pertanyaan.<br><br>
+                Target: 100% completion untuk compliance tracking. Output akhir: summary completion card yang peserta bisa screenshot sebagai bukti attendance.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: HANDS-ON -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">LIVE</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka gemini.google.com → "Guided Learning" di Tools. Anda akan menjalankan sesi Guided Learning dua kali: sekali sebagai <strong class="text-white">peserta</strong> (pakai template yang sudah ada), sekali sebagai <strong class="text-white">pembuat modul</strong> (buat untuk topik Anda sendiri).</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div><div><div class="font-semibold text-white">Jadi Peserta: Jalankan GL-02 (SAR Phase Check)</div><div class="text-xs text-accent font-mono">15 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Copy prompt GL-02. Jalankan. Ikuti sesi sampai selesai — jangan skip. Perhatikan: bagaimana AI menyesuaikan pertanyaan, memberi feedback ketika Anda jawab salah, dan bagaimana rasa "flow" belajarnya.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div><div><div class="font-semibold text-white">Jadi Pembuat: Buat Modul untuk Topik Anda Sendiri</div><div class="text-xs text-green-400 font-mono">15 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Pilih satu topik yang relevan dengan tugas Anda. Tulis prompt Guided Learning menggunakan format 4 fase yang dipelajari. Audience, duration, content, dan assessment yang jelas. Generate dan test.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div><div><div class="font-semibold text-white">Evaluasi Efektifitas</div><div class="text-xs text-purple-400 font-mono">5 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Refleksi: apakah sesi yang Anda buat akan efektif untuk target audience-nya? Apa yang perlu ditambah/dikurangi? Catat lessons learned — ini pattern yang akan Anda pakai saat deploy ke satuan nanti.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'c') this.score++;
+      if (this.answers.q2 === 'b') this.score++;
+      if (this.answers.q3 === 'd') this.score++;
+      if (this.answers.q4 === 'a') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.7</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman Guided Learning</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Keunggulan utama Guided Learning dibanding e-learning statis adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Lebih murah diproduksi</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Menggunakan video dan audio</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Adaptif terhadap level pemahaman peserta + interactive Q&A unlimited</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Bisa digunakan offline</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Fase pertama dalam menyusun Guided Learning path yang efektif adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Assessment final</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Prerequisite check — AI tanyakan dulu apa yang sudah diketahui peserta</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Berikan langsung konsep lengkap supaya efisien</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Buat quiz dulu, baru konten</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Untuk doktrin baru yang harus di-onboard ke 500+ personel di 3 lokasi berbeda, Guided Learning paling kuat karena…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Harganya gratis</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Menggantikan training tempur sepenuhnya</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">AI bisa memberikan sertifikat resmi</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Scalable (unlimited peserta), self-paced, dan consistency 100% — setiap peserta dapat konten dasar yang sama tanpa instruktur terbatas</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Guided Learning PALING tidak cocok untuk…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Training hands-on yang membutuhkan kontak fisik dengan equipment atau skill motorik (pilot training, senjata)</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Onboarding doktrin konseptual</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Refresher SOP prosedural</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Safety training</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Lanjut ke NotebookLM Deep Dive.' : score >= 3 ? 'Baik!' : score >= 2 ? 'Cukup. Ulang slide Instructional Design.' : 'Kembali ke slide 4-5.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q1 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'c' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong><span class="text-white/60 ml-2">— Adaptivitas dan Q&A interactive adalah keunggulan utama Guided Learning</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q2 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'b' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong><span class="text-white/60 ml-2">— Prerequisite check memastikan starting point yang tepat untuk setiap peserta</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q3 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'd' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong><span class="text-white/60 ml-2">— Scale + consistency adalah argumen utama untuk deploy di satuan tersebar</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q4 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'a' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong><span class="text-white/60 ml-2">— Skill motorik dan physical contact training tidak bisa digantikan Guided Learning</span></div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Adaptive + Interactive</div><div class="text-sm text-white/60">Guided Learning menyesuaikan ke level peserta dan unlimited Q&A — bukan e-learning statis.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">4-Phase Design</div><div class="text-sm text-white/60">Prerequisite → Core concept → Application → Assessment. Pattern yang reliable untuk semua topik.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">Best for Conceptual + Procedural</div><div class="text-sm text-white/60">Doktrin, SOP, safety, ROE walkthrough. Bukan untuk hands-on physical training.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Scale Advantage</div><div class="text-sm text-white/60">500+ peserta lintas 3 Koopsud, self-paced, 100% consistency — training footprint yang mustahil dengan tatap muka.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">NotebookLM</strong> — source-grounded intel synthesis untuk multi-document analysis dengan zero hallucination</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-06-create-music.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.6: Create Music</a>
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.8: NotebookLM →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🖼️</span><div class="font-semibold text-indigo-300">Create Image</div></div><div class="text-xs text-white/60">Generate infografis dan ilustrasi briefing via Imagen 4.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📋</span><div class="font-semibold text-indigo-300">Canvas</div></div><div class="text-xs text-white/60">Workspace interaktif untuk draft dan iterasi dokumen.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🔎</span><div class="font-semibold text-indigo-300">Deep Research</div></div><div class="text-xs text-white/60">Riset OSINT otomatis multi-source dengan citation.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎬</span><div class="font-semibold text-indigo-300">Create Video</div></div><div class="text-xs text-white/60">Video brief via Veo untuk briefing package visual.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎵</span><div class="font-semibold text-indigo-300">Create Music</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span></div><div class="text-xs text-white/60">Audio scoring untuk video brief dan presentasi.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/40 bg-indigo-500/10"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📖</span><div class="font-semibold text-indigo-300">Guided Learning</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">SESI INI</span></div><div class="text-xs text-white/60">Self-paced interactive walkthrough untuk onboarding dan training.</div></div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

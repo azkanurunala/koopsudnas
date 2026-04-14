@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 2.3 | Hands-On: Threat Assessment dari Data Simulasi</title>
+  <title>Sesi 2.3 | Hands-On: Risk Assessment Lintas Domain Koopsudnas</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,8 +147,8 @@
   </style>
 </head>
 <body x-data="{ 
-  currentSlide: 0, 
-  totalSlides: 12,
+  currentSlide: 0,
+  totalSlides: 13,
   progress: 0,
   init() {
     this.updateProgress();
@@ -215,13 +215,19 @@
       
       <h1 class="slide-title mb-6">
         HANDS-ON:<br>
-        <span class="text-accent">THREAT ASSESSMENT</span>
+        <span class="text-accent">RISK ASSESSMENT</span>
       </h1>
-      
-      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
-        Praktik lengkap menghasilkan <strong class="text-white">Threat Assessment Brief</strong> 
+
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Praktik lengkap menghasilkan <strong class="text-white">Risk Assessment Brief</strong>
         dari data simulasi multi-source — guided demo + independent exercise.
       </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-12 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT RISK (Hanud)</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">HUMANITARIAN RISK (OMSP/SAR)</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">LEGAL RISK (Gakkum Udara)</span>
+      </div>
       
       <div class="flex flex-wrap justify-center gap-6 mb-12">
         <div class="glass px-6 py-4 rounded-xl text-center">
@@ -789,8 +795,149 @@ RELIABILITY: B-2</pre>
     </div>
   </section>
 
-  <!-- SLIDE 10: SCORING RUBRIC -->
+  <!-- SLIDE 10: ALTERNATIVE VARIANTS — Humanitarian & Legal Risk -->
   <section class="slide-section" id="slide-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">VARIANT EXERCISE (OPSIONAL)</div>
+        <h2 class="slide-subtitle">RISK ASSESSMENT LINTAS DOMAIN</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Framework 3-step (scan → correlate → assess) yang sama juga bisa dipakai untuk domain non-tempur.
+          Pilih satu variant di bawah untuk coba sendiri setelah Sektor Bravo selesai.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- VARIANT B: Humanitarian Risk (OMSP/SAR) -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30" x-data="{ open: false }">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl">🆘</span>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono text-xs mb-1">VARIANT B • OMSP</div>
+              <h3 class="font-semibold text-lg">Humanitarian Risk — CENDRAWASIH RESCUE</h3>
+              <p class="text-xs text-white/50 mt-1">Bukan threat ke kita, tapi risk ke keselamatan survivor & keberhasilan misi SAR</p>
+            </div>
+          </div>
+
+          <div class="p-3 bg-blue-500/10 rounded-lg mb-3 text-xs">
+            <div class="text-blue-400 font-semibold mb-1">SKENARIO:</div>
+            <div class="text-white/70">Gempa M7.2 Banda Sea 0215L. ATR-72 rute Ambon–Kaimana lost contact 0230L (4.2°S 129.8°E, 18,000 ft). 68 pax + 4 kru. Cuaca visibility &lt;2 km. Basarnas request airlift koordinasi.</div>
+          </div>
+
+          <button @click="open = !open" class="w-full text-left text-xs text-blue-400 hover:text-blue-300 flex items-center justify-between py-2 border-t border-white/10">
+            <span x-text="open ? '▲ Tutup contoh prompt' : '▼ Lihat contoh prompt variant B'"></span>
+          </button>
+
+          <div x-show="open" x-collapse class="mt-3">
+            <div class="code-block p-4">
+              <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai SAR coordinator Koopsudnas,
+review 3 sumber berikut dan hasilkan
+HUMANITARIAN RISK ASSESSMENT BRIEF.
+
+SUMBER:
+1. Radar last track ATR-72 (timestamp,
+   heading, altitude, speed drop-off)
+2. BMKG weather forecast (visibility,
+   wind, wave height, 6-jam outlook)
+3. SAR asset availability (C-130, CN-235,
+   helikopter, ETA ke search area)
+
+LAKUKAN 3 LANGKAH:
+1. Scan: identifikasi data anomali
+   (komunikasi terakhir, drift probability)
+2. Correlate: match weather + last track
+   → estimasi search area prioritas
+3. Assess risk:
+   - Risk to survivor (time-critical factor)
+   - Risk to SAR mission success
+   - Risk to rescue aircraft (weather)
+
+FORMAT:
+## BLUF (50 kata)
+## Risk Level (LOW/MED/HIGH) + confidence
+## Prioritized Search Sectors
+## Resource Allocation
+## Immediate Actions (0-6h)
+
+Tone: humanitarian, multi-agency
+(Basarnas/TNI AL/BMKG), bukan combat.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT C: Legal Risk (Gakkum Udara) -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30" x-data="{ open: false }">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl">⚖️</span>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono text-xs mb-1">VARIANT C • GAKKUM UDARA</div>
+              <h3 class="font-semibold text-lg">Legal Risk — FIR VIOLATION</h3>
+              <p class="text-xs text-white/50 mt-1">Risk eskalasi diplomatik + risk chain-of-custody evidence</p>
+            </div>
+          </div>
+
+          <div class="p-3 bg-purple-500/10 rounded-lg mb-3 text-xs">
+            <div class="text-purple-400 font-semibold mb-1">SKENARIO:</div>
+            <div class="text-white/70">Business jet asing masuk FIR Jakarta tanpa clearance, tidak respons radio, heading menuju ruang udara sensitif. Opsi: force-down prosedur. Koordinasi AirNav + Kemlu.</div>
+          </div>
+
+          <button @click="open = !open" class="w-full text-left text-xs text-purple-400 hover:text-purple-300 flex items-center justify-between py-2 border-t border-white/10">
+            <span x-text="open ? '▲ Tutup contoh prompt' : '▼ Lihat contoh prompt variant C'"></span>
+          </button>
+
+          <div x-show="open" x-collapse class="mt-3">
+            <div class="code-block p-4">
+              <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai Perwira Ops Koopsudnas
+dengan latar gakkum udara, review
+3 sumber berikut dan hasilkan
+LEGAL RISK ASSESSMENT BRIEF.
+
+SUMBER:
+1. Radar track pesawat (registrasi,
+   heading, altitude, kecepatan)
+2. AirNav clearance log (tidak ada
+   filed flight plan, no radio response)
+3. Diplomatic context (asal pesawat,
+   perjanjian bilateral relevan)
+
+LAKUKAN 3 LANGKAH:
+1. Scan: identifikasi pelanggaran
+   (ruang udara, komunikasi, transponder)
+2. Correlate: radar + clearance + context
+   → kategori pelanggaran
+3. Assess legal risk:
+   - Risk eskalasi diplomatik
+   - Risk chain-of-custody evidence
+   - Risk prosedural (ROE, UU Penerbangan)
+
+FORMAT:
+## BLUF (50 kata)
+## Legal Risk Level + confidence
+## Escalation Ladder (peaceful → force-down)
+## Stakeholder Notifications
+   (AirNav, Kemlu, Kejakmil)
+## Immediate Actions
+
+Tone: analitis, prosedural,
+mengacu UU Penerbangan & ICAO.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">Prinsip yang sama:</strong> scan → correlate → assess + justification + recommendations.
+        Yang berubah hanya <em>framing risk</em> (threat / humanitarian / legal) dan stakeholder yang dilayani brief-nya.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: SCORING RUBRIC -->
+  <section class="slide-section" id="slide-11">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-8">
         <div class="text-accent font-mono text-sm mb-4">RUBRIK PENILAIAN</div>
@@ -817,8 +964,8 @@ RELIABILITY: B-2</pre>
           
           <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
             <div>
-              <div class="font-semibold text-white">Threat Level Justification</div>
-              <div class="text-xs text-white/50">Level yang tepat dengan reasoning yang solid</div>
+              <div class="font-semibold text-white">Risk Level Justification</div>
+              <div class="text-xs text-white/50">Level risk (threat / humanitarian / legal) dengan reasoning solid</div>
             </div>
             <div class="text-2xl font-display text-accent">20%</div>
           </div>
@@ -847,8 +994,8 @@ RELIABILITY: B-2</pre>
     </div>
   </section>
 
-  <!-- SLIDE 11: CHECKLIST -->
-  <section class="slide-section" id="slide-11">
+  <!-- SLIDE 12: CHECKLIST -->
+  <section class="slide-section" id="slide-12">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-8">
         <div class="text-accent font-mono text-sm mb-4">SELF-CHECK</div>
@@ -875,7 +1022,7 @@ RELIABILITY: B-2</pre>
             <div class="check-box">
               <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <span class="text-white/80">Threat level ada justifikasi yang jelas?</span>
+            <span class="text-white/80">Risk level (threat/humanitarian/legal) ada justifikasi yang jelas?</span>
           </div>
           
           <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
@@ -912,8 +1059,8 @@ RELIABILITY: B-2</pre>
     </div>
   </section>
 
-  <!-- SLIDE 12: KEY TAKEAWAYS -->
-  <section class="slide-section" id="slide-12">
+  <!-- SLIDE 13: KEY TAKEAWAYS -->
+  <section class="slide-section" id="slide-13">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12">
         <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
@@ -952,8 +1099,16 @@ RELIABILITY: B-2</pre>
           <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
             <span class="text-accent font-bold text-xl">4</span>
             <div>
+              <div class="font-semibold text-white mb-1">Framework Lintas Domain</div>
+              <div class="text-sm text-white/60">3-step sama dipakai untuk threat, OMSP/SAR, maupun gakkum udara</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl sm:col-span-2">
+            <span class="text-accent font-bold text-xl">5</span>
+            <div>
               <div class="font-semibold text-white mb-1">Iterate Your Prompts</div>
-              <div class="text-sm text-white/60">First output jarang perfect — refine!</div>
+              <div class="text-sm text-white/60">First output jarang perfect — refine framing dan konteks stakeholder.</div>
             </div>
           </div>
         </div>
@@ -966,6 +1121,74 @@ RELIABILITY: B-2</pre>
         <a href="sesi-02-04-multi-source-fusion.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Lanjut ke Sesi 2.4 →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

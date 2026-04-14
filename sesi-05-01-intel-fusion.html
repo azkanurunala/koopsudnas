@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 5.1 | Intelligence Fusion & Assessment</title>
+  <title>Sesi 5.1 | Phase 1: Fusion (3 Pathway)</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +72,7 @@
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -162,11 +162,60 @@
     </div>
   </section>
 
+  <!-- SLIDE 1.5: PATHWAY SELECTOR CALLOUT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-6">
+        <div class="text-accent font-mono text-sm mb-3">CAPSTONE PATHWAY</div>
+        <h2 class="slide-subtitle">PILIH PATHWAY FASE 1</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Sesi ini menampilkan <strong class="text-red-400">Pathway A (GARUDA SHIELD)</strong> sebagai default.
+          Framework Fusion (extract → correlate → synthesize) sama untuk ketiga pathway — hanya sumber data & output yang berbeda.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass-lit p-5 rounded-2xl border border-red-500/30">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">🎯</span>
+            <div class="font-mono text-xs text-red-400">A • HANUD (default)</div>
+          </div>
+          <div class="font-semibold text-sm mb-2">GARUDA SHIELD</div>
+          <div class="text-xs text-white/60 mb-2"><strong>Sources:</strong> SIGINT, Radar, HUMINT, OSINT</div>
+          <div class="text-xs text-white/60"><strong>Output:</strong> Threat assessment untuk Panglima</div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">🆘</span>
+            <div class="font-mono text-xs text-blue-400">B • OMSP / SAR</div>
+          </div>
+          <div class="font-semibold text-sm mb-2">CENDRAWASIH RESCUE</div>
+          <div class="text-xs text-white/60 mb-2"><strong>Sources:</strong> Weather BMKG, Radar last track, Survivor probability model, SAR asset availability</div>
+          <div class="text-xs text-white/60"><strong>Output:</strong> Search priority assessment untuk Basarnas</div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border border-purple-500/30">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">📚</span>
+            <div class="font-mono text-xs text-purple-400">C • DOKTRIN</div>
+          </div>
+          <div class="font-semibold text-sm mb-2">IADS DOCTRINE REVIEW</div>
+          <div class="text-xs text-white/60 mb-2"><strong>Sources:</strong> Doktrin TNI AU, regional/NATO, lessons learned, policy papers</div>
+          <div class="text-xs text-white/60"><strong>Output:</strong> Doctrine gap assessment untuk Kasau</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">Catatan:</strong> Jika Anda memilih Pathway B atau C, baca sesi ini untuk memahami framework-nya,
+        lalu substitusi sumber A/B/C/D dengan 4 sumber pathway Anda. Pattern prompt & deliverable tetap sama.
+      </div>
+    </div>
+  </section>
+
   <!-- SLIDE 2: SCENARIO BRIEF -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-8">
-        <div class="text-red-400 font-mono text-sm mb-4">CLASSIFIED BRIEF</div>
+        <div class="text-red-400 font-mono text-sm mb-4">CLASSIFIED BRIEF • PATHWAY A DEFAULT</div>
         <h2 class="slide-title">
           OPERATION<br>
           <span class="text-accent">GARUDA SHIELD</span>
@@ -648,6 +697,74 @@ PRODUCE:
         <a href="sesi-05-02-visual-package.html" class="flex-1 py-3 px-6 bg-blue-500 rounded-xl text-center text-navy-900 font-semibold hover:bg-blue-400 transition-colors">
           Lanjut ke Phase 2 →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

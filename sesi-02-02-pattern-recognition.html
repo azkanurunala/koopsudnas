@@ -362,7 +362,7 @@
 </head>
 <body x-data="{ 
   currentSlide: 0, 
-  totalSlides: 10,
+  totalSlides: 11,
   progress: 0,
   init() {
     this.updateProgress();
@@ -1058,6 +1058,102 @@ Bahasa Indonesia formal.</pre>
     </div>
   </section>
 
+  <!-- ==================== SLIDE 8b: OPERATIONAL TEMPO PATTERNS ==================== -->
+  <section class="slide-section" id="slide-8b">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-4">BEYOND RADAR ANOMALIES</div>
+        <h2 class="slide-title">
+          OPERATIONAL TEMPO<br>
+          <span class="text-accent">PATTERNS</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4 text-sm">
+          Framework <strong class="text-white">temporal / spatial / behavioral</strong> tidak hanya untuk radar log.
+          Pattern recognition bekerja sama baiknya untuk tempo latihan, respons SAR, maintenance backlog, atau resource burn-rate.
+          Dua mini-case di bawah menunjukkan transferability-nya.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+
+        <!-- MINI-CASE 1: TRAINING CYCLE (purple — pembinaan) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-purple-400">MINI-CASE 1 • PEMBINAAN</div>
+              <h3 class="font-semibold text-white">Training Cycle Patterns</h3>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 italic mb-4">Skenario: Audit tempo training 3 skadron menjelang ADEX Koopsud II (90 hari)</div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">TEMPORAL</div>
+              <div class="text-white/70">Late starts sortie training vs jadwal (rata-rata 45 menit terlambat di Skadron X), compressed cycles menjelang deadline, gap drill &gt;10 hari.</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">SPATIAL</div>
+              <div class="text-white/70">Training area consolidation ke 1 range saja (bottleneck), skadron tertentu tidak pernah rotate ke training area B padahal dibutuhkan.</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">BEHAVIORAL</div>
+              <div class="text-white/70">Skipped drills (low-complexity skipped first), substitusi pilot junior saat senior absent, pattern "paper-completed" tanpa actual flying.</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">INSIGHT YANG DICARI</div>
+              <div class="text-white/70">Skadron mana yang sedang struggling silently? Apakah tempo training sustainable sampai ADEX, atau akan burn-out di minggu terakhir?</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MINI-CASE 2: SAR MISSION PATTERNS (blue — OMSP) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-blue-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-blue-400">MINI-CASE 2 • OMSP / SAR</div>
+              <h3 class="font-semibold text-white">SAR Mission Response Patterns</h3>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 italic mb-4">Skenario: Analisis lessons learned — tempo respons Basarnas vs TNI AU lintas 8 bencana terakhir</div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">TEMPORAL</div>
+              <div class="text-white/70">Time-to-first-sortie: Basarnas rata-rata 2j15m, TNI AU rata-rata 4j30m. Gap terbesar di bencana waktu malam (response TNI AU delay 2x lipat).</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">SPATIAL</div>
+              <div class="text-white/70">Lanud forward terdekat sering bukan yang pertama tasked — routing via Koopsud HQ tambah 90 menit. Wilayah timur (Papua, Maluku) paling parah delay-nya.</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">BEHAVIORAL</div>
+              <div class="text-white/70">Pattern "wait for confirmation" sebelum launch C-130 — berbeda dengan Basarnas yang launch heli pada indikasi awal. Coordination call chain TNI AU lebih panjang (6 layer vs Basarnas 3 layer).</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">INSIGHT YANG DICARI</div>
+              <div class="text-white/70">Bottleneck bukan di aset atau kru — tapi di <strong class="text-white">decision &amp; coordination chain</strong>. Delegate authority ke Danlanud forward bisa potong 90–120 menit.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-8 glass p-6 rounded-2xl text-center max-w-4xl mx-auto">
+        <p class="text-white/70 text-sm">
+          <strong class="text-white">Catatan metodologi:</strong> framework <span class="text-accent">temporal / spatial / behavioral</span>
+          yang sama dengan radar log — hanya "unit of analysis"-nya yang berganti
+          (dari "contact" jadi "training sortie" atau "SAR mission"). Skill yang dibangun di slide 3–5 transferable ke semua domain.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- ==================== SLIDE 9: QUIZ ==================== -->
   <section class="slide-section" id="slide-9">
     <div class="max-w-4xl mx-auto">
@@ -1183,6 +1279,74 @@ Bahasa Indonesia formal.</pre>
         <a href="sesi-02-03-threat-assessment.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Lanjut ke Sesi 2.3 →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

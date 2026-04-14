@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.6 | Create Music — Audio Scoring untuk Briefing</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.6</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">40 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CREATE MUSIC</span>
+          <span class="ml-1 px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full">NEW</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-05-create-video.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.5</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-07-guided-learning.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.7 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 6 • CREATE MUSIC</span>
+        <span class="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 text-xs font-mono">NEW TOOL</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">CREATE MUSIC</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Tool terbaru Gemini untuk membuat <strong class="text-white">audio original</strong> dari deskripsi teks — background music untuk video brief, audio cue untuk presentasi, scoring untuk training material, dan musik ceremonial.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🎵</div><div class="text-accent font-mono text-xs mb-1">TEXT-TO-MUSIC</div><div class="text-sm text-white/70">Deskripsi → audio original</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🎼</div><div class="text-accent font-mono text-xs mb-1">INSTRUMENTAL</div><div class="text-sm text-white/70">Tanpa lirik, siap pakai</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">⬇️</div><div class="text-accent font-mono text-xs mb-1">DOWNLOAD</div><div class="text-sm text-white/70">MP3/WAV untuk embed</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🔄</div><div class="text-accent font-mono text-xs mb-1">ITERASI</div><div class="text-sm text-white/70">Generate ulang sampai tepat</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div><div><div class="font-semibold text-white mb-1">Kapabilitas Create Music</div><div class="text-sm text-white/60">Pahami apa yang bisa dihasilkan: genre, tempo, durasi, instrumen, mood — dan batasannya</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div><div><div class="font-semibold text-white mb-1">Music Prompting</div><div class="text-sm text-white/60">Cara mendeskripsikan musik yang diinginkan: mood, tempo, instrumen, reference gaya, durasi</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div><div><div class="font-semibold text-white mb-1">5 Use Case Koopsudnas</div><div class="text-sm text-white/60">Video brief scoring, training material audio, exercise simulation atmosphere, presentasi ceremonial, dan alert tones</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div><div><div class="font-semibold text-white mb-1">Workflow Integrasi</div><div class="text-sm text-white/60">Cara menggabungkan Create Music dengan Create Video untuk briefing package audio-visual lengkap</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div><div><div class="font-semibold text-white mb-1">Copyright & OPSEC</div><div class="text-sm text-white/60">Status hak cipta musik yang di-generate AI, pertimbangan penggunaan dalam presentasi internal vs publik</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div><div><div class="font-semibold text-white mb-1">Hands-on + Quiz</div><div class="text-sm text-white/60">Generate 2 track audio untuk briefing berbeda, evaluasi kualitas, identifikasi parameter terbaik</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: KAPABILITAS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KAPABILITAS</div>
+        <h2 class="slide-title">APA YANG BISA <span class="text-accent">CREATE MUSIC?</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-semibold text-accent mb-4">Parameter yang Bisa Dikontrol</div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl"><div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-mono text-xs flex-shrink-0">🎸</div><div><div class="font-semibold text-white text-sm">Genre & Instrumen</div><div class="text-xs text-white/60">Orchestral, ambient, electronic, jazz, folk — atau kombinasi spesifik instrumen</div></div></div>
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl"><div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-mono text-xs flex-shrink-0">❤️</div><div><div class="font-semibold text-white text-sm">Mood & Atmosphere</div><div class="text-xs text-white/60">Tense, hopeful, triumphant, solemn, urgent, calm — langsung pengaruhi karakter musik</div></div></div>
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl"><div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-mono text-xs flex-shrink-0">⚡</div><div><div class="font-semibold text-white text-sm">Tempo & Energy</div><div class="text-xs text-white/60">Slow, moderate, fast — atau BPM spesifik jika tahu</div></div></div>
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl"><div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-mono text-xs flex-shrink-0">⏱️</div><div><div class="font-semibold text-white text-sm">Durasi</div><div class="text-xs text-white/60">30 detik – beberapa menit, sesuaikan dengan kebutuhan video</div></div></div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="glass-lit p-5 rounded-2xl border-green-500/30">
+            <div class="font-semibold text-green-400 mb-2">✓ Use Case Terbaik</div>
+            <ul class="space-y-1.5 text-sm text-white/70">
+              <li>→ Background music untuk video brief tanpa lirik</li>
+              <li>→ Intro/outro music untuk training video</li>
+              <li>→ Ambient score untuk exercise simulation environment</li>
+              <li>→ Ceremonial/processional music (non-standard)</li>
+              <li>→ Alert tones / notification sounds (institutional)</li>
+            </ul>
+          </div>
+          <div class="glass-lit p-5 rounded-2xl border-amber-500/30">
+            <div class="font-semibold text-amber-400 mb-2">⚠️ Pertimbangan</div>
+            <ul class="space-y-1.5 text-sm text-white/70">
+              <li>→ Tidak bisa "suara unit TNI AU resmi" (brand specific)</li>
+              <li>→ Generate ulang beberapa kali untuk hasil optimal</li>
+              <li>→ Untuk presentasi publik: cek policy AI-generated content</li>
+              <li>→ Konsistensi antar session tidak dijamin 100%</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: MUSIC PROMPTING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK PROMPTING</div>
+        <h2 class="slide-title">CARA MENULIS <span class="text-accent">MUSIC PROMPT</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">Formula Music Prompt</div>
+          <div class="font-mono text-sm text-white/80">[GENRE/STYLE] + [MOOD/ATMOSPHERE] + [TEMPO] + [INSTRUMEN UTAMA] + [DURASI] + [KONTEKS PENGGUNAAN]</div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <div class="font-mono text-xs text-red-400 mb-3">✗ KURANG EFEKTIF</div>
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div class="text-sm text-white/70 mb-2">"Buat musik yang bagus untuk briefing militer"</div>
+              <div class="text-xs text-red-400">→ Terlalu generik, hasil tidak predictable</div>
+            </div>
+          </div>
+          <div>
+            <div class="font-mono text-xs text-green-400 mb-3">✓ LEBIH EFEKTIF</div>
+            <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div class="text-sm text-white/70 mb-2">"Instrumental orchestral score, serious and professional atmosphere, moderate tempo, prominent strings and brass, no percussion, 45 seconds, suitable for command briefing background"</div>
+              <div class="text-xs text-green-400">→ Spesifik, semua parameter ada, konteks jelas</div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="font-semibold text-white mb-3">Kosakata Musik yang Berguna</div>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">MOOD</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">tense</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">hopeful</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">solemn</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">urgent</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">triumphant</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">calm</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">INSTRUMEN</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">strings</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">brass</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">piano</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">synth</span>
+                <span class="px-2 py-0.5 bg-accent/20 text-accent text-xs rounded">ambient pads</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: 5 USE CASES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">USE CASES</div>
+        <h2 class="slide-title">5 USE CASE <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-2xl flex-shrink-0">🎬</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Command Briefing Video Score</div><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded font-mono">HANUD</span></div>
+              <div class="text-sm text-white/60">Background score untuk video brief komandan — serius, professional, tanpa distraksi. Plays saat slide video dan grafik muncul.</div>
+            </div>
+            <div class="prompt-block text-xs w-64 flex-shrink-0 hidden lg:block" id="m6-uc1">
+              <button class="copy-btn text-xs" @click="copyText('m6-uc1')" x-text="copied === 'm6-uc1' ? '✓' : 'Copy'"></button>
+              Orchestral, serious professional tone, slow-moderate tempo, strings and brass, no vocals, 60 seconds, command briefing background
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-2xl flex-shrink-0">🚁</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">SAR Operation Emotional Score</div><span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded font-mono">OMSP</span></div>
+              <div class="text-sm text-white/60">Background untuk video dokumentasi operasi SAR — hopeful dan human, cocok untuk laporan keberhasilan kepada keluarga korban atau masyarakat.</div>
+            </div>
+            <div class="prompt-block text-xs w-64 flex-shrink-0 hidden lg:block" id="m6-uc2">
+              <button class="copy-btn text-xs" @click="copyText('m6-uc2')" x-text="copied === 'm6-uc2' ? '✓' : 'Copy'"></button>
+              Cinematic hopeful instrumental, piano and strings, moderate tempo, emotional but uplifting, humanitarian search and rescue context, 45 seconds
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-2xl flex-shrink-0">📚</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Training Module Background</div><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded font-mono">PEMBINAAN</span></div>
+              <div class="text-sm text-white/60">Ambient background untuk sesi e-learning atau self-study — fokus tanpa distraksi, tidak mengganggu konsentrasi saat membaca materi doktrin.</div>
+            </div>
+            <div class="prompt-block text-xs w-64 flex-shrink-0 hidden lg:block" id="m6-uc3">
+              <button class="copy-btn text-xs" @click="copyText('m6-uc3')" x-text="copied === 'm6-uc3' ? '✓' : 'Copy'"></button>
+              Ambient focus music, soft synth pads, minimal melody, low energy, conducive to concentration, no percussion, 3 minutes loop-friendly
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl flex-shrink-0">🎖️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Exercise Opening Atmosphere</div><span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">DOKTRIN</span></div>
+              <div class="text-sm text-white/60">Intro musik untuk pembukaan exercise atau wargame — membangun tension dan sense of urgency sebelum scenario read-out.</div>
+            </div>
+            <div class="prompt-block text-xs w-64 flex-shrink-0 hidden lg:block" id="m6-uc4">
+              <button class="copy-btn text-xs" @click="copyText('m6-uc4')" x-text="copied === 'm6-uc4' ? '✓' : 'Copy'"></button>
+              Tense cinematic score, building intensity, percussion-driven, dramatic brass stabs, rising crescendo, military exercise briefing intro, 30 seconds
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center text-2xl flex-shrink-0">🏛️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1"><div class="font-semibold text-white">Ceremonial Background</div><span class="px-2 py-0.5 bg-violet-500/20 text-violet-400 text-xs rounded font-mono">INSTITUTIONAL</span></div>
+              <div class="text-sm text-white/60">Background music untuk slideshow foto kegiatan, upacara, atau dokumentasi institutional di luar standard hymne resmi.</div>
+            </div>
+            <div class="prompt-block text-xs w-64 flex-shrink-0 hidden lg:block" id="m6-uc5">
+              <button class="copy-btn text-xs" @click="copyText('m6-uc5')" x-text="copied === 'm6-uc5' ? '✓' : 'Copy'"></button>
+              Triumphant ceremonial orchestral, dignified and proud, moderate tempo, full orchestra, suitable for institutional achievement video montage, 90 seconds
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: PROMPT LIBRARY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">MUSIK PROMPTS <span class="text-accent">SIAP PAKAI</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded font-mono">M-01</span><span class="font-semibold">Command Briefing Score — Full Version</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="m6-m01">
+                <button class="copy-btn" @click="copyText('m6-m01')" x-text="copied === 'm6-m01' ? '✓ Copied!' : 'Copy'"></button>
+                Orchestral instrumental music for military command briefing background.<br><br>
+                Style: Cinematic, professional, serious<br>
+                Mood: Authoritative, focused, disciplined<br>
+                Instruments: Strings (dominant), brass (accent), minimal percussion<br>
+                Tempo: Slow to moderate (60-80 BPM)<br>
+                Structure: Steady, no sudden changes, loop-friendly ending<br>
+                Duration: 2 minutes<br>
+                No vocals, no lyrics<br><br>
+                The music should feel appropriate for a senior military officer presenting strategic information — serious but not alarming.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">M-02</span><span class="font-semibold">SAR Victory — Keberhasilan Penyelamatan</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="m6-m02">
+                <button class="copy-btn" @click="copyText('m6-m02')" x-text="copied === 'm6-m02' ? '✓ Copied!' : 'Copy'"></button>
+                Emotional cinematic score for search and rescue mission success video.<br><br>
+                Style: Inspirational, humanistic, cinematic<br>
+                Mood: Start with tension/concern, build to hopeful and triumphant resolution<br>
+                Instruments: Solo piano intro, strings build, subtle choir or synth pads<br>
+                Structure: 3 sections — tense opening (15s), building hope (20s), resolution/relief (25s)<br>
+                Duration: 60 seconds<br>
+                No vocals<br><br>
+                This music will accompany a video documenting the rescue of civilians in a natural disaster response operation.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">M-03</span><span class="font-semibold">Exercise DANGER THUNDER — Situation Score</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="m6-m03">
+                <button class="copy-btn" @click="copyText('m6-m03')" x-text="copied === 'm6-m03' ? '✓ Copied!' : 'Copy'"></button>
+                Tense cinematic situation score for military exercise scenario introduction.<br><br>
+                Style: Dramatic, tense, high-stakes<br>
+                Mood: Urgent, alert, serious — conveys a situation requiring immediate attention<br>
+                Instruments: Heavy percussion, low brass drones, staccato strings, electronic tension elements<br>
+                Tempo: Moderate-fast with irregular tension beats<br>
+                Structure: Cold open tension → building urgency → peak (briefing cue) → sustained alert state<br>
+                Duration: 45 seconds<br>
+                No vocals, no melody — texture and tension only
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: WORKFLOW & COPYRIGHT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WORKFLOW & HUKUM</div>
+        <h2 class="slide-title">INTEGRASI & <span class="text-accent">COPYRIGHT</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="text-xl font-semibold text-accent mb-4">Workflow: Video + Music</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 text-sm"><div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</div><div>Generate video clips dengan <strong class="text-white">Create Video</strong> (Sesi 6.5)</div></div>
+            <div class="flex items-start gap-3 text-sm"><div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</div><div>Generate background score dengan <strong class="text-white">Create Music</strong> — sesuaikan durasi</div></div>
+            <div class="flex items-start gap-3 text-sm"><div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">3</div><div>Download keduanya (MP4 + MP3)</div></div>
+            <div class="flex items-start gap-3 text-sm"><div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">4</div><div>Insert video ke slide, add audio track di Google Slides atau PowerPoint</div></div>
+            <div class="flex items-start gap-3 text-sm"><div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">✓</div><div>Briefing package <strong class="text-accent">audio-visual lengkap</strong> tanpa studio</div></div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="text-xl font-semibold text-accent mb-4">Status Copyright</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-sm">
+              <div class="font-semibold text-green-400 mb-1">✓ Penggunaan Internal (Aman)</div>
+              <div class="text-white/70">Briefing internal, training material, dokumentasi internal — musik AI dapat digunakan bebas tanpa khawatir copyright claim.</div>
+            </div>
+            <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm">
+              <div class="font-semibold text-amber-400 mb-1">⚠️ Publikasi Eksternal (Cek Dulu)</div>
+              <div class="text-white/70">Jika video dipublikasikan ke platform publik (YouTube, sosmed), cek Google's AI-generated content policy terbaru — aturan terus berkembang.</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-sm">
+              <div class="font-semibold text-blue-400 mb-1">ℹ️ Status Hukum Indonesia</div>
+              <div class="text-white/70">Hak cipta untuk konten AI-generated masih dalam perkembangan hukum. Untuk keperluan dinas, konsultasikan dengan bagian hukum satuan.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: HANDS-ON -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">GENERATE AUDIO</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka gemini.google.com → klik "Create Music" di Tools. Tool ini relatif baru — antarmuka mungkin berbeda dari Create Image/Video. Siapkan untuk eksperimen dengan parameter.</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div><div><div class="font-semibold text-white">Generate Briefing Score (M-01)</div><div class="text-xs text-accent font-mono">15 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Copy dan gunakan prompt M-01 (Command Briefing Score). Generate. Dengarkan hasilnya. Pertanyaan: apakah sudah terasa "professional enough" untuk command briefing? Jika tidak — iterasi dengan mengubah parameter yang mana?</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div><div><div class="font-semibold text-white">Coba Exercise Score (M-03)</div><div class="text-xs text-green-400 font-mono">10 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Gunakan prompt M-03 (Exercise Scenario Score). Dengarkan. Apakah "tense" dan "urgent" tercapai? Bandingkan karakter mood dengan briefing score M-01. Ini demonstrasi kontrol mood melalui prompt.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div><div><div class="font-semibold text-white">Combine dengan Video dari Sesi 6.5</div><div class="text-xs text-purple-400 font-mono">10 MENIT</div></div></div>
+            <p class="text-sm text-white/70">Ambil video clip dari latihan Sesi 6.5 dan audio dari latihan ini. Gabungkan di Google Slides — insert video clip, add audio, atur timing. Lihat hasilnya: ini adalah briefing package audio-visual yang dibuat dalam 30 menit.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'c') this.score++;
+      if (this.answers.q2 === 'b') this.score++;
+      if (this.answers.q3 === 'a') this.score++;
+      if (this.answers.q4 === 'd') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.6</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman Create Music</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Parameter terpenting yang membedakan musik untuk "command briefing" dan "exercise intro" adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Durasi — briefing lebih panjang dari exercise</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Genre — briefing pakai jazz, exercise pakai rock</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Mood dan atmosphere — briefing: authoritative/calm, exercise: tense/urgent</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Tidak ada perbedaan yang signifikan</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Untuk penggunaan create music dalam konteks briefing internal Koopsudnas, status copyright-nya adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Terlarang — musik AI tidak boleh digunakan dalam konteks pemerintahan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Aman untuk penggunaan internal — briefing, training, dokumentasi internal tidak berisiko copyright claim</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Harus bayar lisensi setiap kali digunakan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Status hukumnya sama dengan musik bajakan</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Workflow paling efisien untuk membuat briefing package dengan video DAN musik adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Create Video (clips) + Create Music (score) → download keduanya → gabungkan di Google Slides/PowerPoint</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Minta Gemini langsung generate video dengan musik sekaligus dalam satu prompt</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Upload video ke Create Music agar AI tambahkan musik otomatis</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Gunakan NotebookLM untuk combine video dan audio</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Untuk musik SAR yang menggambarkan keberhasilan penyelamatan, elemen musik yang paling penting adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Tempo sangat cepat untuk menggambarkan urgency</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Bass yang dominan untuk authoritative feel</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Tidak ada musik — SAR briefing harus senyap</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Arc emosional: mulai tense/uncertain → build → resolusi hopeful/triumphant — menggambarkan journey dari krisis ke penyelamatan</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Siap ke Guided Learning.' : score >= 3 ? 'Baik!' : score >= 2 ? 'Cukup. Ulang slide Workflow.' : 'Kembali ke slide 4-5.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q1 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'c' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong><span class="text-white/60 ml-2">— Mood/atmosphere adalah pembeda utama antar konteks penggunaan</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q2 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'b' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong><span class="text-white/60 ml-2">— Internal use aman; publikasi publik perlu cek policy lebih lanjut</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q3 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'a' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong><span class="text-white/60 ml-2">— Generate terpisah, combine di presentasi adalah workflow yang paling praktis</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q4 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'd' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong><span class="text-white/60 ml-2">— Arc emosional menghidupkan narasi SAR dari krisis ke resolusi</span></div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Mood = Kunci</div><div class="text-sm text-white/60">Sebutkan mood yang diinginkan secara eksplisit: authoritative, tense, hopeful, solemn — AI akan menyesuaikan seluruh karakter musik.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Internal = Aman</div><div class="text-sm text-white/60">Untuk briefing dan training internal, musik AI-generated bebas digunakan tanpa risiko copyright claim.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">Generate + Iterate</div><div class="text-sm text-white/60">Jarang dapat hasil sempurna di percobaan pertama. Generate 2–3 variasi, pilih yang paling sesuai konteks.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Combine dengan Video</div><div class="text-sm text-white/60">Create Music + Create Video + Google Slides = briefing package audio-visual profesional dalam ~70 menit.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">Guided Learning</strong> — tool baru Gemini untuk membuat self-paced interactive walkthrough untuk onboarding doktrin dan training personel satuan</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-05-create-video.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.5: Create Video</a>
+        <a href="sesi-06-07-guided-learning.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.7: Guided Learning →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🖼️</span><div class="font-semibold text-indigo-300">Create Image</div></div><div class="text-xs text-white/60">Generate infografis dan ilustrasi briefing via Imagen 4.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📋</span><div class="font-semibold text-indigo-300">Canvas</div></div><div class="text-xs text-white/60">Workspace interaktif untuk draft dan iterasi dokumen.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🔎</span><div class="font-semibold text-indigo-300">Deep Research</div></div><div class="text-xs text-white/60">Riset OSINT otomatis multi-source dengan citation.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎬</span><div class="font-semibold text-indigo-300">Create Video</div></div><div class="text-xs text-white/60">Video brief via Veo untuk briefing package visual.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/40 bg-indigo-500/10"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎵</span><div class="font-semibold text-indigo-300">Create Music</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">SESI INI</span></div><div class="text-xs text-white/60">Audio scoring untuk video brief dan presentasi — tool terbaru Gemini.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📖</span><div class="font-semibold text-indigo-300">Guided Learning</div></div><div class="text-xs text-white/60">Self-paced walkthrough interaktif untuk onboarding dan training.</div></div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

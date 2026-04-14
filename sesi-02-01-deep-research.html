@@ -323,7 +323,7 @@
 </head>
 <body x-data="{ 
   currentSlide: 0, 
-  totalSlides: 10,
+  totalSlides: 11,
   progress: 0,
   init() {
     this.updateProgress();
@@ -972,6 +972,127 @@ Bahasa Indonesia formal, maksimal 600 kata total.</pre>
     </div>
   </section>
 
+  <!-- ==================== SLIDE 9b: CACS LINTAS DOMAIN ==================== -->
+  <section class="slide-section" id="slide-9b">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-4">FRAMEWORK TRANSFERABILITY</div>
+        <h2 class="slide-title">
+          CACS <span class="text-accent">LINTAS DOMAIN</span><br>
+          <span class="text-xl text-white/60 font-normal">Framework sama, jenis sumber berbeda</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4 text-sm">
+          CACS (<strong class="text-white">Collect → Analyze → Correlate → Synthesize</strong>) bukan milik domain intelijen.
+          Framework-nya universal. Yang berubah hanya <strong class="text-white">jenis sumber</strong> yang dikumpulkan di step pertama.
+        </p>
+      </div>
+
+      <!-- BASELINE REMINDER -->
+      <div class="glass p-4 rounded-xl mb-6 text-center text-xs text-white/60">
+        <strong class="text-accent">Variant A (baseline):</strong> CACS untuk Intel Fusion — SIGINT + Radar + HUMINT + OSINT (sudah dibahas di slide sebelumnya)
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6" x-data="{ openB: true, openC: false }">
+
+        <!-- VARIANT B: CENDRAWASIH RESCUE (blue) -->
+        <div class="glass-lit rounded-2xl border-t-4 border-blue-500 overflow-hidden">
+          <button @click="openB = !openB" class="w-full p-6 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3 text-left">
+              <div class="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+              </div>
+              <div>
+                <div class="font-mono text-[10px] text-blue-400">VARIANT B — OMSP / SAR</div>
+                <div class="text-sm font-semibold text-white">CACS untuk CENDRAWASIH RESCUE</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform" :class="openB ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="openB" x-collapse class="px-6 pb-6 pt-0 border-t border-blue-500/20">
+            <div class="text-xs text-white/50 mb-4 italic pt-4">Skenario: ATR-72 lost contact, Banda Sea — 68 pax + 4 kru</div>
+
+            <div class="space-y-3 text-xs">
+              <div class="p-3 bg-blue-500/10 rounded-lg">
+                <div class="text-blue-400 font-mono mb-1">C — COLLECT (sources)</div>
+                <ul class="text-white/70 space-y-1 list-disc list-inside">
+                  <li>Weather forecast BMKG (sea state, wind, visibility 6 jam)</li>
+                  <li>Radar last track (4.2°S 129.8°E, 0230L, FL180)</li>
+                  <li>Survivor drift model (sea current + wind)</li>
+                  <li>SAR asset availability (TNI AU CN-235/C-212, TNI AL kapal, Basarnas heli)</li>
+                </ul>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-blue-400 font-mono mb-1">A — ANALYZE (per source)</div>
+                <div class="text-white/70">Key finding tiap sumber: drift area probabilitas, cuaca window, range aset.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-blue-400 font-mono mb-1">C — CORRELATE</div>
+                <div class="text-white/70">Match drift area dengan range aset tersedia; cek apakah cuaca memungkinkan sortie di sektor prioritas.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-blue-400 font-mono mb-1">S — SYNTHESIZE</div>
+                <div class="text-white/70">Unified search plan: 3 sektor prioritas, assignment aset, SITREP Basarnas dengan confidence level.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT C: IADS DOCTRINE REVIEW (amber) -->
+        <div class="glass-lit rounded-2xl border-t-4 border-amber-500 overflow-hidden">
+          <button @click="openC = !openC" class="w-full p-6 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3 text-left">
+              <div class="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <div>
+                <div class="font-mono text-[10px] text-amber-400">VARIANT C — DOKTRIN</div>
+                <div class="text-sm font-semibold text-white">CACS untuk IADS Doctrine Review</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform" :class="openC ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="openC" x-collapse class="px-6 pb-6 pt-0 border-t border-amber-500/20">
+            <div class="text-xs text-white/50 mb-4 italic pt-4">Skenario: Review posture IADS Koopsudnas era UAV &amp; long-range precision strike</div>
+
+            <div class="space-y-3 text-xs">
+              <div class="p-3 bg-amber-500/10 rounded-lg">
+                <div class="text-amber-400 font-mono mb-1">C — COLLECT (sources)</div>
+                <ul class="text-white/70 space-y-1 list-disc list-inside">
+                  <li>Doktrin TNI AU existing (IADS, air defense posture)</li>
+                  <li>NATO STANAG &amp; doktrin regional (Singapore, Australia)</li>
+                  <li>Lessons learned 3 exercise multinational terakhir</li>
+                  <li>Policy paper &amp; think-tank (RAND, IISS, Prabhu Sinha) tentang era UAV</li>
+                </ul>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-amber-400 font-mono mb-1">A — ANALYZE (per source)</div>
+                <div class="text-white/70">Ekstrak prinsip kunci tiap doktrin; bullet points lessons learned; trend dari policy papers.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-amber-400 font-mono mb-1">C — CORRELATE</div>
+                <div class="text-white/70">Bandingkan doktrin Koopsudnas dengan peers; identifikasi gap (UAV defense, long-range strike) yang konsisten di multiple sources.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-amber-400 font-mono mb-1">S — SYNTHESIZE</div>
+                <div class="text-white/70">Doctrine gap analysis + recommended posture update + stakeholder brief, dengan citation per finding.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-8 glass p-6 rounded-2xl text-center max-w-4xl mx-auto">
+        <p class="text-white/70 text-sm">
+          <strong class="text-white">Pattern yang harus diingat:</strong> ketika Anda menghadapi task fusion multi-sumber baru —
+          entah intel, SAR, doktrin, pembinaan, atau gakkum udara — tanyakan pada diri sendiri:
+          <span class="text-accent">"Apa 3–5 sumber yang relevan untuk task ini?"</span>
+          Sisanya CACS mengerjakan sendiri.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- ==================== SLIDE 10: QUIZ & KEY TAKEAWAYS ==================== -->
   <section class="slide-section" id="slide-10">
     <div class="max-w-4xl mx-auto">
@@ -1158,12 +1279,80 @@ Bahasa Indonesia formal, maksimal 600 kata total.</pre>
           </div>
 
           <div class="pt-4 border-t border-white/5">
-            <a href="sesi-06-02-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.2 — NotebookLM Deep Dive →
+            <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.8 — NotebookLM Deep Dive →
             </a>
           </div>
         </div>
       </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
     </div>
   </section>
 

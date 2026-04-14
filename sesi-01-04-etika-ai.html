@@ -925,9 +925,42 @@
       
       <div class="mt-8 glass p-6 rounded-2xl text-center">
         <p class="text-white/70">
-          Pada <strong class="text-white">semua level</strong>, manusia tetap memiliki 
+          Pada <strong class="text-white">semua level</strong>, manusia tetap memiliki
           <strong class="text-accent">kontrol dan accountability</strong> penuh atas keputusan akhir.
         </p>
+      </div>
+
+      <!-- Ethical Contrast: OMSP & Gakkum -->
+      <div class="mt-8 grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border border-green-500/20">
+          <div class="text-xs font-mono text-green-400 mb-3">OMSP / SAR CONTEXT</div>
+          <h4 class="font-semibold mb-4">Prioritisasi Operasi CENDRAWASIH RESCUE</h4>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <div class="text-green-400 font-mono text-xs mb-1">✓ PERMISSIBLE</div>
+              <p class="text-white/70">AI bantu resource prioritization search area (cuaca, drift, last-known-position) — human commander sign-off final tasking.</p>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+              <div class="text-red-400 font-mono text-xs mb-1">✗ FORBIDDEN</div>
+              <p class="text-white/70">AI autonomous triage memutuskan siapa korban yang diselamatkan duluan tanpa oversight manusia.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/20">
+          <div class="text-xs font-mono text-amber-400 mb-3">GAKKUM UDARA CONTEXT</div>
+          <h4 class="font-semibold mb-4">FIR Violation &amp; Force-Down Incident</h4>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <div class="text-green-400 font-mono text-xs mb-1">✓ PERMISSIBLE</div>
+              <p class="text-white/70">AI bantu evidence analysis (radar track, flight plan, ADS-B) untuk force-down incident — komandan putuskan tindakan.</p>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+              <div class="text-red-400 font-mono text-xs mb-1">✗ FORBIDDEN</div>
+              <p class="text-white/70">AI autonomous use-of-force decision (engage / warning shot) tanpa human authorization chain.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1434,6 +1467,74 @@
         <a href="modul-02-intelligence-analysis.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Lanjut ke Modul 02 →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

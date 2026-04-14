@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Training AI untuk Pamen Koopsudnas (TNI AU). Total **31 file HTML** dengan struktur navigasi hierarkis (5 core modul + 1 optional deep-dive modul).
+Training AI untuk Pamen Koopsudnas (TNI AU). Total **36 file HTML** dengan struktur navigasi hierarkis (5 core modul + 1 optional deep-dive modul 9-sesi).
 
 ---
 
@@ -41,11 +41,16 @@ index.html    ← ENTRY POINT
 │   ├── sesi-05-03-coa-wargaming.html
 │   └── sesi-05-04-decision-brief.html
 │
-└── modul-06-multi-tool-operations.html  ← STANDALONE DEEP-DIVE (Gemini + NotebookLM)
+└── modul-06-multi-tool-operations.html  ← STANDALONE DEEP-DIVE (9 sesi: 1 overview + 6 Gemini tools + NotebookLM + Capstone)
     ├── sesi-06-01-gemini-ecosystem.html
-    ├── sesi-06-02-notebooklm-deep-dive.html
-    ├── sesi-06-03-gemini-visual-generation.html
-    └── sesi-06-04-multi-tool-workflow.html
+    ├── sesi-06-02-create-image.html                (Imagen 4)
+    ├── sesi-06-03-canvas.html                      (Workspace interaktif)
+    ├── sesi-06-04-deep-research.html               (Autonomous research agent)
+    ├── sesi-06-05-create-video.html                (Veo)
+    ├── sesi-06-06-create-music.html                (Audio generation — NEW)
+    ├── sesi-06-07-guided-learning.html             (Adaptive walkthrough)
+    ├── sesi-06-08-notebooklm-deep-dive.html
+    └── sesi-06-09-multi-tool-workflow.html         (Capstone)
 ```
 
 **Modul 06 Access Model:** Standalone optional deep-dive — tidak locked behind Modul 01-05. Peserta bisa akses langsung dari landing page (ditandai badge "DEEP DIVE" / "OPTIONAL"). Cocok untuk Pamen yang sudah familiar Claude tapi mau eksplorasi Gemini + NotebookLM secara fokus.
@@ -150,14 +155,19 @@ Setiap session page harus punya navigasi:
 | sesi-05-03 | sesi-05-02-visual-package.html | sesi-05-04-decision-brief.html |
 | sesi-05-04 | sesi-05-03-coa-wargaming.html | index.html |
 
-### Module 06: Multi-Tool Operations (Gemini + NotebookLM) — STANDALONE
+### Module 06: Multi-Tool Operations (9 sesi — Gemini 6 tools + NotebookLM + Capstone) — STANDALONE
 
 | Session | Prev Link | Next Link |
 |---------|-----------|-----------|
-| sesi-06-01 | modul-06-multi-tool-operations.html | sesi-06-02-notebooklm-deep-dive.html |
-| sesi-06-02 | sesi-06-01-gemini-ecosystem.html | sesi-06-03-gemini-visual-generation.html |
-| sesi-06-03 | sesi-06-02-notebooklm-deep-dive.html | sesi-06-04-multi-tool-workflow.html |
-| sesi-06-04 | sesi-06-03-gemini-visual-generation.html | index.html |
+| sesi-06-01 (Gemini Ecosystem) | modul-06-multi-tool-operations.html | sesi-06-02-create-image.html |
+| sesi-06-02 (Create Image) | sesi-06-01-gemini-ecosystem.html | sesi-06-03-canvas.html |
+| sesi-06-03 (Canvas) | sesi-06-02-create-image.html | sesi-06-04-deep-research.html |
+| sesi-06-04 (Deep Research) | sesi-06-03-canvas.html | sesi-06-05-create-video.html |
+| sesi-06-05 (Create Video) | sesi-06-04-deep-research.html | sesi-06-06-create-music.html |
+| sesi-06-06 (Create Music — NEW) | sesi-06-05-create-video.html | sesi-06-07-guided-learning.html |
+| sesi-06-07 (Guided Learning) | sesi-06-06-create-music.html | sesi-06-08-notebooklm-deep-dive.html |
+| sesi-06-08 (NotebookLM Deep Dive) | sesi-06-07-guided-learning.html | sesi-06-09-multi-tool-workflow.html |
+| sesi-06-09 (Multi-Tool Capstone) | sesi-06-08-notebooklm-deep-dive.html | index.html |
 
 ---
 

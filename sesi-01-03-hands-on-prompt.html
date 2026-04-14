@@ -408,7 +408,7 @@
 </head>
 <body x-data="{ 
   currentSlide: 0, 
-  totalSlides: 12,
+  totalSlides: 13,
   progress: 0,
   activeScenario: 'a',
   exerciseStep: 1,
@@ -1317,6 +1317,130 @@ TR-010   | 11-APR 16:45  | -1.90  | 118.10  | 32000  | 420    | 180
   </section>
 
   <!-- ==================== SLIDE 11: PEER REVIEW ==================== -->
+  <!-- ==================== SLIDE 10b: EXERCISE 2 — CENDRAWASIH RESCUE (OPSIONAL) ==================== -->
+  <section class="slide-section" id="slide-10b">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full mb-4">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          <span class="text-blue-400 font-mono text-xs">EXERCISE 2 • OPSIONAL • OMSP / SAR</span>
+        </div>
+        <h2 class="slide-title">
+          <span class="text-blue-400">CENDRAWASIH RESCUE</span><br>
+          <span class="text-xl text-white/60 font-normal">RISEN Builder untuk SAR Coordination Brief</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4 text-sm">
+          Untuk peserta yang sudah menyelesaikan GARUDA ALERT — coba exercise kedua dengan domain berbeda.
+          Gunakan <strong class="text-white">RISEN builder yang sama</strong>, tapi pindahkan role dari intel analyst ke SAR coordinator.
+        </p>
+      </div>
+
+      <!-- SCENARIO CARD -->
+      <div class="glass-lit p-6 rounded-2xl border-l-4 border-blue-500 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <div class="text-blue-400 font-mono text-xs mb-2">SKENARIO • 0230L</div>
+            <h3 class="font-semibold text-lg mb-3">Gempa M7.2 Banda Sea — ATR-72 Lost Contact</h3>
+            <div class="grid sm:grid-cols-2 gap-3 text-xs text-white/70">
+              <div><span class="text-white/40">Origin:</span> Gempa M7.2 di Banda Sea, 0215L</div>
+              <div><span class="text-white/40">Target:</span> ATR-72 rute Ambon–Kaimana</div>
+              <div><span class="text-white/40">Last Contact:</span> 0230L, FL180, 4.2°S 129.8°E</div>
+              <div><span class="text-white/40">Manifest:</span> 68 penumpang + 4 kru</div>
+              <div><span class="text-white/40">Cuaca:</span> Bad weather, visibility &lt;2 km</div>
+              <div><span class="text-white/40">Request:</span> Basarnas minta koordinasi airlift SAR</div>
+            </div>
+            <div class="mt-4 p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-xs text-white/60">
+                <strong class="text-blue-400">Multi-agency:</strong> TNI AU (airlift) + Basarnas (lead coordination) + TNI AL (maritime) + Kemenhub (KNKT) + BMKG (weather)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOAL -->
+      <div class="glass p-5 rounded-2xl mb-8 text-center">
+        <div class="text-white/40 font-mono text-xs mb-2">GOAL EXERCISE</div>
+        <p class="text-white/80 text-sm">
+          Draft prompt RISEN untuk menghasilkan <strong class="text-blue-400">SAR coordination brief 1 halaman</strong>
+          — search area priority, resource allocation, SITREP untuk Basarnas.
+        </p>
+      </div>
+
+      <!-- CONTOH JAWABAN RISEN -->
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-blue-400">Contoh Jawaban RISEN</h3>
+          <span class="text-xs text-white/40 font-mono">REFERENCE ANSWER</span>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-blue-400 font-mono mb-1">R — ROLE</div>
+            <div class="text-white/80">
+              "Anda adalah SAR coordinator TNI AU dengan 10 tahun pengalaman maritime SAR di wilayah timur Indonesia,
+              bekerja dalam tim gabungan Basarnas–TNI AL–BMKG."
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-blue-400 font-mono mb-1">I — INSTRUCTIONS / INPUT</div>
+            <div class="text-white/80">
+              "Saya lampirkan data berikut: (1) last known position 4.2°S 129.8°E pada 0230L,
+              (2) BMKG weather forecast sea state &amp; wind 6 jam ke depan,
+              (3) sea current drift model wilayah Banda Sea,
+              (4) manifest 68 pax + 4 kru,
+              (5) asset availability CN-235, C-212, heli Bell-412 di Makassar &amp; Ambon."
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-blue-400 font-mono mb-1">S — STEPS</div>
+            <div class="text-white/80">
+              "Lakukan langkah berikut secara berurutan: (1) hitung estimated drift area 6 jam dari last known position,
+              (2) bagi area menjadi sektor search prioritas tinggi/menengah/rendah,
+              (3) match aset TNI AU yang tersedia ke tiap sektor berdasarkan range &amp; endurance,
+              (4) draft SITREP singkat untuk Basarnas."
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-blue-400 font-mono mb-1">E — END GOAL / EXPECTED OUTPUT</div>
+            <div class="text-white/80">
+              "Hasil akhir: 1 dokumen SAR coordination brief format:
+              (a) search area priority matrix (3 sektor dengan probabilitas),
+              (b) resource allocation table (aset → sektor → sortie plan),
+              (c) SITREP Basarnas 1 paragraf untuk rilis 0600L.
+              Tone humanitarian, bukan combat."
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-blue-400 font-mono mb-1">N — NARROWING</div>
+            <div class="text-white/80">
+              "Fokus hanya window 0600–1200L hari ini. Jangan bahas causal analysis (itu urusan KNKT).
+              Asumsikan visibility akan tetap &lt;2 km sampai 1000L. Jangan over-commit aset Koopsud II."
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+          <p class="text-xs text-white/70">
+            <strong class="text-blue-400">Catatan:</strong> Struktur prompt <span class="text-white">identik</span> dengan GARUDA ALERT —
+            yang berbeda hanya domain (intel → SAR), tone (combat → humanitarian), dan jenis input data.
+            Inilah power RISEN: satu framework, semua tugas pokok Koopsudnas.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 11: PEER REVIEW ==================== -->
   <section class="slide-section" id="slide-11">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12">
@@ -1482,6 +1606,74 @@ TR-010   | 11-APR 16:45  | -1.90  | 118.10  | 32000  | 420    | 180
         <a href="sesi-01-04-etika-ai.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Lanjut ke Sesi 1.4: Etika AI →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

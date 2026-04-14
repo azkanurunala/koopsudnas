@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 3.3 | Hands-On: Dashboard & Infografis Creation</title>
+  <title>Sesi 3.3 | Dashboard & Infografis Lintas Domain Koopsudnas</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +78,7 @@
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 12, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{ currentSlide: 0, totalSlides: 13, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -126,10 +126,17 @@
         <span class="text-accent">DASHBOARD & INFOGRAFIS</span>
       </h1>
       
-      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
-        Praktik membuat <strong class="text-white">situational awareness dashboard</strong> 
-        dan <strong class="text-white">intelligence infografis</strong> dari data simulasi.
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Praktik membuat <strong class="text-white">dashboard</strong> dan <strong class="text-white">infografis</strong>
+        dari data simulasi — lintas 4 domain Koopsudnas: threat, SAR, bencana, dan readiness satuan.
       </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-8 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT DASH</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">SAR DASH</span>
+        <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full">BENCANA DASH</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">READINESS DASH</span>
+      </div>
       
       <div class="flex flex-wrap justify-center gap-6 mb-12">
         <div class="glass px-6 py-4 rounded-xl text-center">
@@ -571,6 +578,180 @@ OUTPUT: Complete HTML with inline CSS</pre>
     </div>
   </section>
 
+  <!-- SLIDE 7.5: VARIANT LINTAS DOMAIN — Dashboard & Infografis -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">VARIANT LINTAS DOMAIN</div>
+        <h2 class="slide-subtitle">4 DASHBOARD + 4 INFOGRAFIS KOOPSUDNAS</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Template prompt di atas (threat dashboard) adalah default untuk Operasi Pertahanan Udara.
+          Di bawah ini 3 variant lain: SAR, Bencana, dan Readiness. Framework visual sama —
+          hero metric + metric cards + chart + status — yang berubah: data, warna, stakeholder.
+        </p>
+      </div>
+
+      <div x-data="{ variant: 'threat' }">
+        <div class="flex flex-wrap justify-center gap-2 mb-6">
+          <button @click="variant = 'threat'" :class="variant === 'threat' ? 'bg-red-500/30 border-red-500 text-red-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🎯 A • THREAT</button>
+          <button @click="variant = 'sar'" :class="variant === 'sar' ? 'bg-blue-500/30 border-blue-500 text-blue-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🆘 B • SAR</button>
+          <button @click="variant = 'bencana'" :class="variant === 'bencana' ? 'bg-green-500/30 border-green-500 text-green-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🌊 C • BENCANA</button>
+          <button @click="variant = 'readiness'" :class="variant === 'readiness' ? 'bg-purple-500/30 border-purple-500 text-purple-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🛠️ D • READINESS</button>
+        </div>
+
+        <!-- THREAT VARIANT (default, refer to existing) -->
+        <template x-if="variant === 'threat'">
+          <div class="glass-lit p-6 rounded-2xl border border-red-500/30">
+            <div class="text-red-400 font-mono text-xs mb-2">VARIANT A • OPERASI PERTAHANAN UDARA</div>
+            <h3 class="font-semibold text-lg mb-3">Situational Awareness Dashboard (default existing)</h3>
+            <p class="text-xs text-white/60 mb-3">
+              Hero metric = <strong>Threat Level</strong>. Metric cards = contacts, sectors, hot sector, confidence.
+              Chart = 24h trend kontak. Status = air defense / CAP / radar. Rujuk Slide 4 untuk prompt lengkap.
+            </p>
+            <div class="grid md:grid-cols-4 gap-2 text-xs">
+              <div class="p-2 bg-red-500/10 rounded">Hero: <strong>THREAT LEVEL</strong></div>
+              <div class="p-2 bg-white/5 rounded">Cards: contact / sector / confidence</div>
+              <div class="p-2 bg-white/5 rounded">Chart: 24h trend kontak</div>
+              <div class="p-2 bg-white/5 rounded">Status: AD / CAP / radar</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- SAR VARIANT -->
+        <template x-if="variant === 'sar'">
+          <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+            <div class="text-blue-400 font-mono text-xs mb-2">VARIANT B • OMSP / CENDRAWASIH RESCUE</div>
+            <h3 class="font-semibold text-lg mb-3">SAR Operations Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Survivor Risk (TIME-CRITICAL / CRITICAL / STABLE) + jam sejak lost contact</div>
+                  <div><strong class="text-white">Cards:</strong> Sektor searched / debris found / last known position / pax count</div>
+                  <div><strong class="text-white">Chart:</strong> Progress pencarian per 2-jam + weather window</div>
+                  <div><strong class="text-white">Status:</strong> C-130 status / CN-235 / helikopter / koordinasi Basarnas</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan SAR Dashboard untuk
+CENDRAWASIH RESCUE (ATR-72 hilang
+Banda Sea, 68 pax).
+
+HERO: Survivor Risk Badge
+       (TIME-CRITICAL +3h35m)
+CARDS:
+  - Sektor searched: 4/12
+  - Debris found: 0
+  - Last known position
+  - Pax count: 68+4
+CHART: search progress per 2h +
+       weather window BMKG
+STATUS:
+  - C-130 on-station
+  - CN-235 enroute
+  - Heli Super Puma standby
+  - Basarnas coord active
+
+Color: biru = progress, amber =
+weather caution, merah = urgent.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- BENCANA VARIANT -->
+        <template x-if="variant === 'bencana'">
+          <div class="glass-lit p-6 rounded-2xl border border-green-500/30">
+            <div class="text-green-400 font-mono text-xs mb-2">VARIANT C • OMSP / BANJIR SULAWESI</div>
+            <h3 class="font-semibold text-lg mb-3">Disaster Relief Coordination Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Pengungsi ter-cover vs total (%) + Humanitarian Severity</div>
+                  <div><strong class="text-white">Cards:</strong> Shelter aktif / sortie terlaksana / cargo delivered / affected population</div>
+                  <div><strong class="text-white">Chart:</strong> Cargo ton per hari + shelter resupply timeline</div>
+                  <div><strong class="text-white">Status:</strong> BNPB coord / aircraft availability / pemda liaison / PMI</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan Disaster Relief Dashboard
+untuk Banjir Bandang Sulawesi
+(12,000 pengungsi, 3 kabupaten).
+
+HERO: Coverage 62% (7,440/12,000)
+      Severity: RED
+CARDS:
+  - Shelter aktif: 4
+  - Sortie today: 8/12
+  - Cargo delivered: 42 ton
+  - Affected pop: 12,000
+CHART: cargo/hari (7 hari) +
+       shelter resupply timeline
+STATUS:
+  - BNPB lead coord
+  - 2x C-130 available
+  - Pemda liaison active
+  - PMI distribusi on-ground
+
+Color: hijau = ter-cover,
+amber = scheduled, merah = urgent.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- READINESS VARIANT -->
+        <template x-if="variant === 'readiness'">
+          <div class="glass-lit p-6 rounded-2xl border border-purple-500/30">
+            <div class="text-purple-400 font-mono text-xs mb-2">VARIANT D • PEMBINAAN SATUAN / ADEX</div>
+            <h3 class="font-semibold text-lg mb-3">Unit Readiness Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Overall Readiness (GREEN/AMBER/RED) + hari ke D-day ADEX</div>
+                  <div><strong class="text-white">Cards:</strong> Serviceability % / crew currency / ammo stock / maintenance backlog</div>
+                  <div><strong class="text-white">Chart:</strong> Trend serviceability 90 hari + milestone completion</div>
+                  <div><strong class="text-white">Status:</strong> Per skadron (3 skadron), per kapabilitas, per tipe aset</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan Readiness Dashboard
+Koopsud II menjelang ADEX
+(90 hari, 3 skadron).
+
+HERO: Readiness AMBER
+      D-60 menuju exercise
+CARDS:
+  - Serviceability: 68%
+  - Crew currency: 82%
+  - Ammo stock: 75%
+  - Maint backlog: 12 line
+CHART: serviceability 90h +
+       training milestone
+STATUS per skadron:
+  - Skadron 1: GREEN
+  - Skadron 2: AMBER (maint)
+  - Skadron 3: RED (crew cur.)
+
+Color: hijau/amber/merah
+sesuai standar pembinaan.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl">
+        <div class="text-xs text-accent font-semibold mb-2 text-center">INFOGRAFIS VARIANT (EXECUTIVE SUMMARY)</div>
+        <p class="text-xs text-white/60 text-center">
+          Setiap dashboard di atas punya padanan <strong>infografis 1-halaman</strong> untuk executive summary:
+          Threat Matrix → <em>SAR Progress Matrix</em> → <em>Bencana Impact Matrix</em> → <em>Doctrine Compliance Trend</em>.
+          Struktur infografis (header + 3 key findings + matrix + recommendations + confidence meter) tetap sama.
+          Ganti data & icon, warna mengikuti domain (merah/biru/hijau/ungu).
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- SLIDE 8: EXERCISE 2 DATA -->
   <section class="slide-section">
     <div class="max-w-5xl mx-auto">
@@ -918,12 +1099,80 @@ OUTPUT: Complete HTML with inline CSS</pre>
           </div>
 
           <div class="pt-4 border-t border-white/5">
-            <a href="sesi-06-03-gemini-visual-generation.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.3 — Gemini Visual Generation →
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.3 — Canvas (Dashboard Workspace) →
             </a>
           </div>
         </div>
       </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
     </div>
   </section>
 

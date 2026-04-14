@@ -77,7 +77,7 @@
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -570,6 +570,87 @@ Provide your analysis following the 5 steps above, then conclude with:
     </div>
   </section>
 
+  <!-- SLIDE 8B: COT LINTAS DOMAIN -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CROSS-DOMAIN APPLICATION</div>
+        <h2 class="slide-title">
+          CoT<br>
+          <span class="text-accent">LINTAS DOMAIN</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Chain-of-Thought bukan hanya untuk threat assessment. Framework 5-step yang sama berlaku untuk SAR, pembinaan satuan, dan pengembangan doktrin.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Mini Case 1: SAR (Blue) -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">B1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">OMSP / SAR</div>
+              <div class="font-semibold text-sm">CENDRAWASIH RESCUE</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">CoT untuk SAR deployment strategy — ATR-72 lost contact Banda Sea, 72 souls on board, bad weather.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">1.</span><span class="text-white/70"><strong class="text-white">Decompose:</strong> last known pos, drift model, survival window, asset availability</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">2.</span><span class="text-white/70"><strong class="text-white">Analyze:</strong> probability map cuaca + arus + heading terakhir</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">3.</span><span class="text-white/70"><strong class="text-white">Synthesize:</strong> priority search sectors (Alpha/Bravo/Charlie)</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">4.</span><span class="text-white/70"><strong class="text-white">Recommend:</strong> asset mix (C-295 SAR + heli + kapal AL)</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">5.</span><span class="text-white/70"><strong class="text-white">Validate:</strong> cek asumsi drift, konfirmasi dengan Basarnas</span></div>
+          </div>
+        </div>
+
+        <!-- Mini Case 2: Pembinaan (Purple) -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-purple-400 font-bold">C3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">PEMBINAAN SATUAN</div>
+              <div class="font-semibold text-sm">RESOURCE PRIORITISASI</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">CoT untuk prioritisasi anggaran pemeliharaan lintas Koopsud I/II/III (budget minus 15%).</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-purple-400 font-mono">1.</span><span class="text-white/70"><strong class="text-white">Decompose:</strong> serviceability rate, backlog, flight hours, mission criticality tiap Koopsud</span></div>
+            <div class="flex gap-2"><span class="text-purple-400 font-mono">2.</span><span class="text-white/70"><strong class="text-white">Analyze:</strong> trade-off: asset tertua vs ops tempo vs strategic geography</span></div>
+            <div class="flex gap-2"><span class="text-purple-400 font-mono">3.</span><span class="text-white/70"><strong class="text-white">Synthesize:</strong> 3 opsi alokasi (equal / weighted / risk-based)</span></div>
+            <div class="flex gap-2"><span class="text-purple-400 font-mono">4.</span><span class="text-white/70"><strong class="text-white">Recommend:</strong> risk-based split + kontingensi</span></div>
+            <div class="flex gap-2"><span class="text-purple-400 font-mono">5.</span><span class="text-white/70"><strong class="text-white">Validate:</strong> stress-test dengan skenario surge ops</span></div>
+          </div>
+        </div>
+
+        <!-- Mini Case 3: Doktrin (Amber) -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">D3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">DOKTRIN</div>
+              <div class="font-semibold text-sm">MULTI-PLATFORM IOP</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">CoT untuk doktrin interoperability F-16 + Rafale + KF-21 — tactical employment & C2.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">1.</span><span class="text-white/70"><strong class="text-white">Decompose:</strong> data-link, sensor fusion, weapons compat, maintenance chain, ROE alignment</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">2.</span><span class="text-white/70"><strong class="text-white">Analyze:</strong> compare dengan best practice NATO / regional air forces</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">3.</span><span class="text-white/70"><strong class="text-white">Synthesize:</strong> doktrin tiering — legacy strike, multi-role, high-end</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">4.</span><span class="text-white/70"><strong class="text-white">Recommend:</strong> draft doktrin note + C2 architecture</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">5.</span><span class="text-white/70"><strong class="text-white">Validate:</strong> wargame 3 skenario kontras</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-xs text-white/50 italic">Framework 5-step identik — yang berubah hanya context, input data, dan stakeholder output.</div>
+    </div>
+  </section>
+
   <!-- SLIDE 9: QUIZ -->
   <section class="slide-section">
     <div class="max-w-4xl mx-auto">
@@ -734,6 +815,74 @@ Provide your analysis following the 5 steps above, then conclude with:
           </div>
         </div>
       </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
     </div>
   </section>
 

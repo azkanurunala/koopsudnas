@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 6.4 | Multi-Tool Workflow Integration</title>
+  <title>Sesi 6.9 | Multi-Tool Workflow Integration (Capstone)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,7 +83,7 @@
 </head>
 <body x-data="{
   currentSlide: 0,
-  totalSlides: 11,
+  totalSlides: 12,
   progress: 0,
   copied: null,
   init() {
@@ -135,14 +135,14 @@
         </a>
         <div class="h-4 w-px bg-white/20"></div>
         <div class="text-sm">
-          <span class="text-accent font-mono">SESI 6.4</span>
+          <span class="text-accent font-mono">SESI 6.9</span>
           <span class="text-white/40 mx-2">•</span>
           <span class="text-white/60">60 Menit</span>
           <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CAPSTONE</span>
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <a href="sesi-06-03-gemini-visual-generation.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.3</a>
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.8</a>
         <span class="text-white/20">|</span>
         <a href="index.html" class="text-xs text-white/40 hover:text-white/60">Home →</a>
       </div>
@@ -154,7 +154,7 @@
     <div class="max-w-5xl mx-auto text-center">
       <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
         <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 4 • CAPSTONE</span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 9 • CAPSTONE</span>
       </div>
 
       <h1 class="slide-title mb-6">
@@ -205,6 +205,91 @@
           <div class="flex items-center gap-2"><span class="text-accent">›</span> Knowledge check quiz</div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1B: SCENARIO MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">SCENARIO MATRIX</div>
+        <h2 class="slide-title">1 WORKFLOW, <span class="text-accent">3 MISI</span></h2>
+        <p class="text-white/60 mt-4 max-w-3xl mx-auto">Pipeline <strong class="text-accent">NotebookLM → Claude → Gemini → Package</strong> tidak terbatas ke threat brief. Workflow sama bisa menghasilkan deliverable untuk SAR coordination dan doctrine synthesis. Yang berubah hanya input data dan stakeholder output.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <!-- Threat Brief (Red) -->
+        <div class="glass-lit p-6 rounded-2xl border border-red-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 font-bold">A</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-red-400">DEFAULT / EXISTING</div>
+              <div class="font-semibold text-sm">THREAT BRIEF</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">UAV swarm threat assessment & intercept recommendation.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-red-400 font-mono">N→</span><span class="text-white/70">Literature UAV doktrin & case studies</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">C→</span><span class="text-white/70">Reasoning COA intercept + risk</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">G→</span><span class="text-white/70">Visual SITREP + threat map</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">P→</span><span class="text-white/70">Decision brief Pangkoopsudnas</span></div>
+          </div>
+        </div>
+
+        <!-- SAR (Blue) -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">B1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">OMSP / SAR</div>
+              <div class="font-semibold text-sm">SAR COORDINATION</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">CENDRAWASIH RESCUE — ATR-72 missing Banda Sea.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">N→</span><span class="text-white/70">SOP Basarnas, drift model, weather ARA</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">C→</span><span class="text-white/70">Search strategy + asset allocation</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">G→</span><span class="text-white/70">Search area map + SITREP multi-agency</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">P→</span><span class="text-white/70">Coordination package untuk Basarnas</span></div>
+          </div>
+        </div>
+
+        <!-- Doctrine (Amber) -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">D1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">DOKTRIN</div>
+              <div class="font-semibold text-sm">DOCTRINE SYNTHESIS</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">IADS doctrine review — posture era UAV & long-range strike.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">N→</span><span class="text-white/70">NATO/regional doctrine literature synthesis</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">C→</span><span class="text-white/70">Gap analysis + COA rollout</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">G→</span><span class="text-white/70">Comparative matrix + posture infografik</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">P→</span><span class="text-white/70">Doctrine note brief Kasau</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl border border-indigo-500/30">
+        <div class="font-mono text-xs text-indigo-400 mb-2">4 PRINSIP UNIVERSAL (apapun domainnya)</div>
+        <div class="grid md:grid-cols-4 gap-4 text-xs">
+          <div><span class="text-indigo-400 font-semibold">1. Ground</span><span class="text-white/60"> — sumber terverifikasi (NotebookLM)</span></div>
+          <div><span class="text-indigo-400 font-semibold">2. Reason</span><span class="text-white/60"> — structured thinking (Claude)</span></div>
+          <div><span class="text-indigo-400 font-semibold">3. Visualize</span><span class="text-white/60"> — stakeholder-ready visual (Gemini)</span></div>
+          <div><span class="text-indigo-400 font-semibold">4. Human gate</span><span class="text-white/60"> — validasi perwira sebelum release</span></div>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-white/50 italic mt-6">Scenario primary sesi ini (UAV threat) tetap jadi walk-through utama. Dua skenario alternatif di atas adalah transfer exercise untuk peserta yang fokus OMSP atau doktrin.</p>
     </div>
   </section>
 
@@ -1013,7 +1098,7 @@ Output format: structured report with inline citations, organized by country/act
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12">
         <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
-        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.4</span></h2>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.9</span></h2>
         <p class="text-white/50 mt-3 text-sm">4 pertanyaan • Pilih jawaban terbaik</p>
       </div>
 
@@ -1214,12 +1299,80 @@ Output format: structured report with inline citations, organized by country/act
       </div>
 
       <div class="flex flex-col sm:flex-row gap-4">
-        <a href="sesi-06-03-gemini-visual-generation.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
-          ← Sesi 6.3: Visual Generation
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 6.8: NotebookLM Deep Dive
         </a>
         <a href="index.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Kembali ke Landing →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>

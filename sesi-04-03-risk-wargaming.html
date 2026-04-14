@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sesi 4.3 | Risk Assessment & Wargaming dengan AI</title>
+  <title>Sesi 4.3 | Risk Wargaming — Disruption Team Lintas Domain</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,7 +88,7 @@
     @media (max-width: 768px) { .slide-nav { display: none; } }
   </style>
 </head>
-<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
 
   <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
   <div class="grid-pattern"></div>
@@ -136,10 +136,17 @@
         <span class="text-accent">WARGAMING</span>
       </h1>
       
-      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
-        Menggunakan AI sebagai <strong class="text-white">Red Team</strong> — 
-        memprediksi adversary response dan <strong class="text-accent">identifying vulnerabilities</strong>.
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Menggunakan AI sebagai <strong class="text-white">Disruption Team</strong> —
+        mem-simulasikan sumber gangguan (musuh, cuaca, resource, institusional)
+        untuk <strong class="text-accent">identify vulnerabilities</strong> di setiap rencana.
       </p>
+      <div class="flex flex-wrap justify-center gap-2 mb-8 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">ADVERSARY</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">ENVIRONMENTAL</span>
+        <span class="px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full">RESOURCE</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">INSTITUTIONAL</span>
+      </div>
       
       <div class="flex flex-wrap justify-center gap-6 mb-12">
         <div class="glass px-6 py-4 rounded-xl text-center">
@@ -288,16 +295,20 @@ End with TOP 3 RISKS that require commander attention.</pre>
         <div class="text-accent font-mono text-sm mb-4">WARGAMING</div>
         <h2 class="slide-title">
           AI AS<br>
-          <span class="text-accent">RED TEAM</span>
+          <span class="text-accent">DISRUPTION TEAM</span>
         </h2>
       </div>
-      
+
       <div class="glass-lit p-8 rounded-2xl mb-8">
-        <p class="text-lg text-white/70 text-center mb-8">
-          <strong class="text-white">Wargaming</strong> adalah simulasi move-countermove untuk test COA. 
-          AI dapat berperan sebagai <strong class="text-accent">adversary</strong> — memprediksi respons 
-          dan membantu identify vulnerabilities.
+        <p class="text-lg text-white/70 text-center mb-4">
+          <strong class="text-white">Wargaming</strong> adalah simulasi move-countermove untuk test COA.
+          AI dapat berperan sebagai <strong class="text-accent">Disruption Team</strong> — bukan hanya
+          musuh (combat) tapi juga <em>complications</em> dari cuaca, resource, atau resistance institusional.
         </p>
+        <div class="text-center mb-8 text-xs text-white/50">
+          Red Team klasik = satu jenis disruption saja. Koopsudnas pakai semua 4 jenis
+          karena tugas pokoknya mencakup OMP + OMSP + pembinaan + doktrin.
+        </div>
         
         <div class="space-y-4">
           <div class="wargame-move blue-move p-4 rounded-r-xl">
@@ -382,6 +393,106 @@ As the adversary commander, analyze the Blue action and provide:
 
 Be adversarial but realistic — respond as a competent opponent would.</pre>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5.5: 4 TYPES OF DISRUPTION TEAMS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">4 JENIS DISRUPTION TEAM</div>
+        <h2 class="slide-subtitle">RED TEAM BUKAN CUMA "MUSUH"</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Template wargaming di atas (adversary commander) adalah default untuk <em>combat</em>.
+          Untuk SAR, pembinaan, dan doktrin, AI berperan sebagai <em>disruption lain</em> —
+          tetap dengan framework MLR/MDR/vulnerabilities/adaptations yang sama.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <!-- 1. ADVERSARY -->
+        <div class="glass-lit p-5 rounded-2xl border border-red-500/30">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-xl">⚔️</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-red-400">TYPE 1 • COMBAT</div>
+              <div class="font-semibold text-sm">Adversary Disruption</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/70 space-y-2">
+            <div><strong class="text-white">Use case:</strong> Operasi Hanud — intercept plan vs reconnaissance, deterrence COA vs asymmetric threat</div>
+            <div><strong class="text-white">AI role:</strong> Adversary commander dengan doctrine, capability, constraint</div>
+            <div><strong class="text-white">MLR/MDR:</strong> What hostile pilot/commander would probably / worst do</div>
+            <div><strong class="text-white">Prompt tweak:</strong> Existing template (Slide 5) — default state</div>
+          </div>
+        </div>
+
+        <!-- 2. ENVIRONMENTAL -->
+        <div class="glass-lit p-5 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-xl">🌦️</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">TYPE 2 • OMSP / SAR</div>
+              <div class="font-semibold text-sm">Environmental Disruption</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/70 space-y-2">
+            <div><strong class="text-white">Use case:</strong> SAR CENDRAWASIH RESCUE, water bombing karhutla, evakuasi bencana</div>
+            <div><strong class="text-white">AI role:</strong> "Weather & terrain red team" — simulate cuaca memburuk, visibility drop, wave height naik</div>
+            <div><strong class="text-white">MLR/MDR:</strong> Most likely weather degradation / worst-case forecast bust</div>
+            <div><strong class="text-white">Prompt tweak:</strong> "Kamu adalah weather/terrain disruption simulator. Simulasikan kondisi paling mungkin vs paling merugikan untuk COA SAR ini."</div>
+          </div>
+        </div>
+
+        <!-- 3. RESOURCE -->
+        <div class="glass-lit p-5 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-xl">🛠️</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">TYPE 3 • PEMBINAAN SATUAN</div>
+              <div class="font-semibold text-sm">Resource Disruption</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/70 space-y-2">
+            <div><strong class="text-white">Use case:</strong> Training plan menjelang ADEX, maintenance backlog, anggaran minus</div>
+            <div><strong class="text-white">AI role:</strong> Murphy's Law simulator — maintenance unexpected, personnel unavailable, spare part delay</div>
+            <div><strong class="text-white">MLR/MDR:</strong> Most likely resource failure / worst-case cascade (critical aircraft AOG + crew turnover)</div>
+            <div><strong class="text-white">Prompt tweak:</strong> "Kamu adalah resource disruption simulator. Identifikasi failure mode yang paling likely dan paling damaging untuk training plan ini."</div>
+          </div>
+        </div>
+
+        <!-- 4. INSTITUTIONAL -->
+        <div class="glass-lit p-5 rounded-2xl border border-purple-500/30">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-xl">🏛️</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">TYPE 4 • DOKTRIN / GAKKUM</div>
+              <div class="font-semibold text-sm">Institutional Disruption</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/70 space-y-2">
+            <div><strong class="text-white">Use case:</strong> Doctrine transition, change management, koordinasi lintas instansi, legal chain</div>
+            <div><strong class="text-white">AI role:</strong> Devil's advocate — simulate resistance dari stakeholder, pushback legal, friction antar instansi</div>
+            <div><strong class="text-white">MLR/MDR:</strong> Most likely institutional pushback / worst-case blocking coalition</div>
+            <div><strong class="text-white">Prompt tweak:</strong> "Kamu adalah institutional disruption simulator. Simulate resistance dari Lemhannas/Kemlu/Kasau thd proposal doktrin ini."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">MLR & MDR tetap valid untuk keempat jenis:</strong>
+        MLR = respons gangguan paling mungkin (historical baseline),
+        MDR = worst-case gangguan (tail-risk). Framework wargaming tidak berubah,
+        hanya "adversary" yang di-reframe.
       </div>
     </div>
   </section>
@@ -661,7 +772,7 @@ Be adversarial but realistic — respond as a competent opponent would.</pre>
           <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
             <span class="text-accent font-bold text-xl">2</span>
             <div>
-              <div class="font-semibold text-white mb-1">AI as Red Team</div>
+              <div class="font-semibold text-white mb-1">AI as Disruption Team</div>
               <div class="text-sm text-white/60">Simulate adversary to test your plan</div>
             </div>
           </div>
@@ -689,6 +800,74 @@ Be adversarial but realistic — respond as a competent opponent would.</pre>
         <a href="sesi-04-04-decision-support.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
           Lanjut ke Sesi 4.4 →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
       </div>
     </div>
   </section>
