@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 03 | Testing & Quality</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #6366f1; --module-color-dark: #4f46e5; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--module-color); opacity: 0.12; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #ec4899; opacity: 0.06; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .module-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--module-color); text-transform: uppercase; letter-spacing: 0.1em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-color-dark)); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.35); }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; text-decoration: none; transition: all 0.3s ease; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+    .session-card { position: relative; overflow: hidden; border-left: 3px solid var(--module-color); }
+    .session-card:hover { background: rgba(255,255,255,0.06); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 2000px; }
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Landing</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-indigo-400 font-mono">MODUL 03</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">APPLIED</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-02-architecture-design.html" class="text-white/50 hover:text-white font-mono">← Modul 02</a>
+        <a href="modul-04-devops-delivery.html" class="text-indigo-400 hover:text-indigo-300 font-mono">Modul 04 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative min-h-[70vh] flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-3 fade-in">
+          <div class="module-badge mb-6"><span class="status-dot"></span>MODUL 03 • APPLIED</div>
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">TESTING<br><span class="text-indigo-400">& QUALITY</span></h1>
+          <p class="text-lg text-white/60 max-w-xl mb-8">Testing pyramid yang benar, <strong class="text-white">TDD/BDD</strong> yang practical, <strong class="text-white">code review culture</strong> yang konstruktif, dan <strong class="text-white">systematic debugging</strong> ketika hal aneh terjadi di produksi.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#sessions" class="cta-primary">Mulai Sesi 3.1<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <a href="#overview" class="cta-secondary">Learning Objectives</a>
+          </div>
+        </div>
+        <div class="lg:col-span-2 fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-6 rounded-2xl">
+            <div class="text-xs font-mono text-indigo-400 mb-4">MODULE INFO</div>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm"><span class="text-white/50">Durasi total</span><span>~4 jam</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Jumlah sesi</span><span>4 sesi</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Hands-on exercise</span><span>4 latihan</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">AI-Assisted slide</span><span class="text-pink-400">✓ Setiap sesi</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Level</span><span>Applied / Mid</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-indigo-400">KAMU KUASAI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🔺</div><h3 class="font-semibold mb-2">Testing Pyramid</h3><p class="text-sm text-white/60">Balance unit, integration, E2E — kapan pakai yang mana, dan kenapa ice cream cone itu red flag.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🧪</div><h3 class="font-semibold mb-2">TDD & BDD Practical</h3><p class="text-sm text-white/60">Red-green-refactor, outside-in vs inside-out, dan kapan TDD justru jadi overkill.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">👀</div><h3 class="font-semibold mb-2">Code Review Culture</h3><p class="text-sm text-white/60">Review tone, static analysis, linters, pre-commit hooks, dan mindset "raise the bar".</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🐛</div><h3 class="font-semibold mb-2">Systematic Debugging</h3><p class="text-sm text-white/60">Bisection, print-driven vs debugger, performance profiling, dan root-cause analysis.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>4 SESI INTERAKTIF</div>
+        <h2 class="section-title">SESI DI<br><span class="text-indigo-400">MODUL 03</span></h2>
+      </div>
+      <div class="space-y-6" x-data="{ open: 0 }">
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 1 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-indigo-400">3.1</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded">FRAMEWORK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Testing Pyramid: Unit, Integration, E2E</h3>
+                <p class="text-sm text-white/60">Anatomi testing stack yang sehat — balance, speed, isolation, dan menghindari flaky test.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-03-01-testing-pyramid.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 1 ? 0 : 1" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 1 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 1 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-indigo-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Pyramid vs ice cream cone</li><li>• Test isolation & determinism</li><li>• Mocking, stubbing, contract testing</li><li>• E2E strategy: Playwright, Cypress</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Copilot untuk generate unit test skeleton</li><li>• Claude Code untuk audit test coverage gaps</li><li>• Cursor untuk convert manual test ke automated</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 2 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-indigo-400">3.2</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded">PRAKTIK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">TDD & BDD: Test-First Workflows</h3>
+                <p class="text-sm text-white/60">Red-green-refactor cycle, Given-When-Then, outside-in vs inside-out, kapan TDD jadi overkill.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-03-02-tdd-bdd.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 2 ? 0 : 2" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 2 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 2 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-indigo-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• TDD red-green-refactor cycle</li><li>• BDD Given-When-Then</li><li>• Outside-in vs inside-out TDD</li><li>• Property-based testing</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk write failing test dari spec</li><li>• Cursor composer untuk red→green refactor</li><li>• Copilot untuk generate edge case test</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 3 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-indigo-400">3.3</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded">DISKUSI</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Code Review & Static Analysis</h3>
+                <p class="text-sm text-white/60">Review culture yang raise the bar tanpa bikin tim burn out. Linters, type checkers, pre-commit hooks.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-03-03-code-review.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 3 ? 0 : 3" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 3 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 3 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-indigo-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Review tone: blocking vs nit vs suggestion</li><li>• ESLint, Pylint, Clippy, Biome, Ruff</li><li>• Type checking (TypeScript, mypy, pyright)</li><li>• Pre-commit hooks & husky</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• CodeRabbit/Copilot Review untuk first-pass</li><li>• Claude Code /review-pr skill</li><li>• Cursor untuk auto-fix lint issue bulk</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 4 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-indigo-400">3.4</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded">PRAKTIK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Debugging & Performance Profiling</h3>
+                <p class="text-sm text-white/60">Bisection, print vs debugger, memory/cpu profiling, dan cara formulate hypothesis yang tepat.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-03-04-debugging-profiling.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 4 ? 0 : 4" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 4 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 4 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-indigo-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Scientific debugging method</li><li>• git bisect for regression hunting</li><li>• CPU & memory profilers</li><li>• Flame graphs, perf, pprof</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk investigate stack trace</li><li>• Cursor chat untuk explain profiling output</li><li>• Copilot untuk suggest perf optimization</li></ul></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-02-architecture-design.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Modul 02: Architecture & Design</a>
+        <a href="modul-04-devops-delivery.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-navy-900" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">Modul 04: DevOps & Delivery →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

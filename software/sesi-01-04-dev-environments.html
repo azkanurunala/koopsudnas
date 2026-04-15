@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 1.4 | Reproducible Dev Environments</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #0ea5e9; --ai-color: #ec4899; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.06; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(14,165,233,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(14,165,233,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), #0284c7); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(14,165,233,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.05) 40%, transparent 100%); }
+    .ai-card { background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(14,165,233,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-01-software-fundamentals.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 01</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-sky-400 font-mono">SESI 1.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-sky-500/20 text-sky-300 text-[10px] font-mono rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-01-03-collaboration.html" class="text-white/40 hover:text-white/60 font-mono">← Sesi 1.3</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-02-01-system-design.html" class="text-sky-400 hover:text-sky-300 font-mono">Sesi 2.1 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-sky-400 uppercase tracking-wider">Sesi 1.4 • Modul 01 Foundation</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          DEV<br><span class="text-sky-400">ENVIRONMENTS</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Editor setup, dotfiles, devcontainers, Docker Compose, dan shell productivity. "Works on my machine" bukan lagi jawaban yang diterima.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-sky-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-sky-400">KAMU SETUP</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🎨</div>
+          <h3 class="font-semibold mb-2">Editor Setup</h3>
+          <p class="text-sm text-white/60">VS Code / JetBrains / Neovim — extension, keybinding, theme yang productive.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📄</div>
+          <h3 class="font-semibold mb-2">Dotfiles Management</h3>
+          <p class="text-sm text-white/60">chezmoi atau stow untuk sync config antar mesin dan backup.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📦</div>
+          <h3 class="font-semibold mb-2">Devcontainers & Docker Compose</h3>
+          <p class="text-sm text-white/60">Project "clone and run" dalam 5 menit, tanpa install ribet di host.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">⚡</div>
+          <h3 class="font-semibold mb-2">Shell Productivity</h3>
+          <p class="text-sm text-white/60">fzf, zoxide, ripgrep, starship — CLI yang 10× lebih cepat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Editor Setup -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">EDITOR:<br><span class="text-sky-400">INVEST 1 JAM, HEMAT 100</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Setup editor yang proper satu kali, rasakan return-nya setiap hari. Minimum harus punya: <strong class="text-white">format-on-save, lint-on-type, multi-cursor, workspace-search cepat, dan git blame inline</strong>.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-sky-400 mb-3">VS CODE SETTINGS.JSON (minimum)</div>
+        <pre class="code-block"><span class="str">{
+  "editor.formatOnSave"</span>: <span class="kw">true</span>,
+  <span class="str">"editor.defaultFormatter"</span>: <span class="str">"esbenp.prettier-vscode"</span>,
+  <span class="str">"editor.codeActionsOnSave"</span>: {
+    <span class="str">"source.fixAll.eslint"</span>: <span class="str">"explicit"</span>,
+    <span class="str">"source.organizeImports"</span>: <span class="str">"explicit"</span>
+  },
+  <span class="str">"files.trimTrailingWhitespace"</span>: <span class="kw">true</span>,
+  <span class="str">"files.insertFinalNewline"</span>: <span class="kw">true</span>,
+  <span class="str">"git.autofetch"</span>: <span class="kw">true</span>,
+  <span class="str">"git.confirmSync"</span>: <span class="kw">false</span>,
+  <span class="str">"terminal.integrated.defaultProfile.osx"</span>: <span class="str">"zsh"</span>
+}</pre>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-sky-400 mb-2">ESSENTIAL EXT</div>
+          <ul class="text-xs text-white/70 space-y-1">
+            <li>• ESLint + Prettier</li>
+            <li>• GitLens</li>
+            <li>• Error Lens</li>
+            <li>• Path IntelliSense</li>
+          </ul>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-sky-400 mb-2">AI PAIR</div>
+          <ul class="text-xs text-white/70 space-y-1">
+            <li>• GitHub Copilot</li>
+            <li>• Cursor (fork VS Code)</li>
+            <li>• Continue.dev</li>
+            <li>• Codeium</li>
+          </ul>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-sky-400 mb-2">QUALITY</div>
+          <ul class="text-xs text-white/70 space-y-1">
+            <li>• SonarLint</li>
+            <li>• Code Spell Checker</li>
+            <li>• Todo Tree</li>
+            <li>• Better Comments</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Devcontainers -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">DEVCONTAINERS:<br><span class="text-sky-400">CLONE & RUN</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Devcontainer mendefinisikan environment development di dalam Docker image — sehingga semua developer (dan CI) punya <strong class="text-white">versi Node/Python/DB/tool yang exactly sama</strong>. Bye-bye "works on my machine".
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-sky-400 mb-3">.devcontainer/devcontainer.json</div>
+          <pre class="code-block text-xs"><span class="str">{
+  "name"</span>: <span class="str">"myapp-dev"</span>,
+  <span class="str">"dockerComposeFile"</span>: <span class="str">"../compose.yml"</span>,
+  <span class="str">"service"</span>: <span class="str">"app"</span>,
+  <span class="str">"workspaceFolder"</span>: <span class="str">"/workspace"</span>,
+  <span class="str">"features"</span>: {
+    <span class="str">"ghcr.io/devcontainers/features/node:1"</span>: {
+      <span class="str">"version"</span>: <span class="str">"20"</span>
+    }
+  },
+  <span class="str">"postCreateCommand"</span>: <span class="str">"pnpm install"</span>,
+  <span class="str">"customizations"</span>: {
+    <span class="str">"vscode"</span>: {
+      <span class="str">"extensions"</span>: [<span class="str">"dbaeumer.vscode-eslint"</span>]
+    }
+  }
+}</pre>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-sky-400 mb-3">compose.yml</div>
+          <pre class="code-block text-xs"><span class="kw">services</span>:
+  <span class="fn">app</span>:
+    <span class="kw">build</span>: .
+    <span class="kw">volumes</span>:
+      - <span class="str">..:/workspace:cached</span>
+    <span class="kw">environment</span>:
+      <span class="kw">DATABASE_URL</span>: <span class="str">postgres://dev:dev@db/app</span>
+    <span class="kw">depends_on</span>: [db, redis]
+  <span class="fn">db</span>:
+    <span class="kw">image</span>: <span class="str">postgres:16</span>
+    <span class="kw">environment</span>:
+      <span class="kw">POSTGRES_USER</span>: dev
+      <span class="kw">POSTGRES_PASSWORD</span>: dev
+  <span class="fn">redis</span>:
+    <span class="kw">image</span>: <span class="str">redis:7-alpine</span></pre>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-sky-500">
+        <div class="text-xs font-mono text-sky-400 mb-2">📝 ONBOARDING CHECKLIST</div>
+        <ol class="text-sm text-white/70 space-y-1 list-decimal list-inside">
+          <li><code>git clone &lt;repo&gt;</code></li>
+          <li>Open di VS Code → "Reopen in Container"</li>
+          <li>Tunggu 5 menit (build + <code>postCreateCommand</code>)</li>
+          <li><code>pnpm dev</code> → siap ngoding</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Shell Productivity -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">SHELL:<br><span class="text-sky-400">10× LEBIH CEPAT</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Tool CLI modern menggantikan tool lama dengan interface yang lebih baik dan performa 10× lebih cepat. Install lima ini dan rasakan bedanya dalam satu hari.
+      </p>
+
+      <div class="space-y-3">
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="text-2xl">🔍</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold">ripgrep (rg)</h3>
+              <code class="text-xs text-sky-300">replaces grep</code>
+            </div>
+            <p class="text-sm text-white/60 mb-2">Regex search seluruh repo, respect .gitignore, parallel by default. 10-100× lebih cepat daripada grep -R.</p>
+            <pre class="code-block text-xs">rg <span class="str">"processOrder"</span> --type ts -l</pre>
+          </div>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="text-2xl">🎯</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold">fzf</h3>
+              <code class="text-xs text-sky-300">fuzzy finder</code>
+            </div>
+            <p class="text-sm text-white/60 mb-2">Fuzzy-find file, git branch, history, process — interactively. Ctrl+R history jadi interaktif.</p>
+            <pre class="code-block text-xs"><span class="cm"># fuzzy checkout branch</span>
+git checkout $(git branch | fzf)</pre>
+          </div>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="text-2xl">📁</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold">zoxide (z)</h3>
+              <code class="text-xs text-sky-300">replaces cd</code>
+            </div>
+            <p class="text-sm text-white/60 mb-2">Jump ke folder dengan keyword, bukan full path. <code>z koopsud</code> → jump ke project.</p>
+            <pre class="code-block text-xs">z proj   <span class="cm"># jump to most-used dir matching "proj"</span></pre>
+          </div>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="text-2xl">⭐</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold">starship</h3>
+              <code class="text-xs text-sky-300">prompt</code>
+            </div>
+            <p class="text-sm text-white/60 mb-2">Cross-shell prompt yang tampilkan git branch, package version, kube context — tanpa slow down.</p>
+          </div>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl flex items-start gap-4">
+          <div class="text-2xl">🐙</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold">lazygit / gh</h3>
+              <code class="text-xs text-sky-300">git TUI + CLI</code>
+            </div>
+            <p class="text-sm text-white/60 mb-2">lazygit untuk staging/commit/rebase TUI; gh untuk PR/issue di terminal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">SIDE-BY-SIDE</div>
+      <h2 class="section-title mb-8">ONBOARDING:<br><span class="text-sky-400">BEFORE VS AFTER</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #ef4444;">
+          <div class="text-xs font-mono text-red-400 mb-3">❌ BEFORE</div>
+          <pre class="code-block"><span class="cm"># README.md — 3 hari setup</span>
+1. Install Node 18.4.1 (not 18.5!)
+2. Install pnpm via corepack
+3. Install PostgreSQL 14 locally
+4. Install Redis locally
+5. Copy .env.example and fill 12 vars
+6. Run db:migrate (may fail on mac)
+7. Install peculiar-tool v2.3.1
+8. Ask @senior how to fix error
+   on step 6 (undocumented)
+...
+14. Maybe it works now?</pre>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #10b981;">
+          <div class="text-xs font-mono text-green-400 mb-3">✅ AFTER</div>
+          <pre class="code-block"><span class="cm"># README.md — 5 menit setup</span>
+1. git clone &lt;repo&gt;
+2. code . (VS Code)
+3. Klik "Reopen in Container"
+4. (tunggu image build)
+5. pnpm dev
+
+<span class="cm"># Done.</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>• Semua versi terkunci di image</li>
+            <li>• Services (db, redis) managed Compose</li>
+            <li>• Env vars di-inject otomatis</li>
+            <li>• Identik di semua mesin + CI</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">ENVIRONMENT SETUP<br><span class="text-pink-400">DENGAN AI TOOLS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Setup environment adalah task yang <strong class="text-white">sangat cocok untuk AI</strong> — pattern-heavy, verbose, dan mudah di-verify. Berikut tiga workflow yang menghemat jam.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">📦</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — Generate Devcontainer</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Di root project existing, minta Claude scan dependencies dan generate devcontainer yang tepat:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Scan package.json, pnpm-lock.yaml, dan .env.example.
+Lalu generate:
+1. .devcontainer/devcontainer.json
+2. compose.yml dengan postgres + redis
+3. Dockerfile dengan Node 20 + pnpm
+4. postCreateCommand yang jalanin install + migrate
+5. Update README.md dengan instruksi "Reopen in Container"
+
+Pakai best practices 2026: multi-stage build,
+non-root user, cache mount untuk pnpm store.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">⚡</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">GitHub Copilot CLI — Shell Completion</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">COPILOT CLI</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Lupa flag <code>tar</code>, <code>kubectl</code>, atau <code>ffmpeg</code>? Panggil Copilot CLI dari terminal:</p>
+              <pre class="code-block text-xs"><span class="cm"># install: gh extension install github/gh-copilot</span>
+
+gh copilot suggest <span class="str">"compress all .log files in /var/log</span>
+<span class="str">older than 7 days into tar.gz and remove originals"</span>
+
+<span class="cm"># Copilot akan draft command, kamu review dan confirm</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🗺️</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor Codebase Chat — Onboarding Tour</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Hari pertama di project baru, pakai <code>@Codebase</code> untuk dapat tour arsitektur:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Chat (Cmd+L)</span>
+@Codebase
+
+Saya developer baru di project ini. Tolong:
+1. Peta modul utama + tanggung jawab
+2. Entry point (main/index/app)
+3. State management pattern yang dipakai
+4. Test framework + cara run test
+5. File penting yang wajib saya baca minggu pertama
+6. Konvensi naming dan folder structure</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/25 bg-pink-500/5 text-sm text-white/70">
+        <strong class="text-pink-300">⚠️ Pitfall:</strong> AI generated Dockerfile sering pakai image tag <code>latest</code> atau base yang tidak aman. Selalu pin version eksplisit dan scan dengan <code>trivy</code> atau <code>docker scout</code> sebelum commit.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-sky-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Tim kamu bermigrasi ke devcontainer. Seorang developer komplain "di mesin gue bisa, di devcontainer error". Apa langkah pertama yang paling tepat?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Suruh dia balik ke setup lokal, devcontainer tidak worth
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Justru ini goal-nya — reproduksi error dan fix di devcontainer config supaya semua anggota tim terkunci di state yang sama
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Copy <code>node_modules</code> dari mesin lokalnya ke devcontainer
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Install semua dependency yang missing secara manual di dalam container
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>B</strong> — tujuan devcontainer justru expose drift environment. Kalau bekerja di host tapi fail di container, hampir pasti ada implicit dependency yang belum masuk config. Fix itu sekarang, sehingga semua anggota tim (dan CI) berjalan di state identik.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">HANDS-ON • 15 MENIT</div>
+      <h2 class="section-title mb-8">LATIHAN<br><span class="text-sky-400">DEVCONTAINER</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Ambil project Node.js existing kamu (atau clone sample). Tambah devcontainer config dengan requirement:</p>
+
+        <ul class="text-sm text-white/70 space-y-1 mb-4 list-disc list-inside">
+          <li>Node 20 LTS + pnpm 9</li>
+          <li>PostgreSQL 16 + Redis 7 via Compose</li>
+          <li>postCreateCommand: <code>pnpm install &amp;&amp; pnpm db:migrate</code></li>
+          <li>VS Code extensions: ESLint, Prettier, GitLens</li>
+          <li>Non-root user dengan UID 1000</li>
+        </ul>
+
+        <div class="p-4 bg-pink-500/5 border border-pink-500/25 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Scan project ini dan generate .devcontainer/devcontainer.json
+plus compose.yml dengan:
+- Node 20 LTS (pinned version)
+- pnpm 9 via corepack
+- Postgres 16 + Redis 7 sebagai services
+- postCreateCommand jalanin pnpm install + migrate
+- VS Code extensions: ESLint, Prettier, GitLens
+- Non-root user (dev:1000)
+- Volume cache untuk pnpm store
+
+Setelah generate, tunjukkan 3 hal utama yang perlu
+saya verify sebelum commit.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Recap -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-sky-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-sky-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-sky-500">
+          <div class="text-lg font-semibold mb-1">🎨 Editor setup = ROI harian</div>
+          <div class="text-sm text-white/60">Format-on-save, lint-on-type, AI pair — minimum equipment.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-sky-500">
+          <div class="text-lg font-semibold mb-1">📦 Devcontainer kills "works on my machine"</div>
+          <div class="text-sm text-white/60">Clone + Reopen in Container = siap coding dalam 5 menit.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-sky-500">
+          <div class="text-lg font-semibold mb-1">⚡ Modern CLI = 10× speed</div>
+          <div class="text-sm text-white/60">rg, fzf, zoxide, starship, lazygit.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 AI generate config</div>
+          <div class="text-sm text-white/60">Claude Code untuk devcontainer, Copilot CLI untuk shell.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-01-03-collaboration.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 1.3: Collaboration
+        </a>
+        <a href="sesi-02-01-system-design.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-navy-900" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+          Modul 02: System Design →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

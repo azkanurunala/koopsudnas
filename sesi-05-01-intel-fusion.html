@@ -701,6 +701,209 @@ PRODUCE:
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — CAPSTONE PHASE 1 EMBED -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">CAPSTONE PHASE 1 • GEMINI WORKFLOWS</div>
+        <h2 class="text-3xl font-bold mb-3">Dual-Tool Fusion untuk Capstone Intel Synthesis</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Capstone Phase 1 = produksi intel synthesis paling komprehensif dari training ini. Anda punya <strong class="text-white">dokumen sendiri</strong> (internal corpus untuk NotebookLM) <strong class="text-white">DAN butuh OSINT publik</strong> (untuk Deep Research). Dual-tool approach memastikan fusion Anda punya ground truth internal + external context yang lengkap.</p>
+      </div>
+
+      <!-- EMBED 1: NOTEBOOKLM (SESI 6.8) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📚</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.8 NOTEBOOKLM</div>
+              <h3 class="text-lg font-semibold">Internal Corpus Synthesis — Zero Hallucination Ground Truth</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK CAPSTONE INTEL FUSION</div>
+            <p class="text-sm text-white/70">Capstone butuh <strong class="text-white">ground truth yang defensible</strong> — setiap klaim di final fusion harus traceable. NotebookLM adalah tool terbaik untuk internal corpus synthesis karena <em>zero hallucination</em>: AI hanya menjawab berdasarkan dokumen yang Anda upload. Untuk capstone yang akan dipresentasikan, ini mengurangi risk reputational kalau ada klaim yang tidak bisa dipertanggungjawabkan.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Capstone Internal Fusion</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Curate corpus capstone</strong> — 30-50 dokumen relevan dengan topik capstone Anda. Variasi jenis: SITREP, doktrin, OSINT report, lessons learned.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Tag reliability + source</strong> di filename — "A1_IISS_2024_Balance.pdf" vs "C3_News_2024_Article.pdf".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate briefing doc baseline</strong> — auto-summary dari corpus sebagai starting reference.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Jalankan 6 capstone queries</strong> — timeline, pattern, contradiction, confidence, gaps, exec sum.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Export mind map</strong> + audio overview untuk briefing materials di Phase 4.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Baseline hand-off ke Deep Research</strong> — NotebookLM identifikasi data gap, Deep Research cari external analog untuk fill gap.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Capstone Fusion Queries</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Setelah upload 30-50 capstone sources ke NotebookLM, jalankan 6 fusion queries berikut:]
+
+QUERY 1 — Capstone Timeline:
+Berdasarkan semua sources yang di-upload, buat timeline kronologis untuk topik capstone [ISI TOPIK]. Per event: tanggal, lokasi (generic), aktor, sumber citation, source reliability (berdasarkan filename prefix).
+
+QUERY 2 — Multi-Source Pattern Detection:
+Identifikasi 5 pola yang muncul di MINIMAL 3 sources berbeda. Per pola:
+- Evidence (dengan citation spesifik)
+- Period
+- Apakah stabil atau berkembang?
+- Reliability assessment berdasarkan source mix
+
+QUERY 3 — Contradictions Analysis:
+Di mana konflik antar sources? List 5 kontradiksi dengan format "Source A [tag] bilang X, Source B [tag] bilang Y". Highlight jika kontradiksi antara high-reliability dan low-reliability source — ini critical untuk capstone defense.
+
+QUERY 4 — Confidence Matrix untuk Capstone:
+Untuk 10 klaim utama yang akan di-argue di capstone, berikan:
+- Confidence level (HIGH/MEDIUM/LOW)
+- Jumlah sources independen yang mendukung
+- Average source reliability
+- Single point of failure (klaim yang hanya didukung 1 source)
+- Justifikasi kalibrasi
+
+QUERY 5 — Data Gap Analysis:
+Apa 5 pertanyaan critical yang TIDAK bisa dijawab dari corpus ini?
+Per gap:
+- Kenapa penting untuk capstone
+- Source yang bisa fill gap (apakah ada di corpus yang sudah di-upload tapi belum di-queried, atau butuh external research via Deep Research)
+- Priority untuk fill
+
+QUERY 6 — Capstone Executive Summary:
+Buat executive summary 7 bullet untuk presentasi capstone.
+Setiap bullet WAJIB:
+- Punya citation ke source
+- Confidence level eksplisit
+- Impact statement (kenapa ini penting)
+Tone: formal military professional, BLUF format.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capstone Internal Fusion</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Curate > upload everything</strong> — 30 sources kualitas > 100 sources acak. Pilih yang paling relevan.</li>
+              <li>• <strong class="text-white">Reliability tag critical</strong> untuk capstone defense — saat reviewer challenge, Anda punya metadata.</li>
+              <li>• <strong class="text-white">Single point of failure flagging</strong> — klaim yang hanya 1 source support adalah weakness. Flag dan cari corroboration via Deep Research.</li>
+              <li>• <strong class="text-white">Data gap list = Deep Research TODO</strong> — bridge internal + external via systematic gap analysis.</li>
+              <li>• <strong class="text-white">Audio overview untuk oral presentation prep</strong> — dengar baseline ringkasan sambil prepare talking points.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.8 — NotebookLM →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: DEEP RESEARCH (SESI 6.4) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">External Context + Gap Fill — OSINT untuk Capstone</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK CAPSTONE</div>
+            <p class="text-sm text-white/70">Setelah NotebookLM identifikasi <strong class="text-white">data gap</strong> di internal corpus, Deep Research adalah cara paling efisien untuk <em>fill gap</em> dari OSINT publik. Juga untuk cari <strong class="text-white">external context</strong> — trend kawasan, pemikiran think tank, academic analysis — yang memberikan framing strategic untuk capstone Anda.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Gap Fill + External Framing</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Import data gap list</strong> dari NotebookLM Query 5 — ini adalah research agenda Anda.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Per gap, submit targeted Deep Research query</strong> — bukan generic research, tapi specific untuk fill gap yang diidentifikasi.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Verifikasi citation URL</strong> untuk setiap finding — capstone reputational risk tinggi, unverified = jangan pakai.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Separate external context query</strong> — additional research untuk strategic framing, trend regional, policy debate.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Merge kembali ke NotebookLM</strong> — upload Deep Research output sebagai new source, run fusion queries ulang untuk holistic view.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Capstone External Context</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Capstone External Context untuk [TOPIK CAPSTONE]
+
+Background:
+Saya sudah melakukan internal corpus synthesis dengan NotebookLM (30+ sources internal) dan identifikasi 5 data gap critical. Sekarang saya butuh external OSINT context untuk:
+(a) Fill 5 data gaps berikut:
+   - Gap 1: [DESKRIPSI]
+   - Gap 2: [DESKRIPSI]
+   - Gap 3: [DESKRIPSI]
+   - Gap 4: [DESKRIPSI]
+   - Gap 5: [DESKRIPSI]
+
+(b) Provide external strategic framing:
+   - Trend regional/global yang relevan dengan topik (2022-2024)
+   - Think tank consensus dan dissent
+   - Academic literature yang framework-applicable
+   - Policy debate yang masih ongoing
+
+Research Plan:
+1. Untuk setiap gap, cari 3-5 sources publik yang paling otoritatif
+2. External framing dari think tank papers (IISS, CSIS, RUSI, RAND, Lowy Institute)
+3. Academic lens dari journal relevan (International Security, Foreign Affairs, Naval War College Review)
+4. Policy perspective dari government white papers
+
+Output format:
+- Per gap: 3-5 findings dengan citation + reliability assessment
+- External framing section: trend, consensus, dissent, debate
+- Pattern extraction: apa yang ada di external context yang NOT di internal corpus
+- Integration suggestions: bagaimana external findings merge dengan internal baseline
+- Bibliography lengkap dengan URL
+
+Catatan:
+- Hanya sumber publik, fact-check angka kuantitatif
+- Flag klaim yang controversial atau debated
+- Prioritaskan credibility over quantity</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capstone External Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Targeted > broad</strong> — capstone Deep Research harus spesifik untuk data gap yang sudah identified, bukan exploratory.</li>
+              <li>• <strong class="text-white">External framing section</strong> — trend regional + think tank consensus memberi capstone Anda strategic gravitas.</li>
+              <li>• <strong class="text-white">Flag controversy</strong> — debated claims = opportunity untuk Anda add value di capstone dengan posisi yang jelas.</li>
+              <li>• <strong class="text-white">Merge back ke NotebookLM</strong> — upload Deep Research output, run fusion query untuk internal + external holistic view.</li>
+              <li>• <strong class="text-white">Citation wajib untuk setiap klaim capstone</strong> — reputational risk tinggi. Tidak ada yang unverified.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- CAPSTONE FUSION PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Capstone Phase 1 — Dual-Tool Fusion Pipeline</div>
+        <div class="grid md:grid-cols-5 gap-2 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">1. NOTEBOOKLM</div><div class="text-white/70">Internal corpus fusion + gap ID</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. DEEP RESEARCH</div><div class="text-white/70">Gap fill + external framing</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. NOTEBOOKLM-2</div><div class="text-white/70">Merge external → re-synthesize</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">4. CLAUDE (sesi ini)</div><div class="text-white/70">Strategic fusion + reasoning</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">5. → PHASE 2</div><div class="text-white/70">Visual package</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

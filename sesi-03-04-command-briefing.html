@@ -1001,6 +1001,274 @@ OUTPUT: 4 complete HTML sections with inline CSS</pre>
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Command Briefing Package</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Command briefing modern = bukan hanya slide teks. Package lengkap butuh: (1) <strong class="text-white">document draft</strong> untuk brief narrative, (2) <strong class="text-white">video element</strong> untuk immersion (intro, terrain shot), dan (3) <strong class="text-white">audio scoring</strong> untuk tone. Tiga tool Gemini menutupi semuanya — end-to-end briefing package dalam ~90 menit.</p>
+      </div>
+
+      <!-- EMBED 1: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Briefing Narrative Document — Draft dengan Section Editing</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COMMAND BRIEFING</div>
+            <p class="text-sm text-white/70">Briefing komandan tingkat Pangkoopsud selalu diiringi <strong class="text-white">briefing document tertulis</strong> (backgrounder, talking points, Q&A prep). Canvas adalah workspace terbaik untuk draft document ini karena Anda bisa iterate setiap section (Background, Key Findings, Recommendations, Q&A) secara terpisah saat slide ditune.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Briefing Document di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Minta skeleton briefing document</strong> — Cover page, BLUF, Background, Analysis, Options/COAs, Recommendation, Q&A prep, Appendix.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi BLUF (Bottom Line Up Front) dulu</strong> — ini paling penting, maksimal 3 kalimat, komandan baca ini first.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Q&A Prep Section</strong> — minta AI generate 10 kemungkinan pertanyaan komandan + jawaban pendek. Critical untuk persiapan.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Iterate saat slide di-refine</strong> — setiap perubahan slide → update section terkait di document, preserve lain.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Export ke Google Docs</strong> → print sebagai hand-out untuk komandan dan staf.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Briefing Document + Q&A Prep</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas briefing document lengkap untuk presentasi ke Pangkoopsud.
+
+Topik: [ISI TOPIK, e.g., "Threat Assessment Kontak Unidentified Sektor Timur"]
+Durasi briefing: 15 menit
+Audience: Pangkoopsud + staf inti
+
+Struktur:
+
+1. COVER PAGE
+   - Judul
+   - Classification banner
+   - Prepared by, Date, Distribution
+
+2. BLUF (3 kalimat maksimal)
+   - What happened / threat level
+   - What we're doing about it
+   - What decision we need from commander
+
+3. BACKGROUND (1 paragraf)
+   - Konteks situasional singkat
+   - Timeline kejadian
+
+4. KEY FINDINGS (3-5 bullet dengan confidence)
+   - Setiap finding: observed fact + assessment + confidence
+
+5. ANALYSIS (2-3 paragraf)
+   - Capability, intent, opportunity
+   - Historical analog (jika ada)
+   - Data gaps
+
+6. OPTIONS / COA (2-3 courses of action)
+   - Per COA: description, pros, cons, resource requirement
+
+7. RECOMMENDATION
+   - COA preferred + justification
+   - Implementation timeline
+   - Success criteria
+
+8. Q&A PREP — PENTING
+   Generate 10 likely questions dari Pangkoopsud dengan jawaban pendek:
+   - Questions about capability
+   - Questions about intent
+   - Questions about resource/cost
+   - Questions about timeline
+   - Questions about alternative scenarios
+   - Questions about worst case
+   - Questions about precedent
+   - Questions about decision authority
+   - Questions about escalation criteria
+   - Questions about what to tell media/public
+
+9. APPENDIX
+   - Sources used
+   - Methodology note
+   - Confidence matrix
+
+Format: formal military Indonesia, siap cetak A4, tone professional untuk level Pangkoopsud.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Briefing Document</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">BLUF selalu pertama</strong> — komandan sering baca BLUF, skip sisanya. Buat 3 kalimat yang standalone.</li>
+              <li>• <strong class="text-white">Q&A prep critical</strong> — 80% kesuksesan briefing = persiapan Q&A. Generate 10 question, jawab all.</li>
+              <li>• <strong class="text-white">Recommendation < 1 paragraph</strong> — clear, actionable, dengan success criteria.</li>
+              <li>• <strong class="text-white">Document ≠ slide content</strong> — document lebih detail, slide lebih visual. Jangan kopi-paste.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CREATE VIDEO (SESI 6.5) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🎬</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.5 CREATE VIDEO</div>
+              <h3 class="text-lg font-semibold">Video Brief Element — Intro Video + Terrain Visualization</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COMMAND BRIEFING</div>
+            <p class="text-sm text-white/70">Briefing modern butuh <strong class="text-white">elemen visual yang immersive</strong> — bukan sekadar slide teks. Video 5-8 detik cocok untuk: intro video (establishing atmosphere sebelum BLUF), terrain visualization (menunjukkan lingkungan ops secara generic), atau skenario ilustrasi (menampilkan konteks situasional). Veo menghasilkan clip berkualitas cinematic dari deskripsi teks dalam 2-3 menit.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Video untuk Briefing</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi 2-3 video moments</strong> di briefing flow — intro video (slide 1), terrain establishing (slide 3), dan scenario illustration (slide 7).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Generate tiap clip terpisah</strong> via Create Video — satu per satu, generate 2-3 variasi per clip, pilih yang terbaik.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Download MP4 clips</strong> — simpan di folder briefing package.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Insert ke Google Slides</strong> → Insert &gt; Video &gt; Upload. Atur timing dan auto-play jika perlu.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Gabungkan dengan audio</strong> dari Create Music (Embed 3) — video + audio = immersive briefing element.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Briefing Intro Video (3 clips)</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Generate 3 clips berikut satu per satu di Create Video]
+
+CLIP 1 — Atmospheric Opening (slide 1):
+Aerial wide shot of Indonesian archipelago coastline at dawn, golden hour lighting, dramatic cumulus clouds, slow cinematic pan right across multiple islands separated by glowing sea. No aircraft, no structures visible. Peaceful but watchful atmosphere. Photorealistic, wide 16:9.
+
+CLIP 2 — Terrain Establishing (slide 3):
+Aerial view flying low over tropical mountainous terrain with patchy cloud cover, dense jungle canopy below, mist rising from valleys, soft morning light. Smooth forward camera motion. Cinematic, peaceful but vast. No military elements visible.
+
+CLIP 3 — Surveillance Atmosphere (slide 7):
+Night time aerial view over open ocean, stars visible, subtle moonlight reflecting on water surface, occasional distant ship light, slow cinematic drift. Sense of vigilance and watchfulness. Dark atmospheric, cinematic. No aircraft, no combat elements.
+
+Note: Semua clip HARUS pass content filter — hindari kata "military", "combat", "tactical operation". Gunakan "aerial", "surveillance", "coastal monitoring", "patrol" dalam konteks generik.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Video untuk Briefing</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">5-8 detik cukup</strong> — panjang = distraksi. Video brief harus complement narrative, bukan steal attention.</li>
+              <li>• <strong class="text-white">Generate 2-3 variasi</strong> per clip, pilih yang paling professional.</li>
+              <li>• <strong class="text-white">Auto-play di Slides</strong> — set "play automatically" supaya flow tidak terganggu klik.</li>
+              <li>• <strong class="text-white">Loop untuk establishing shot</strong> — clip pendek yang loop = background atmospheric tanpa audience sadar.</li>
+              <li>• <strong class="text-white">Generic framing</strong> — hindari kata militer spesifik di prompt supaya lulus content filter.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-05-create-video.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.5 — Create Video →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 3: CREATE MUSIC (SESI 6.6) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🎵</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.6 CREATE MUSIC</div>
+              <h3 class="text-lg font-semibold">Briefing Audio Scoring — Background Music untuk Tone</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COMMAND BRIEFING</div>
+            <p class="text-sm text-white/70">Background music di command briefing jarang dipakai di military context, tapi untuk <strong class="text-white">briefing yang panjang, ceremonial, atau high-stakes</strong>, musik subtle bisa membantu mempertahankan atensi dan membangun tone. Gunakan HANYA untuk intro/outro dan transitions — bukan under narrative (akan distraksi).</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Briefing Audio Score</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi moment untuk audio</strong> — intro (30s), section transition (5-10s), outro (30s). Bukan keseluruhan briefing.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Tentukan mood</strong> — serious/authoritative untuk threat briefing, hopeful untuk SAR success, solemn untuk lesson-learned.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate intro track</strong> via Create Music, 30 detik, tanpa lirik, loop-friendly ending.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Download MP3</strong>, insert ke Slides via Insert &gt; Audio, set auto-play untuk slide pertama.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Fade-out saat narrative start</strong> — audio hanya untuk intro, stop sebelum komandan/briefer mulai bicara.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Briefing Intro Score</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Generate orchestral instrumental music for military command briefing intro.
+
+Style: Cinematic, professional, serious
+Mood: Authoritative, focused, disciplined — conveys importance without alarm
+Instruments: Strings (dominant), low brass (subtle accent), minimal percussion
+Tempo: Slow to moderate (60-75 BPM)
+Structure:
+- 0-5s: subtle opening (single string note)
+- 5-15s: gradual buildup (add more strings, soft brass)
+- 15-25s: sustained middle (full but controlled)
+- 25-30s: gentle fade that loops cleanly
+
+Duration: 30 seconds
+NO vocals, NO lyrics, NO sudden loud hits
+Tone: befitting a senior military officer presenting strategic information
+Purpose: background music for briefing intro slide, will fade out when narrative starts</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Briefing Audio</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Kurang > lebih</strong> — audio di briefing = risk distraksi. Gunakan hanya di intro/outro.</li>
+              <li>• <strong class="text-white">Fade-out wajib</strong> — audio harus hilang sebelum narrative. Atur di Slides audio settings.</li>
+              <li>• <strong class="text-white">Test di ruangan aktual</strong> — audio yang oke di headphone bisa terdengar buruk di speaker ruang briefing. Test dulu.</li>
+              <li>• <strong class="text-white">Match mood ke topik</strong> — serius untuk threat, hopeful untuk SAR victory, solemn untuk lessons learned.</li>
+              <li>• <strong class="text-white">Internal use = aman</strong> — AI-generated music OK untuk briefing internal; cek policy kalau video akan dipublikasikan eksternal.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-06-create-music.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.6 — Create Music →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE END-TO-END -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Complete Briefing Package Pipeline (~90 menit)</div>
+        <div class="grid md:grid-cols-5 gap-2 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE</div><div class="text-white/70">Narrative + talking points (30 min)</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CANVAS</div><div class="text-white/70">Briefing doc + Q&A prep (20 min)</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CREATE VIDEO</div><div class="text-white/70">3 cinematic clips (15 min)</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">4. CREATE MUSIC</div><div class="text-white/70">Intro/outro audio (10 min)</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">5. SLIDES</div><div class="text-white/70">Assembly + rehearsal (15 min)</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

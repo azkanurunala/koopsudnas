@@ -1044,67 +1044,203 @@ sesuai standar pembinaan.</pre>
     </div>
   </section>
 
-  <!-- Tool Comparison Callout → Modul 06 -->
-  <section class="relative py-16 px-6">
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto">
-      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Dashboard & Infografis</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Dashboard dan infografis butuh dua hal: (1) <strong class="text-white">layout interaktif dokumen</strong> dengan chart placeholder yang bisa di-iterate, dan (2) <strong class="text-white">visual elements</strong> — icon, ilustrasi, infografis background. Canvas untuk layout, Create Image untuk visual. Kombinasi keduanya = dashboard siap briefing.</p>
+      </div>
+
+      <!-- EMBED 1: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
         <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
             <div>
-              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
-              <h3 class="text-lg font-semibold">Gemini Canvas untuk Dashboard Interaktif</h3>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Dashboard Layout + Live Iterate Chart Sections</h3>
             </div>
           </div>
           <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
-          <p class="text-sm text-white/70">
-            Dashboard dan infografis statis cukup dibuat di Claude Artifacts, tapi ketika Anda butuh <strong class="text-white">live editor side-by-side</strong> dengan chat — Gemini Canvas jadi lebih cepat untuk iterate. Output-nya bisa HTML/SVG self-contained, siap di-host atau di-export.
-          </p>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
 
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-              <div class="text-xs font-mono text-purple-400 mb-2">CLAUDE ARTIFACTS</div>
-              <ul class="text-xs text-white/70 space-y-1">
-                <li>• Preview di panel kanan, live render</li>
-                <li>• Reasoning code lebih kuat (complex logic)</li>
-                <li>• Cocok untuk interactive tool dengan business logic</li>
-                <li>• React/TypeScript support</li>
-                <li>• Version history built-in</li>
-              </ul>
-            </div>
-            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <div class="text-xs font-mono text-indigo-400 mb-2">GEMINI CANVAS</div>
-              <ul class="text-xs text-white/70 space-y-1">
-                <li>• Fast iterate dengan inline edit</li>
-                <li>• SVG infografis crisp (teks akurat)</li>
-                <li>• Built-in data import dari Google Sheets</li>
-                <li>• Live document mode (bukan cuma code)</li>
-                <li>• Direct export ke Google Docs/Slides</li>
-              </ul>
-            </div>
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DASHBOARD</div>
+            <p class="text-sm text-white/70">Saat Anda butuh <strong class="text-white">dokumen dashboard yang kompleks</strong> — multiple section dengan chart placeholder, tabel data, ringkasan executive, dan narative — dan butuh iterate per section tanpa rewrite keseluruhan. Canvas lebih kuat dari Claude Artifacts untuk dashboard DOCUMENT (bukan dashboard interactive app) karena fokusnya di text/visual layout, dengan direct export ke Google Docs/Slides.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Build Dashboard Document di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Minta Canvas buat dashboard skeleton</strong> — 6-8 section: Header, Executive Summary, Key Metrics Grid, Trend Section, Pattern Section, Alert Section, Recommendations, Appendix.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Key Metrics Grid</strong> — markdown table dengan 4-6 KPI (value + trend arrow + confidence).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Insert chart placeholders</strong> — "[CHART 1: TREND OVER TIME]", "[CHART 2: PATTERN BREAKDOWN]", [CHART 3: GEOGRAPHIC DIST]". Chart akan di-generate terpisah (via Create Image atau Google Sheets embed).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Iterate section saat data update</strong> — highlight Trend Section, instruksi "refresh dengan data minggu ini, preserve format markdown".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Executive Summary terakhir</strong> — revisi setelah semua section stabil. 3-5 bullet BLUF.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Google Slides</strong> — Canvas bisa langsung convert ke slide deck dengan 1 klik, section → slide mapping otomatis.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Dashboard Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas Dashboard Document untuk Weekly Intel Summary.
+
+Judul: Weekly Intelligence Dashboard — [PERIOD]
+Audience: Pangkoopsud dan staf operasi
+Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+
+Struktur:
+
+1. HEADER BANNER
+   - Judul, period, prepared by [PLACEHOLDER]
+   - Total sources dianalisis: [N]
+   - Date range coverage: [D]
+
+2. EXECUTIVE SUMMARY (5 bullet BLUF)
+   - Threat level overall
+   - Biggest change from last week
+   - Top recommendation
+
+3. KEY METRICS GRID (tabel 2x3 atau 3x2)
+   | Metric | Current | vs Last Week | Trend | Confidence |
+   |---|---|---|---|---|
+   | Activity Level | [N] | +/-% | ↑/↓ | H/M/L |
+   | Anomaly Count | [N] | +/-% | ↑/↓ | H/M/L |
+   | Contact Frequency | [N] | +/-% | ↑/↓ | H/M/L |
+
+4. TREND ANALYSIS
+   [CHART 1 PLACEHOLDER: Line chart showing 7-day activity trend]
+   - Narrative: 2-3 kalimat interpretasi trend
+   - Inflection points: tanggal dan driving factors
+
+5. PATTERN BREAKDOWN
+   [CHART 2 PLACEHOLDER: Bar chart by category]
+   - Top 3 patterns that emerged this week
+   - Patterns that disappeared from baseline
+
+6. ALERTS & ANOMALIES
+   - List 3-5 alerts paling kritis
+   - Per alert: description, confidence, time window, recommended action
+
+7. RECOMMENDATIONS
+   - 3 tindakan prioritas
+   - Collection requirements untuk next week
+   - Escalation criteria
+
+8. APPENDIX
+   - Methodology note
+   - Sources used (generic, tanpa detail sensitif)
+   - Data gaps
+
+Format: layout markdown dengan heading hierarchical, tabel untuk metrics, bullet untuk list. Siap export ke Google Slides sebagai presentation deck.</pre>
           </div>
 
           <div class="p-4 bg-white/5 rounded-xl">
-            <div class="font-semibold text-indigo-400 mb-2">🎯 Pilih Mana untuk Ops Koopsudnas?</div>
-            <ul class="text-sm text-white/70 space-y-2">
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Interactive dashboard dengan CSV data</strong> → Canvas (import dari Sheets, quick viz)</li>
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Prototype internal tool dengan logic kompleks</strong> → Claude Artifacts (reasoning lebih kuat)</li>
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Infografis untuk briefing deck</strong> → Canvas SVG (lebih crisp), atau Imagen (illustrative)</li>
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Live document draft briefing</strong> → Canvas (export langsung ke Docs)</li>
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Dashboard di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Chart placeholder, bukan chart langsung</strong> — Canvas lemah render chart real. Placeholder → insert manual dari Google Sheets/Create Image.</li>
+              <li>• <strong class="text-white">Markdown tabel untuk KPI</strong> — renders cleanly di Canvas dan di Google Docs/Slides export.</li>
+              <li>• <strong class="text-white">One-click slide export</strong> — setiap major heading di Canvas akan jadi slide di Google Slides. Atur heading hierarchy dari awal.</li>
+              <li>• <strong class="text-white">Section-level iteration</strong> — saat data refresh weekly, hanya update section yang berubah — section lain tetap stabil.</li>
             </ul>
           </div>
 
-          <div class="pt-4 border-t border-white/5">
+          <div class="pt-3 border-t border-white/5">
             <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.3 — Canvas (Dashboard Workspace) →
+              Deep dive lengkap: Sesi 6.3 — Canvas →
             </a>
           </div>
         </div>
       </details>
+
+      <!-- EMBED 2: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Generate Infografis Background dan Visual Elements</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DASHBOARD INFOGRAFIS</div>
+            <p class="text-sm text-white/70">Setelah layout dashboard siap di Canvas, Anda butuh <strong class="text-white">visual assets</strong> untuk hero image, section dividers, icon set, atau background infografis. Create Image efektif untuk generate <em>infographic-style illustration</em> yang melengkapi data tabel — BUKAN untuk generate chart data (chart pakai Google Sheets atau Python).</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Visual Assets untuk Dashboard</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi visual needs</strong> — hero banner, section divider illustration, icon set, atau background pattern. List semuanya dulu.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Set gaya visual konsisten</strong> di semua prompt — "flat infographic style, navy + indigo palette, minimalist". Konsistensi = professional.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate hero banner dulu</strong> — ini set tone untuk dashboard. Iterate sampai puas.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Icon set di satu prompt</strong> — minta 6 icon related themes (radar, aircraft, shield, alert, chart, map) dalam 1 image, lalu crop manual per icon.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Insert ke Canvas dashboard</strong> di placeholder yang sesuai. Tambahkan watermark "AI GENERATED" di footer.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Dashboard Hero Banner</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">SUBJECT:
+Abstract infographic hero banner illustration for weekly intelligence dashboard. Features subtle hexagonal grid pattern overlay, radial data visualization elements (concentric circles, dotted arcs), minimal wireframe globe silhouette on right side.
+
+STYLE:
+Flat vector infographic style (NOT photorealistic). Dark navy background (#050810) with indigo glow accents (#6366f1), subtle cyan highlights (#22d3ee). Minimalist corporate-military briefing aesthetic. Clean professional look, no clutter.
+
+COMPOSITION:
+Wide banner aspect ratio (5:1 or similar). Left two-thirds: abstract data visualization elements (grid, dots, lines). Right one-third: subtle globe wireframe as anchor. Plenty of negative space for title text to be added later.
+
+CONSTRAINT:
+- NO specific country names, NO real geographic accuracy
+- NO realistic aircraft, NO identifiable unit insignia
+- NO text (will be added manually)
+- Purely abstract visual — evokes "intelligence briefing" without specifics
+- Safe for training/internal use
+- Watermark-friendly bottom strip
+
+Purpose: header banner for weekly intel dashboard document</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Visual Assets</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Abstract lebih aman dari concrete</strong> — "abstract data visualization" melewati filter, "military operation center" mungkin kena.</li>
+              <li>• <strong class="text-white">Consistency via shared style block</strong> — copy-paste blok STYLE yang sama di semua prompt dashboard asset.</li>
+              <li>• <strong class="text-white">Chart masih manual</strong> — chart data real pakai Google Sheets/Looker Studio, Create Image hanya untuk illustrative elements.</li>
+              <li>• <strong class="text-white">Text manual di Slides</strong> — insert image di Slides, add title/label dengan text boxes biasa.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Dashboard Production Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE (sesi ini)</div><div class="text-white/70">Analysis + insight narrative</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CANVAS</div><div class="text-white/70">Dashboard layout + sections</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CREATE IMAGE</div><div class="text-white/70">Visual assets + hero banner</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. SLIDES</div><div class="text-white/70">Assembly + distribusi</div></div>
+        </div>
+      </div>
     </div>
   </section>
 

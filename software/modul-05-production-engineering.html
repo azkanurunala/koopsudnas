@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 05 | Production Engineering (Capstone)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #d946ef; --module-color-dark: #c026d3; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--module-color); opacity: 0.12; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #06b6d4; opacity: 0.06; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(217,70,239,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(217,70,239,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .module-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(217,70,239,0.15); border: 1px solid rgba(217,70,239,0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--module-color); text-transform: uppercase; letter-spacing: 0.1em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-color-dark)); border-radius: 12px; font-weight: 600; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(217,70,239,0.35); }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; text-decoration: none; transition: all 0.3s ease; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+    .session-card { position: relative; overflow: hidden; border-left: 3px solid var(--module-color); }
+    .session-card:hover { background: rgba(255,255,255,0.06); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 2000px; }
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Landing</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-fuchsia-400 font-mono">MODUL 05</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">CAPSTONE</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-04-devops-delivery.html" class="text-white/50 hover:text-white font-mono">← Modul 04</a>
+        <a href="modul-06-ai-assisted-development.html" class="text-fuchsia-400 hover:text-fuchsia-300 font-mono">Modul 06 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative min-h-[70vh] flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-3 fade-in">
+          <div class="module-badge mb-6"><span class="status-dot"></span>MODUL 05 • CAPSTONE</div>
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">PRODUCTION<br><span class="text-fuchsia-400">ENGINEERING</span></h1>
+          <p class="text-lg text-white/60 max-w-xl mb-8">Capstone end-to-end: <strong class="text-white">design → build → deploy → monitor → iterate</strong> sebuah production service. Menggabungkan semua materi Modul 01-04 dalam satu skenario realistik dengan AI-Assisted di setiap tahap.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#sessions" class="cta-primary">Mulai Phase 5.1<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <a href="#overview" class="cta-secondary">Learning Objectives</a>
+          </div>
+        </div>
+        <div class="lg:col-span-2 fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-6 rounded-2xl">
+            <div class="text-xs font-mono text-fuchsia-400 mb-4">CAPSTONE INFO</div>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm"><span class="text-white/50">Durasi total</span><span>~6 jam</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">4 Phases</span><span>Full lifecycle</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Deliverable</span><span>Running service</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">AI-Assisted slide</span><span class="text-pink-400">✓ Setiap phase</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Level</span><span>Capstone</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>CAPSTONE OUTCOMES</div>
+        <h2 class="section-title">AKHIR MODUL<br><span class="text-fuchsia-400">KAMU PUNYA</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">📐</div><h3 class="font-semibold mb-2">Design Document</h3><p class="text-sm text-white/60">API spec, data model, architecture diagram, ADR, trade-off analysis yang dokumentasi.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🚀</div><h3 class="font-semibold mb-2">Running Service</h3><p class="text-sm text-white/60">Containerized service running di cloud, dengan CI/CD pipeline otomatis dan IaC.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">📊</div><h3 class="font-semibold mb-2">Observability Stack</h3><p class="text-sm text-white/60">Dashboard, alert rules, SLO dokumentasi, runbook untuk incident response.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🔄</div><h3 class="font-semibold mb-2">Iteration Playbook</h3><p class="text-sm text-white/60">Postmortem template, feedback loop process, roadmap berbasis data operasional.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-fuchsia-500/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>4 CAPSTONE PHASES</div>
+        <h2 class="section-title">PHASE DI<br><span class="text-fuchsia-400">MODUL 05</span></h2>
+      </div>
+      <div class="space-y-6" x-data="{ open: 0 }">
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 1 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-fuchsia-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-fuchsia-400">5.1</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-mono rounded">PHASE 1</span><span class="text-xs text-white/40">~90 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Design & Build a Service</h3>
+                <p class="text-sm text-white/60">Mulai dari requirement → design doc → implementation. Aplikasikan SOLID + clean code dari Modul 01-02.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-05-01-build-service.html" class="cta-primary text-sm !py-2 !px-4">Buka Phase →</a>
+              <button @click="open = open === 1 ? 0 : 1" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 1 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 1 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-fuchsia-400 font-mono text-xs mb-2">DELIVERABLES</div><ul class="text-white/60 space-y-1"><li>• Design doc + ADR</li><li>• OpenAPI / GraphQL schema</li><li>• Repository dengan struktur clean</li><li>• Unit tests dasar</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk draft design doc dari requirement</li><li>• Cursor Composer untuk scaffold service</li><li>• Copilot untuk implement business logic</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 2 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-fuchsia-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-fuchsia-400">5.2</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-mono rounded">PHASE 2</span><span class="text-xs text-white/40">~90 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Deploy & Pipeline Automation</h3>
+                <p class="text-sm text-white/60">Containerize, setup CI/CD, Terraform provisioning, dan deploy ke cloud environment.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-05-02-deploy-pipeline.html" class="cta-primary text-sm !py-2 !px-4">Buka Phase →</a>
+              <button @click="open = open === 2 ? 0 : 2" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 2 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 2 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-fuchsia-400 font-mono text-xs mb-2">DELIVERABLES</div><ul class="text-white/60 space-y-1"><li>• Dockerfile + docker-compose</li><li>• GitHub Actions workflow</li><li>• Terraform module untuk infra</li><li>• Service running di cloud</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk generate Dockerfile + workflow</li><li>• Cursor untuk debug deploy yang gagal</li><li>• Copilot untuk Terraform modul</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 3 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-fuchsia-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-fuchsia-400">5.3</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-mono rounded">PHASE 3</span><span class="text-xs text-white/40">~90 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Monitor & Debug in Production</h3>
+                <p class="text-sm text-white/60">Instrument service dengan OTel, setup dashboard + alert, handle simulated incident.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-05-03-monitor-debug.html" class="cta-primary text-sm !py-2 !px-4">Buka Phase →</a>
+              <button @click="open = open === 3 ? 0 : 3" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 3 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 3 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-fuchsia-400 font-mono text-xs mb-2">DELIVERABLES</div><ul class="text-white/60 space-y-1"><li>• OTel instrumentation</li><li>• Dashboard + SLO docs</li><li>• Alert rules + runbook</li><li>• Incident response log</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk instrument code + explain trace</li><li>• Cursor untuk draft runbook dari postmortem</li><li>• Copilot untuk alert query</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 4 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-fuchsia-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-fuchsia-400">5.4</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-mono rounded">PHASE 4</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Iterate & Improve</h3>
+                <p class="text-sm text-white/60">Postmortem, feedback loop, prioritization, dan roadmap berbasis data dari produksi.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-05-04-iterate-improve.html" class="cta-primary text-sm !py-2 !px-4">Buka Phase →</a>
+              <button @click="open = open === 4 ? 0 : 4" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 4 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 4 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-fuchsia-400 font-mono text-xs mb-2">DELIVERABLES</div><ul class="text-white/60 space-y-1"><li>• Postmortem document (blameless)</li><li>• Feedback loop playbook</li><li>• Roadmap dengan priority rationale</li><li>• Retrospective notes</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk draft postmortem dari incident log</li><li>• Cursor chat untuk structure retrospective</li><li>• Copilot untuk prioritization matrix</li></ul></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-04-devops-delivery.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Modul 04: DevOps & Delivery</a>
+        <a href="modul-06-ai-assisted-development.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #d946ef, #c026d3);">Modul 06: AI-Assisted Development →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

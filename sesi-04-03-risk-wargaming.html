@@ -804,6 +804,192 @@ Be adversarial but realistic — respond as a competent opponent would.</pre>
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Risk Wargaming</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Risk wargaming butuh dua sumber insight: (1) <strong class="text-white">corpus lessons-learned</strong> dari exercise/incident historis (NotebookLM), dan (2) <strong class="text-white">historical worst-case analog dari OSINT</strong> (Deep Research). Kedua tool melengkapi Claude untuk mendekonstruksi risiko secara rigorous.</p>
+      </div>
+
+      <!-- EMBED 1: NOTEBOOKLM (SESI 6.8) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📚</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.8 NOTEBOOKLM</div>
+              <h3 class="text-lg font-semibold">Lessons-Learned Corpus Synthesis untuk Disruption Team</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK RISK WARGAMING</div>
+            <p class="text-sm text-white/70">Disruption Team butuh <strong class="text-white">pengetahuan tentang kegagalan sebelumnya</strong> — exercise yang gagal, incident historis, lessons-learned dari berbagai ops. NotebookLM dengan upload 20-50 lessons-learned menjadi <em>collective memory</em> yang bisa di-query saat wargaming: "apa saja failure mode yang pernah terjadi di kondisi seperti ini?"</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Lessons-Learned Synthesis</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Kumpulkan corpus</strong> — exercise AAR, incident reports, case studies. Sanitize classified content.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Upload ke NotebookLM</strong> — tag per kategori (ADV_/ENV_/RES_/COORD_) di nama file untuk query filtering.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Query failure mode</strong> per COA yang sedang diwargame — "apa failure historis untuk COA type seperti ini?"</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Extract disruption vectors</strong> — failure mode → disruption yang bisa diinjek per turn.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Feed ke wargaming</strong> — "berdasarkan 8 failure mode ini, inject disruption ke setiap turn".</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Failure Mode Extraction</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Setelah upload 20-40 lessons-learned ke NotebookLM, jalankan query berikut:]
+
+QUERY 1 — Failure Mode Inventory:
+Berdasarkan dokumen yang di-upload, identifikasi 15 failure mode yang pernah terjadi dalam operasi/exercise mirip [TIPE OPS]. Per failure mode:
+- Kategori: Adversary / Environmental / Resource / Coordination / Institutional
+- Description (1 kalimat)
+- Source document (citation)
+- Apakah pernah di-prevent? Bagaimana?
+
+QUERY 2 — Cascading Failure Pattern:
+5 contoh failure yang cascade — satu kecil menyebabkan rangkaian besar. Per contoh:
+- Trigger awal
+- Rangkaian cascade
+- Outcome akhir
+- Intervention point yang bisa break the chain
+
+QUERY 3 — Environmental Disruption:
+Disruption lingkungan yang paling sering jadi root cause. Rank by frequency.
+
+QUERY 4 — Resource Failure:
+Kapan resource constraint menjadi blocker. List 5 scenario dengan: resource missing, kenapa, impact.
+
+QUERY 5 — Coordination Breakdown:
+Failure coordination (multi-agency, civ-mil) yang recurring di AAR.
+
+QUERY 6 — Disruption Injection Recommendations:
+Untuk wargaming [COA X], disruption mana yang paling relevant untuk diinjek per turn? Jelaskan kenapa dengan reference ke source.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Lessons-Learned Corpus</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Tag kategori di filename</strong> — ADV_/ENV_/RES_/COORD_ membantu query filtering.</li>
+              <li>• <strong class="text-white">Sanitize dulu</strong> — classified content tidak boleh ke NotebookLM.</li>
+              <li>• <strong class="text-white">Cascading > single failure</strong> — disruption yang cascade lebih instructive.</li>
+              <li>• <strong class="text-white">Reusable notebook</strong> — corpus yang bagus jadi reference untuk banyak wargaming.</li>
+              <li>• <strong class="text-white">Share ke Disruption Team</strong> — semua anggota punya reference yang sama.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.8 — NotebookLM →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: DEEP RESEARCH (SESI 6.4) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">Historical Worst-Case Analog untuk Credibility</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK RISK WARGAMING</div>
+            <p class="text-sm text-white/70">Untuk <strong class="text-white">worst-case scenario planning</strong>, Anda butuh referensi apa yang pernah terjadi di dunia nyata dalam skenario serupa — bukan hanya hipotetik. Deep Research scan OSINT publik untuk cari <em>real events</em> yang dapat Anda gunakan sebagai baseline "plausible worst case" — lebih credible daripada worst-case yang Anda karang sendiri.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Worst-Case Analog Research</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Deskripsikan scenario baseline</strong> — tipe ops, kondisi, stakeholders.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Submit query worst-case</strong> — "cari insiden historis di mana operasi mirip ini menghadapi kondisi ekstrem/gagal".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Extract severity spectrum</strong> — dari manageable challenge sampai catastrophic failure.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Kalibrasi wargaming</strong> — pastikan worst-case yang Anda inject punya historical basis, bukan fantasi.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Worst-Case Historical Research</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Historical Worst-Case Scenarios untuk Wargaming Calibration
+
+Baseline scenario yang saya wargame:
+[DESKRIPSI — contoh: "Operasi SAR multi-agency untuk aircraft emergency di area pegunungan tropis selama cuaca buruk, durasi extended 72+ jam"]
+
+Research Question:
+Cari 5-10 insiden historis (publicly documented) di mana operasi serupa menghadapi kondisi yang cascade menjadi worst-case:
+
+Untuk setiap insiden:
+1. Kronologi singkat
+2. Trigger awal (apa yang mulai cascade)
+3. Failure modes yang muncul (list)
+4. Factor yang memperburuk (weather, resource, coordination)
+5. Final outcome
+6. Lessons learned yang ter-publish
+7. Apa yang SEHARUSNYA bisa di-prevent
+
+Sumber prioritas:
+- Academic disaster/accident studies
+- Government investigation reports
+- Think tank retrospective analysis
+- International civil aviation reports
+- Military after-action reviews yang dipublikasikan
+
+Output:
+- Severity spectrum dari manageable sampai catastrophic
+- Pattern extraction: failure factor paling recurring
+- Applicability rating: mana analog yang paling relevan dengan scenario saya
+- Specific disruption suggestions untuk wargaming (evidence-based)
+
+Catatan: real events, bukan hipotetik. Credible worst-case > imagined worst-case.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Worst-Case Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Evidence-based worst case</strong> — "pernah terjadi" lebih defensible dari "bisa terjadi".</li>
+              <li>• <strong class="text-white">Severity spectrum</strong> — wargaming butuh multiple turn, pakai spectrum bukan satu worst case tunggal.</li>
+              <li>• <strong class="text-white">Pattern extraction</strong> — failure factor yang recurring = disruption prioritas.</li>
+              <li>• <strong class="text-white">Combine dengan NotebookLM corpus</strong> — analog publik + internal AAR = disruption deck lengkap.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Risk Wargaming Pipeline</div>
+        <div class="grid md:grid-cols-4 gap-2 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">1. NOTEBOOKLM</div><div class="text-white/70">Failure mode dari AAR corpus</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. DEEP RESEARCH</div><div class="text-white/70">Worst-case analog publik</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">3. CLAUDE (sesi ini)</div><div class="text-white/70">Wargaming + disruption inject</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. CANVAS</div><div class="text-white/70">After-action doc + mitigasi</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

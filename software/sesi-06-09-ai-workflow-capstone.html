@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.9 | Multi-Tool AI Workflow Capstone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }</script>
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --ai-color: #8b5cf6; }
+    * { box-sizing: border-box; } html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.12; }
+    .blob-2 { width: 500px; height: 500px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.08; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.03) 50%, transparent 100%); }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; } .code-block .fn { color: #60a5fa; } .code-block .str { color: #86efac; } .code-block .cm { color: #6b7280; font-style: italic; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #ec4899, #db2777); border-radius: 12px; font-weight: 600; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.08) 40%, transparent 100%); }
+    .ai-card { background: rgba(139,92,246,0.05); border: 1px solid rgba(139,92,246,0.35); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(236,72,153,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+    .phase-step { background: rgba(255,255,255,0.03); border: 1px solid var(--color-border); border-left: 4px solid var(--module-color); border-radius: 12px; padding: 1rem 1.25rem; }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex items-center gap-2 text-white/60 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg><span class="text-sm">Modul 06</span></a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-pink-400 font-mono">SESI 6.9</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">90 Menit</span><span class="ml-2 px-2 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] font-mono rounded-full">★ CAPSTONE</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-06-08-codebase-indexing.html" class="text-white/40 hover:text-white font-mono">← Sesi 6.8</a>
+        <a href="index.html" class="text-pink-400 hover:text-pink-300 font-mono">Landing →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav"><template x-for="i in 10" :key="i"><div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div></template></div>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6"><span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span><span class="text-xs font-mono text-pink-400 uppercase tracking-wider">Sesi 6.9 • ★ Final Capstone</span></div>
+      <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">MULTI-TOOL<br><span class="text-pink-400">WORKFLOW</span></h1>
+      <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">End-to-end capstone: ship sebuah feature dari spec → production pakai <strong class="text-white">semua tools</strong> yang kamu pelajari — Claude Code untuk planning, Cursor untuk scaffold, Copilot untuk implement, Bolt untuk UI mockup.</p>
+      <a href="#" @click.prevent="goTo(1)" class="cta-primary">Mulai Capstone<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg></a>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12"><div class="font-mono text-xs text-pink-400 mb-2">CAPSTONE OUTCOMES</div><h2 class="section-title">AKHIR SESI<br><span class="text-pink-400">KAMU AKAN</span></h2></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🎯</div><h3 class="font-semibold mb-2">Orchestrate Multi-Tool</h3><p class="text-sm text-white/60">Tahu kapan handoff antara Claude Code → Cursor → Copilot → Bolt.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">📋</div><h3 class="font-semibold mb-2">Plan → Execute Pattern</h3><p class="text-sm text-white/60">Plan dengan Claude Code (agent, skills), execute dengan other tools.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">✅</div><h3 class="font-semibold mb-2">Ship Feature End-to-End</h3><p class="text-sm text-white/60">Spec → design → code → test → PR — dengan AI di setiap langkah.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🔒</div><h3 class="font-semibold mb-2">Keep Quality Control</h3><p class="text-sm text-white/60">Tahu di mana harus "manual review" supaya tidak auto-pilot blind.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">SCENARIO</div>
+      <h2 class="section-title mb-8">CAPSTONE<br><span class="text-pink-400">BRIEF</span></h2>
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <h3 class="font-semibold mb-3 text-pink-300">📦 Feature: "Task Reminders"</h3>
+        <p class="text-white/70 mb-4">Tambahkan fitur <strong>scheduled reminders</strong> ke existing task manager app. User set reminder pada task, sistem kirim email 15 menit sebelum due time.</p>
+        <div class="text-xs font-mono text-white/50 mb-2">REQUIREMENTS</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• API endpoint: <code>POST /tasks/:id/reminders</code> (time, notification_method)</li>
+          <li>• Background job: scheduler yang run setiap 1 menit, kirim email untuk reminder yang due</li>
+          <li>• UI: settings modal untuk set reminder pada task card</li>
+          <li>• Tests: unit (business logic), integration (scheduler), E2E (UI flow)</li>
+          <li>• Observability: metric reminders_sent_total, error budget tracking</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">PHASE 1/3</div>
+      <h2 class="section-title mb-8">CLAUDE CODE:<br><span class="text-pink-400">PLAN + DESIGN</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Mulai dengan Claude Code dalam <strong class="text-white">plan mode</strong> — AI-assisted architect yang analyze codebase, surface constraints, dan draft implementation plan.</p>
+      <div class="space-y-4">
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 1.1 — Exploration</div>
+          <pre class="code-block text-xs">claude-code --plan
+&gt; Explore the current task manager codebase.
+&gt;   Identify: API structure, DB schema, background job
+&gt;   infrastructure, email sending, test patterns.
+&gt;   Report what exists &amp; what needs to be built.</pre>
+        </div>
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 1.2 — Design Doc</div>
+          <pre class="code-block text-xs">&gt; Based on exploration, write docs/design/reminders.md:
+&gt;   - API contract (OpenAPI spec)
+&gt;   - DB migration (add reminders table)
+&gt;   - Scheduler architecture (cron vs queue)
+&gt;   - Email template spec
+&gt;   - Test plan
+&gt;   - Rollout plan with feature flag</pre>
+        </div>
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 1.3 — Exit plan mode</div>
+          <p class="text-sm text-white/60">Claude Code <code>ExitPlanMode</code> dengan plan yang sudah disetujui kamu. Plan file jadi reference untuk tools lain di phase selanjutnya.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">PHASE 2/3</div>
+      <h2 class="section-title mb-8">CURSOR +<br><span class="text-pink-400">COPILOT: BUILD</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Handoff ke Cursor untuk multi-file scaffold, Copilot untuk inline completion pada business logic yang well-scoped.</p>
+      <div class="space-y-4">
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 2.1 — Cursor: Scaffold</div>
+          <pre class="code-block text-xs"><span class="cm"># Cursor Composer (Cmd+I)</span>
+Read docs/design/reminders.md and scaffold:
+- Prisma migration for reminders table
+- src/services/reminders/ (create, list, delete)
+- src/routes/reminders.ts (API handlers)
+- src/jobs/reminder-scheduler.ts (cron job)
+- src/services/reminders/__tests__/*.test.ts
+Follow existing patterns from src/services/tasks/.</pre>
+        </div>
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 2.2 — Copilot: Fill business logic</div>
+          <p class="text-sm text-white/60 mb-2">Buka file demi file, Copilot completion untuk fill function body dengan context dari comment:</p>
+          <pre class="code-block text-xs"><span class="cm">// Send email reminders for all due reminders in the last 2 minutes.</span>
+<span class="cm">// Idempotent: use sent_at to skip already-sent reminders.</span>
+<span class="kw">async function</span> <span class="fn">processDueReminders</span>() {
+  <span class="cm">// Copilot: generates the implementation</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">PHASE 3/3</div>
+      <h2 class="section-title mb-8">BOLT +<br><span class="text-pink-400">CLAUDE CODE: SHIP</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Bolt untuk prototyping UI modal, Claude Code untuk integration + review + PR preparation.</p>
+      <div class="space-y-4">
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 3.1 — Bolt: UI mockup</div>
+          <pre class="code-block text-xs"><span class="cm"># bolt.new</span>
+Build a reminder settings modal:
+- Time picker (15 min before, 1 hr before, 1 day before, custom)
+- Email / SMS toggle
+- Preview of email content
+- Save button that returns { time, method, preview_ok }
+
+Use shadcn/ui Dialog + shadcn form components.
+Export as single .tsx file.</pre>
+        </div>
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 3.2 — Claude Code: Integrate + Test</div>
+          <pre class="code-block text-xs">&gt; Take components/ReminderModal.tsx (from Bolt) and:
+&gt;   1. Wire it to the POST /tasks/:id/reminders endpoint
+&gt;   2. Add to TaskCard component
+&gt;   3. Write Playwright E2E test for the full flow
+&gt;   4. Run vitest and playwright, fix any failures</pre>
+        </div>
+        <div class="phase-step">
+          <div class="text-xs font-mono text-pink-400 mb-1">STEP 3.3 — Claude Code: Review + PR</div>
+          <pre class="code-block text-xs">&gt; /review-pr
+&gt; /commit
+&gt; Generate a PR description including:
+&gt;   - Summary of changes (per module)
+&gt;   - Test plan (what to verify)
+&gt;   - Rollout plan (feature flag)
+&gt;   - Observability (new metrics)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>ORCHESTRATION PLAYBOOK</div>
+      <h2 class="section-title mb-6">TOOL<br><span class="text-violet-400">HANDOFF MATRIX</span></h2>
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">Kapan pindah tool? Playbook ini adalah ringkasan dari semua sesi Modul 06.</p>
+      <div class="glass-lit p-6 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-white/10"><th class="text-left p-2 text-white/50">Phase</th><th class="text-left p-2 text-violet-300">Best Tool</th><th class="text-left p-2 text-white/50">Why</th></tr></thead>
+          <tbody class="text-white/70">
+            <tr class="border-b border-white/5"><td class="p-2">Exploration / Audit</td><td class="p-2 text-violet-300">Claude Code (plan mode)</td><td class="p-2 text-xs">Long-horizon, multi-file, long context</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Architecture Design</td><td class="p-2 text-violet-300">Claude Code</td><td class="p-2 text-xs">Draft ADR, design doc with context</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Multi-file Scaffold</td><td class="p-2 text-violet-300">Cursor Composer</td><td class="p-2 text-xs">Codebase-aware inline edits</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Inline business logic</td><td class="p-2 text-violet-300">GitHub Copilot</td><td class="p-2 text-xs">Fast autocompletion in IDE</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Small atomic refactors</td><td class="p-2 text-violet-300">Aider</td><td class="p-2 text-xs">Clean git history, commit-per-edit</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">UI / component design</td><td class="p-2 text-violet-300">v0.dev / Bolt</td><td class="p-2 text-xs">Fast prototype, visual feedback</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Integration + tests + PR</td><td class="p-2 text-violet-300">Claude Code</td><td class="p-2 text-xs">Skills: /review-pr, /commit</td></tr>
+            <tr class="border-b border-white/5"><td class="p-2">Production debug (DB queries)</td><td class="p-2 text-violet-300">Claude Code + MCP</td><td class="p-2 text-xs">Via MCP Postgres read-only server</td></tr>
+            <tr><td class="p-2">Codebase search (huge repo)</td><td class="p-2 text-violet-300">Cursor @codebase / Cody</td><td class="p-2 text-xs">AST-aware RAG</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-violet-500/25 bg-violet-500/5 text-sm text-white/70">
+        <strong class="text-violet-300">💡 Key principle:</strong> Pakai tool yang <em>paling cocok untuk sub-task</em>, bukan "satu tool untuk semua". Multi-tool workflow adalah force multiplier.
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">QUIZ</div>
+      <h2 class="section-title mb-8">FINAL<br><span class="text-pink-400">CHECK</span></h2>
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Kamu ship PR untuk feature baru, dan CI failing di integration test. Urutan tool yang paling efektif untuk fix?</p>
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted &amp;&amp; quiz === 'a' }" @click="if (!submitted) quiz = 'a'"><span class="font-mono text-xs text-white/50 mr-2">A.</span> Bolt — regenerate entire PR from scratch</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted &amp;&amp; quiz === 'b' }" @click="if (!submitted) quiz = 'b'"><span class="font-mono text-xs text-white/50 mr-2">B.</span> Claude Code untuk investigate (CI log + code), Cursor untuk fix targeted files</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted &amp;&amp; quiz === 'c' }" @click="if (!submitted) quiz = 'c'"><span class="font-mono text-xs text-white/50 mr-2">C.</span> Copilot autocomplete — cepat di IDE</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted &amp;&amp; quiz === 'd' }" @click="if (!submitted) quiz = 'd'"><span class="font-mono text-xs text-white/50 mr-2">D.</span> v0.dev — prototype a fix</div>
+        </div>
+        <button @click="submitted = true" x-show="!submitted &amp;&amp; quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm"><strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong> Jawaban <strong>B</strong> — Claude Code paling kuat untuk "investigate dengan konteks" (baca CI log, trace ke code, formulate hypothesis), lalu Cursor untuk apply fix yang targeted. Bolt/v0 (A, D) tidak tepat untuk bug fixing; Copilot (C) bagus untuk line-by-line tapi kurang powerful untuk investigate root cause.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">CAPSTONE TASK • 45 MENIT</div>
+      <h2 class="section-title mb-8">YOUR<br><span class="text-pink-400">TURN</span></h2>
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Implement the "Task Reminders" Feature</h3>
+        <p class="text-white/70 mb-4">Pakai semua tools yang dipelajari. Ship sebuah PR yang:</p>
+        <ul class="text-sm text-white/70 space-y-2 mb-4">
+          <li>✓ Punya design doc (dari Claude Code plan mode)</li>
+          <li>✓ Multi-file scaffold (dari Cursor Composer)</li>
+          <li>✓ Business logic implementation (dengan bantuan Copilot)</li>
+          <li>✓ UI modal component (dari Bolt/v0)</li>
+          <li>✓ Unit + integration tests</li>
+          <li>✓ PR description yang complete (dari Claude Code /commit)</li>
+        </ul>
+        <div class="p-4 bg-violet-500/5 border border-violet-500/25 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🏆 SUCCESS CRITERIA</div>
+          <pre class="code-block text-xs">1. All tests pass locally
+2. PR description explains: what, why, test plan, rollout
+3. You can explain WHY you picked each tool for each step
+4. No single tool monopoly — at least 3 different tools used
+5. Commit history is reviewable (not one giant dump)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">COURSE COMPLETE</div>
+      <h2 class="section-title mb-8">KAMU SUDAH<br><span class="text-pink-400">MENYELESAIKAN COURSE</span></h2>
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">🎓 5 Core Modules</div><div class="text-sm text-white/60">Fundamentals → Architecture → Testing → DevOps → Capstone</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">🤖 9 AI Tooling Sessions</div><div class="text-sm text-white/60">Cursor, Copilot, Claude Code, Aider, Windsurf, v0, Bolt, MCP, RAG</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">✅ 29 Interactive Sessions</div><div class="text-sm text-white/60">Dengan AI-assisted workflow terintegrasi</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-violet-500"><div class="text-lg font-semibold mb-1">🚀 Ready to Ship</div><div class="text-sm text-white/60">Production-grade dengan AI multiplier</div></div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-08-codebase-indexing.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Sesi 6.8: Codebase Indexing</a>
+        <a href="index.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">Kembali ke Landing ✨</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+</body>
+</html>

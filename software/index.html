@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Software Development | Training untuk Developer Profesional</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'dev': { sky: '#0ea5e9', cyan: '#06b6d4', indigo: '#6366f1', violet: '#8b5cf6', fuchsia: '#d946ef', pink: '#ec4899' }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255,255,255,0.03);
+      --color-border: rgba(255,255,255,0.08);
+      --accent: #0ea5e9;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--accent); opacity: 0.1; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #ec4899; opacity: 0.08; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .module-card { position: relative; overflow: hidden; transition: transform 0.3s ease; }
+    .module-card:hover { transform: translateY(-8px); }
+    .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--module-color) 0%, transparent 100%); opacity: 0.8; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; box-shadow: 0 4px 24px rgba(14,165,233,0.25); text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(14,165,233,0.35); }
+
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .dev-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.25); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #0ea5e9; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .stat-card { text-align: center; padding: 24px; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; line-height: 1; background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body x-data="{ mobileMenu: false }">
+
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-dev-sky to-dev-pink flex items-center justify-center">
+          <svg class="w-6 h-6 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-display text-xl tracking-wider">MODERN SWE</span>
+          <span class="block text-xs text-white/40 font-mono">SOFTWARE DEVELOPMENT</span>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#modules" class="text-sm text-white/60 hover:text-white transition-colors">Modul</a>
+        <a href="#methodology" class="text-sm text-white/60 hover:text-white transition-colors">Metodologi</a>
+        <a href="#outcomes" class="text-sm text-white/60 hover:text-white transition-colors">Outcomes</a>
+        <a href="../index.html" class="text-xs text-white/40 hover:text-white transition-colors font-mono">← AI-OPINT</a>
+      </div>
+
+      <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div x-show="mobileMenu" x-transition class="md:hidden bg-navy-800/95 backdrop-blur-xl border-t border-white/5 p-6 space-y-4">
+      <a href="#overview" class="block text-white/70 hover:text-white py-2">Overview</a>
+      <a href="#modules" class="block text-white/70 hover:text-white py-2">Modul</a>
+      <a href="#methodology" class="block text-white/70 hover:text-white py-2">Metodologi</a>
+      <a href="#outcomes" class="block text-white/70 hover:text-white py-2">Outcomes</a>
+      <a href="../index.html" class="block text-white/70 hover:text-white py-2">← AI-OPINT Course</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="fade-in">
+          <div class="dev-badge mb-6">
+            <span class="status-dot"></span>
+            TRAINING FOR PROFESSIONAL DEVELOPERS
+          </div>
+
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">
+            MODERN<br>
+            <span class="text-dev-sky">SOFTWARE</span><br>
+            DEVELOPMENT
+          </h1>
+
+          <p class="text-lg text-white/60 max-w-xl mb-4">
+            Program training intensif untuk developer profesional — <strong class="text-white">dari clean code sampai production engineering</strong>, dengan <strong class="text-dev-pink">AI-Assisted Workflow</strong> terintegrasi di setiap sesi menggunakan Cursor, GitHub Copilot, dan Claude Code.
+          </p>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-dev-pink/10 border border-dev-pink/30 mb-8">
+            <span class="w-1.5 h-1.5 rounded-full bg-dev-pink"></span>
+            <span class="text-xs font-mono text-dev-pink uppercase tracking-wider">AI-Assisted pada setiap sesi</span>
+          </div>
+
+          <div class="flex flex-wrap gap-4">
+            <a href="#modules" class="cta-primary">
+              Lihat Kurikulum
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#overview" class="cta-secondary">Overview Program</a>
+          </div>
+        </div>
+
+        <div class="fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-8 rounded-2xl">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="stat-card">
+                <div class="stat-value">29</div>
+                <div class="text-white/50 text-sm mt-2">Sesi Interaktif</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">5<span class="text-dev-pink text-xl">+1</span></div>
+                <div class="text-white/50 text-sm mt-2">Modul (5 Core + AI Deep Dive)</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">36</div>
+                <div class="text-white/50 text-sm mt-2">Halaman Materi</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">100%</div>
+                <div class="text-white/50 text-sm mt-2">AI-Assisted</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overview Section -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="dev-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          PROGRAM OVERVIEW
+        </div>
+        <h2 class="section-title">
+          KENAPA MODERN<br>
+          <span class="text-dev-sky">SOFTWARE DEVELOPMENT?</span>
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-dev-sky/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-dev-sky" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Shipping Velocity</h3>
+          <p class="text-white/60 text-sm">Delivery production-grade code lebih cepat dengan CI/CD, containerization, dan automation pipeline yang solid.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-dev-violet/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-dev-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Production Quality</h3>
+          <p class="text-white/60 text-sm">Testing, code review, observability — praktik yang memastikan software tidak cuma jalan, tapi <em>reliable</em> di produksi.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-dev-pink/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-dev-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">AI-Assisted Dev</h3>
+          <p class="text-white/60 text-sm">Cursor, GitHub Copilot, Claude Code — setiap sesi punya workflow AI-assisted konkret untuk topic-nya. Bukan teori.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modules Section -->
+  <section id="modules" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-dev-sky/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="dev-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          KURIKULUM
+        </div>
+        <h2 class="section-title">
+          5 MODUL CORE + 1 DEEP DIVE<br>
+          <span class="text-dev-sky">PRODUCTION-READY</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Dari clean code sampai capstone project — plus standalone deep dive ke AI-Assisted Development tooling. Complete journey untuk developer profesional.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Module 01 -->
+        <a href="modul-01-software-fundamentals.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #0ea5e9;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-sky-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-sky-400">01</span>
+            </div>
+            <div>
+              <div class="text-xs text-sky-400 font-mono">FOUNDATION • 4 SESI</div>
+              <h3 class="font-semibold">Software Fundamentals</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Clean code, version control (Git), collaboration workflow, dan dev environment yang reproducible.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-sky-500/20 rounded text-sky-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Git + Clean Code</span>
+          </div>
+        </a>
+
+        <!-- Module 02 -->
+        <a href="modul-02-architecture-design.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #06b6d4;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-cyan-400">02</span>
+            </div>
+            <div>
+              <div class="text-xs text-cyan-400 font-mono">CORE • 4 SESI</div>
+              <h3 class="font-semibold">Architecture & Design</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">System design, SOLID patterns, API design (REST/GraphQL/gRPC), dan data modeling yang scalable.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-cyan-500/20 rounded text-cyan-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">SOLID + API Design</span>
+          </div>
+        </a>
+
+        <!-- Module 03 -->
+        <a href="modul-03-testing-quality.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #6366f1;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-indigo-400">03</span>
+            </div>
+            <div>
+              <div class="text-xs text-indigo-400 font-mono">APPLIED • 4 SESI</div>
+              <h3 class="font-semibold">Testing & Quality</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Testing pyramid, TDD/BDD, code review culture, dan systematic debugging + performance profiling.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-indigo-500/20 rounded text-indigo-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">TDD + Code Review</span>
+          </div>
+        </a>
+
+        <!-- Module 04 -->
+        <a href="modul-04-devops-delivery.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #8b5cf6;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-violet-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-violet-400">04</span>
+            </div>
+            <div>
+              <div class="text-xs text-violet-400 font-mono">ADVANCED • 4 SESI</div>
+              <h3 class="font-semibold">DevOps & Delivery</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">CI/CD pipelines, Docker/Kubernetes, Infrastructure as Code (Terraform), dan observability (logs/metrics/traces).</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-violet-500/20 rounded text-violet-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">CI/CD + K8s</span>
+          </div>
+        </a>
+
+        <!-- Module 05 -->
+        <a href="modul-05-production-engineering.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #d946ef;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-fuchsia-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-fuchsia-400">05</span>
+            </div>
+            <div>
+              <div class="text-xs text-fuchsia-400 font-mono">CAPSTONE • 4 SESI</div>
+              <h3 class="font-semibold">Production Engineering</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">End-to-end capstone: design → build → deploy → monitor → iterate sebuah production service nyata.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-fuchsia-500/20 rounded text-fuchsia-400 text-xs">4 Phases</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Full Capstone</span>
+          </div>
+        </a>
+
+        <!-- Module 06 -->
+        <a href="modul-06-ai-assisted-development.html" class="module-card glass-lit p-6 rounded-2xl relative" style="--module-color: #ec4899;">
+          <div class="absolute top-3 right-3 px-2 py-1 bg-pink-500/30 border border-pink-400/50 rounded text-pink-300 text-[10px] font-mono tracking-wider">
+            DEEP DIVE • OPTIONAL
+          </div>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-pink-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-pink-400">06</span>
+            </div>
+            <div>
+              <div class="text-xs text-pink-400 font-mono">AI TOOLING • 9 SESI</div>
+              <h3 class="font-semibold">AI-Assisted Development</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Deep dive ekosistem AI coding — Cursor, GitHub Copilot, Claude Code, Aider, Windsurf, v0/Bolt, MCP, codebase indexing, workflow capstone.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-pink-500/20 rounded text-pink-400 text-xs">9 Sesi</span>
+            <span class="px-2 py-1 bg-violet-500/20 rounded text-violet-400 text-xs">Cursor + Claude Code</span>
+            <span class="px-2 py-1 bg-fuchsia-500/20 rounded text-fuchsia-400 text-xs">MCP</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Methodology Section -->
+  <section id="methodology" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="dev-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          METODOLOGI
+        </div>
+        <h2 class="section-title">
+          LEARNING BY<br>
+          <span class="text-dev-sky">SHIPPING</span>
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">📚</div>
+          <div class="text-dev-sky font-semibold mb-2">20%</div>
+          <div class="text-sm text-white/60">Konsep & Pattern</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">💻</div>
+          <div class="text-dev-cyan font-semibold mb-2">50%</div>
+          <div class="text-sm text-white/60">Hands-On Coding</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">🤖</div>
+          <div class="text-dev-pink font-semibold mb-2">20%</div>
+          <div class="text-sm text-white/60">AI-Assisted Workflow</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">💬</div>
+          <div class="text-dev-violet font-semibold mb-2">10%</div>
+          <div class="text-sm text-white/60">Code Review & Q&A</div>
+        </div>
+      </div>
+
+      <div class="mt-12 glass-lit p-8 rounded-2xl">
+        <h3 class="font-semibold text-lg mb-6 text-center">Setiap Sesi Mencakup:</h3>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-dev-sky/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-dev-sky">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">Code Examples</div>
+              <div class="text-sm text-white/60">Production-grade snippets siap adopt</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-dev-pink/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-dev-pink">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">AI-Assisted Workflow</div>
+              <div class="text-sm text-white/60">Concrete prompts untuk Cursor/Copilot/Claude Code</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-dev-violet/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-dev-violet">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">Hands-On Exercise</div>
+              <div class="text-sm text-white/60">Latihan dengan skenario real-world</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Outcomes Section -->
+  <section id="outcomes" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-dev-pink/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="dev-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          LEARNING OUTCOMES
+        </div>
+        <h2 class="section-title">
+          SETELAH<br>
+          <span class="text-dev-pink">TRAINING</span>
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-dev-sky/20 flex items-center justify-center">
+              <span class="text-dev-sky text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Ship Production Code</h3>
+          </div>
+          <p class="text-white/60 text-sm">Mampu menulis, men-test, dan men-deploy code ke production dengan confidence — clean, reviewable, maintainable.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-dev-cyan/20 flex items-center justify-center">
+              <span class="text-dev-cyan text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Design Scalable Systems</h3>
+          </div>
+          <p class="text-white/60 text-sm">Memahami trade-off system design dan mampu pilih architecture pattern yang sesuai context.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-dev-violet/20 flex items-center justify-center">
+              <span class="text-dev-violet text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Operate Production Systems</h3>
+          </div>
+          <p class="text-white/60 text-sm">Setup CI/CD, containerize service, monitor dengan observability stack, dan respond ke incident secara sistematis.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-dev-pink/20 flex items-center justify-center">
+              <span class="text-dev-pink text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Leverage AI Coding Tools</h3>
+          </div>
+          <p class="text-white/60 text-sm">Workflow AI-Assisted yang produktif — Cursor, Copilot, Claude Code, MCP — tanpa kehilangan kontrol kualitas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="glass-lit p-12 rounded-3xl">
+        <h2 class="section-title mb-4">
+          SIAP JADI<br>
+          <span class="text-dev-sky">MODERN DEVELOPER?</span>
+        </h2>
+        <p class="text-white/60 mb-8 max-w-xl mx-auto">
+          Training intensif untuk developer yang ingin naik level — dari ngoding sampai ship production-grade service dengan AI-Assisted workflow.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="modul-01-software-fundamentals.html" class="cta-primary">
+            Mulai dari Modul 01
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+        </div>
+        <p class="text-white/30 text-sm mt-8">
+          Penyelenggara: <strong class="text-white/50">Velo CT</strong> — AI & Data Solutions
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI CODING TOOLKIT -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-dev-pink mb-2">AI CODING TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">AI-Assisted Tools yang Dipakai di Course Ini</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Setiap sesi di Modul 01-05 punya dedicated <strong class="text-white/70">AI-Assisted Workflow slide</strong> yang menunjukkan cara pakai tools ini untuk topic sesi. Modul 06 jadi deep dive tool-by-tool.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🤖</span>
+            <div class="font-semibold text-pink-300">GitHub Copilot</div>
+          </div>
+          <div class="text-xs text-white/60">Autocomplete + chat IDE-native. Cepat untuk boilerplate, unit test, dan explain code di Visual Studio Code / JetBrains.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">⚡</span>
+            <div class="font-semibold text-pink-300">Cursor</div>
+          </div>
+          <div class="text-xs text-white/60">IDE AI-first dengan Composer, inline edit, dan codebase-aware chat. Cocok untuk refactoring multi-file.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🧠</span>
+            <div class="font-semibold text-pink-300">Claude Code</div>
+          </div>
+          <div class="text-xs text-white/60">CLI agent dari Anthropic. Kuat untuk multi-step task, planning, skills, hooks, dan long-context codebase analysis.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔧</span>
+            <div class="font-semibold text-pink-300">Aider + Windsurf</div>
+          </div>
+          <div class="text-xs text-white/60">Alternative terminal-based (Aider) dan IDE-native (Windsurf) agents. Bagus untuk git-native workflow.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎨</span>
+            <div class="font-semibold text-pink-300">v0 + Bolt</div>
+          </div>
+          <div class="text-xs text-white/60">UI-first generation — dari prompt jadi component React/Next.js langsung running. Cocok untuk prototyping.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-pink-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔌</span>
+            <div class="font-semibold text-pink-300">MCP Tooling</div>
+            <span class="px-2 py-0.5 rounded-full bg-pink-500/30 text-pink-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Model Context Protocol — cara standard untuk integrate tools, databases, dan APIs ke dalam AI coding agents.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/20 bg-pink-500/5 text-xs text-white/60 text-center">
+        <strong class="text-pink-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-ai-assisted-development.html" class="text-pink-300 underline hover:text-pink-200">Modul 06 — AI-Assisted Development</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-12 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-dev-sky to-dev-pink flex items-center justify-center">
+            <svg class="w-6 h-6 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-lg tracking-wider">MODERN SWE</span>
+            <span class="block text-xs text-white/40 font-mono">by Velo CT</span>
+          </div>
+        </div>
+        <div class="text-center md:text-right">
+          <p class="text-white/40 text-sm">© 2026 Velo CT. All rights reserved.</p>
+          <p class="text-white/30 text-xs mt-1">Modern Software Development Training Program</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

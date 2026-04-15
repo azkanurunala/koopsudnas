@@ -1224,67 +1224,183 @@ Bahasa Indonesia formal, maksimal 600 kata total.</pre>
     </div>
   </section>
 
-  <!-- Tool Comparison Callout → Modul 06 -->
-  <section class="relative py-16 px-6">
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto">
-      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Deep Research Intel</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Claude adalah tool default untuk deep research, tapi ada dua workflow Gemini yang sangat kuat untuk task sesi ini — masing-masing punya sweet spot berbeda. Praktekkan keduanya supaya Anda bisa routing yang tepat di lapangan.</p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- EMBED 1: GEMINI DEEP RESEARCH (SESI 6.4) -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
         <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
             <div>
-              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
-              <h3 class="text-lg font-semibold">Kapan NotebookLM Mengalahkan Chatbot untuk Deep Research</h3>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">Autonomous Research Agent untuk Background Brief Intel</h3>
             </div>
           </div>
           <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
-          <p class="text-sm text-white/70">
-            Deep research via Claude atau Gemini chat bagus untuk <strong class="text-white">eksplorasi open-ended</strong>. Tapi begitu Anda punya <strong class="text-white">fixed corpus dokumen</strong> yang harus dicitir dengan presisi, <strong class="text-indigo-400">NotebookLM</strong> adalah tool yang lebih tepat.
-          </p>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
 
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="p-4 bg-teal-500/10 rounded-xl border border-teal-500/20">
-              <div class="text-xs font-mono text-teal-400 mb-2">PAKAI CLAUDE / GEMINI KALAU...</div>
-              <ul class="text-xs text-white/70 space-y-2">
-                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Topik baru, belum tahu sumbernya</li>
-                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Butuh <em>generate</em> insight/angle baru</li>
-                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Mau brainstorm, bukan cite</li>
-                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Perlu creative reasoning/analogi</li>
-                <li class="flex items-start gap-2"><span class="text-teal-400">✓</span> Konteks &lt;200k tokens</li>
-              </ul>
-            </div>
-            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <div class="text-xs font-mono text-indigo-400 mb-2">SWITCH KE NOTEBOOKLM KALAU...</div>
-              <ul class="text-xs text-white/70 space-y-2">
-                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Sudah ada 10+ dokumen sumber</li>
-                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Citation wajib untuk setiap klaim</li>
-                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Audit trail traceable ke source</li>
-                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Tim butuh shared baseline intel</li>
-                <li class="flex items-start gap-2"><span class="text-indigo-400">✓</span> Komandan minta audio briefing</li>
-              </ul>
-            </div>
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK TASK DEEP RESEARCH</div>
+            <p class="text-sm text-white/70">Saat Anda perlu <strong class="text-white">background brief mendalam dari web publik</strong> — tidak punya dokumen sendiri, belum tahu sumber yang otoritatif, dan butuh sintesis lintas puluhan halaman dengan citation lengkap. Deep Research akan mem-browse 15-50 halaman OSINT, cross-reference klaim, dan menghasilkan laporan 10-15 halaman dengan inline citation — bagus sebagai <em>first-pass research</em> sebelum Anda masuk analisis lebih dalam dengan Claude.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP (untuk intel background brief)</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com</strong> → klik "Deep Research" di sidebar Tools. Pastikan model Gemini 2.5 Pro aktif (Deep Research butuh Pro).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Submit research query</strong> dengan scope jelas — topik, timeframe, aspek yang dicari, format output. Hindari query yang terlalu luas ("kapal selam") atau terlalu sempit ("exact budget Q3 2024").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — Deep Research akan menampilkan rencana sub-query (5-15 item) sebelum mulai browsing. Edit plan jika ada sub-query yang tidak relevan atau missing angle penting.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Tunggu 5-15 menit</strong> — agent akan mem-browse, evaluasi sumber, dan sintesis. Anda bisa lihat progress real-time di sidebar (halaman apa yang dibuka).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Verifikasi citation URL</strong> untuk 3-5 klaim paling kritis. Klik URL, pastikan konten sesuai. Flag klaim yang unverified sebelum forward ke komandan.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Canvas</strong> untuk edit format sesuai template Koopsudnas — tambahkan executive summary, rapikan section, lalu finalisasi ke Google Docs.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Deep Research untuk Background Brief</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat laporan riset mendalam (10-12 halaman) untuk background brief intel dengan topik:
+
+Topik: [ISI: e.g., "Perkembangan kapabilitas SAR aviation di kawasan Indo-Pasifik 2020-2024" atau "C-UAS systems yang diadopsi negara ASEAN"]
+
+Scope:
+1. Kronologi perkembangan 2020-2024
+2. Aktor/stakeholder utama dan posisi mereka
+3. Kapabilitas teknis yang dipublikasikan (specifications, vendor)
+4. Lessons learned dari deployment atau insiden terdokumentasi
+5. Gap capabilities yang belum teratasi di kawasan
+6. Implikasi untuk postur pertahanan negara berkembang di Indo-Pasifik
+
+Sumber yang diprioritaskan:
+- Think tank (IISS, CSIS, RUSI, RAND)
+- Jurnal pertahanan (Jane's Defence Weekly, Aviation Week)
+- Laporan resmi pemerintah yang dipublikasikan
+- Media internasional kredibel
+
+Format: laporan berstruktur dengan inline citation. Sertakan:
+- Executive summary 5 bullet points
+- Metodologi research (sumber yang digunakan, batasan)
+- Body dengan section heading per aspek
+- Bibliography lengkap dengan URL di akhir
+- Data gaps dan area untuk follow-up research
+
+Bahasa: Inggris untuk istilah teknis, Indonesia untuk narasi. Tone: objektif, tanpa spekulasi tanpa dasar.</pre>
           </div>
 
           <div class="p-4 bg-white/5 rounded-xl">
-            <div class="font-semibold text-indigo-400 mb-2">💡 Ops Workflow Hybrid</div>
-            <p class="text-sm text-white/70">
-              <strong class="text-white">Step 1:</strong> Claude untuk eksplorasi awal — "apa saja angle penting tentang X?"<br>
-              <strong class="text-white">Step 2:</strong> Collect 15-30 sources yang relevan berdasarkan angle tsb<br>
-              <strong class="text-white">Step 3:</strong> Upload ke NotebookLM untuk deep synthesis dengan citation<br>
-              <strong class="text-white">Step 4:</strong> Kembali ke Claude untuk <em>strategic reasoning</em> dari grounded output NotebookLM
-            </p>
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips untuk Task Deep Research Intel</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Fact-check angka dan tanggal dulu</strong> — ini paling rawan hallucination. Verifikasi dari sumber primer.</li>
+              <li>• <strong class="text-white">Minta counterargument</strong> — setelah laporan selesai, tanya: "apa argumen lawan dari temuan utama ini?" untuk identify bias agregasi.</li>
+              <li>• <strong class="text-white">Label confidence di output final</strong> — VERIFIED / UNVERIFIED / ASSESSMENT. Transparan ke pembaca.</li>
+              <li>• <strong class="text-white">Deep Research bukan real-time</strong> — untuk update jam-jaman pakai Search Grounding biasa, bukan Deep Research.</li>
+              <li>• <strong class="text-white">Pipeline terbaik:</strong> Deep Research (raw intel) → Canvas (edit format) → Claude (strategic reasoning di atas grounded output).</li>
+            </ul>
           </div>
 
-          <div class="pt-4 border-t border-white/5">
-            <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.8 — NotebookLM Deep Dive →
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
             </a>
           </div>
         </div>
       </details>
+
+      <!-- ======================================== -->
+      <!-- EMBED 2: NOTEBOOKLM (SESI 6.8)           -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📚</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.8 NOTEBOOKLM</div>
+              <h3 class="text-lg font-semibold">Source-Grounded Deep Research dari Corpus Dokumen Anda</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK TASK DEEP RESEARCH</div>
+            <p class="text-sm text-white/70">Saat Anda <strong class="text-white">sudah punya corpus dokumen sendiri</strong> — laporan intel, doktrin, PDF kajian, notulen rapat, SOP — dan butuh sintesis <strong class="text-white">zero-hallucination</strong> yang setiap klaimnya traceable ke halaman sumber. NotebookLM sangat powerful untuk deep research saat <em>sumbernya sudah fixed dan butuh audit trail yang rigorous</em> — beda dengan Deep Research Gemini yang browse web publik.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP (untuk intel synthesis dari corpus)</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka notebooklm.google.com</strong> → klik "New notebook". Pilih folder tema (contoh: "Threat Assessment — Sektor Timur 2026").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Upload 10-50 sumber</strong> — PDF, Google Docs, website link, teks pasted. <strong class="text-amber-400">OPSEC check:</strong> jangan upload dokumen classified; pakai data yang sudah di-sanitize atau open-source.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate briefing doc</strong> otomatis — NotebookLM buat summary lintas semua sumber dalam 1 klik. Ini baseline untuk mulai eksplorasi.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Tanya pertanyaan investigatif</strong> — "apa saja pola aktivitas yang muncul di 3 laporan terakhir?", "mana yang kontradiksi antar sumber?", "siapa aktor yang paling sering disebut?". Setiap jawaban akan punya citation inline ke halaman sumber.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Generate audio overview</strong> — "dua host auto-podcast" yang diskusikan corpus Anda selama 10-20 menit. Sangat kuat untuk briefing komandan saat dia commute — forward sebagai voice memo.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Generate mind map</strong> untuk visualisasi hubungan antar entitas/topik dalam corpus. Export screenshot untuk briefing slide.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — NotebookLM Intel Query</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Setelah upload 15-30 sumber OSINT ke NotebookLM, jalankan query berikut satu per satu:]
+
+Query 1 — Baseline Scan:
+Berdasarkan semua sumber yang di-upload, buat timeline kronologis aktivitas/kejadian utama. Untuk setiap item, sertakan: tanggal, lokasi, aktor, sumber citation. Urutkan dari terbaru ke terlama.
+
+Query 2 — Pattern Detection:
+Identifikasi 3 pola yang muncul berulang di beberapa sumber berbeda. Untuk setiap pola, sebutkan minimal 2 sumber yang mendukung dan 1 sumber (jika ada) yang bertentangan.
+
+Query 3 — Contradictions:
+Di mana saja ada kontradiksi antar sumber? List spesifik: "Sumber A bilang X, Sumber B bilang Y". Jangan resolve kontradiksinya — hanya dokumentasikan.
+
+Query 4 — Confidence Assessment:
+Untuk klaim utama yang saya akan pakai di briefing komandan, berikan confidence level (HIGH/MEDIUM/LOW) berdasarkan: (a) jumlah sumber independen yang mendukung, (b) reputasi sumber, (c) recency. Sertakan justifikasi singkat.
+
+Query 5 — Data Gaps:
+Apa saja pertanyaan penting yang TIDAK bisa dijawab dari corpus ini? List 5 data gap prioritas — ini akan jadi collection requirements untuk follow-up.
+
+Query 6 — Executive Summary:
+Buat executive summary 5 bullet untuk briefing komandan, tone professional, maksimal 150 kata. Setiap bullet harus punya citation ke sumber.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips untuk Task Intel Research dengan NotebookLM</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Quality over quantity</strong> — 15 sumber otoritatif jauh lebih baik dari 50 sumber generic.</li>
+              <li>• <strong class="text-white">Custom analyst persona</strong> — set "Notebook guide" sebagai "senior intelligence analyst" supaya output-nya sesuai konteks militer.</li>
+              <li>• <strong class="text-white">Audio overview untuk komandan</strong> — bahasa Inggris secara default, bisa diminta versi Indonesia.</li>
+              <li>• <strong class="text-white">Zero hallucination bukan zero error</strong> — NotebookLM tidak ngarang, tapi masih bisa salah interpretasi. Tetap verify klaim kritis.</li>
+              <li>• <strong class="text-white">Share ke tim</strong> — notebook bisa di-share ke analis lain untuk shared baseline intel (bukan sekadar final report).</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.8 — NotebookLM →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- ROUTING GUIDE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🎯 Routing Decision untuk Task Sesi Ini</div>
+        <div class="grid md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-teal-400 mb-1">CLAUDE (sesi ini)</div><div class="text-white/70">Tidak punya sumber, topik belum jelas, butuh creative reasoning</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-indigo-400 mb-1">GEMINI DEEP RESEARCH</div><div class="text-white/70">Belum punya dokumen, mau autonomous agent browse web untuk cite</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-violet-400 mb-1">NOTEBOOKLM</div><div class="text-white/70">Sudah ada corpus 10+ dokumen, butuh zero-hallucination synthesis</div></div>
+        </div>
+      </div>
     </div>
   </section>
 

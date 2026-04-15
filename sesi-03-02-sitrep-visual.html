@@ -911,71 +911,188 @@ Actions:
     </div>
   </section>
 
-  <!-- Tool Comparison Callout → Modul 06 -->
-  <section class="relative py-16 px-6">
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto">
-      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk SITREP Visual</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">SITREP visual punya dua bagian: (1) <strong class="text-white">graphic elements</strong> — map view, icon, illustrasi situasional (Claude tidak bisa generate ini), dan (2) <strong class="text-white">layout dokumen</strong> — cara semua elemen disusun dengan text, tabel, dan section. Dua workflow Gemini untuk menutupi keduanya.</p>
+      </div>
+
+      <!-- EMBED 1: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
         <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
             <div>
-              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
-              <h3 class="text-lg font-semibold">Generate Sitrep Visual dengan Gemini Imagen</h3>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Generate Graphic Elements untuk SITREP — Map View, Icon, Illustrasi</h3>
             </div>
           </div>
           <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
-          <p class="text-sm text-white/70">
-            Claude <strong class="text-white">tidak bisa generate gambar</strong> — Anda hanya bisa pakai Claude untuk <em>describe</em> visual yang diinginkan. Untuk benar-benar <em>menghasilkan</em> sitrep visual, gunakan <strong class="text-indigo-400">Gemini Imagen</strong> yang built-in di gemini.google.com.
-          </p>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK SITREP VISUAL</div>
+            <p class="text-sm text-white/70">Untuk <strong class="text-white">generic situational map, icon set, atau illustrasi konsep</strong> yang akan menjadi visual utama SITREP. Claude hanya bisa describe, tidak bisa generate — jadi Create Image adalah jembatan dari deskripsi ke visual nyata. Fokus pada <em>generic illustrative</em> (bukan accurate real map), karena Imagen akan hallucinate geografi akurat.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Generate SITREP Visuals</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com → Create Image</strong>. Pastikan aspect ratio 16:9 (SITREP slide standard).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Tulis prompt dengan 4-komponen framework</strong>: SUBJECT + STYLE + COMPOSITION + CONSTRAINT.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">OPSEC gate</strong>: hindari nama negara, koordinat real, nama satuan, insignia. Pakai generic descriptor ("coastal archipelago", "tropical region").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Generate 3-4 variasi</strong>, pilih yang paling ikut prinsip visual sesi ini (hierarchy, contrast, alignment).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Add watermark</strong> "AI GENERATED • ILUSTRASI" sebelum digunakan di dokumen resmi.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Text labels manual</strong> — AI image generators masih lemah di text rendering. Label data manual di Google Slides setelah insert image.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Generic Situational Awareness Map</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">SUBJECT:
+Top-down tactical situational awareness map infographic showing a generic tropical coastal region with multiple islands and open sea areas. Central focal point: highlighted zone of interest (marked with circle/ring). Secondary elements: flight path indicators (dashed lines), detection range arcs, zone labels.
+
+STYLE:
+Modern military briefing aesthetic. Flat vector illustration style (NOT photorealistic). Dark navy blue background (#050810), accent colors: indigo (#6366f1), amber for alerts (#f59e0b), white for labels. Clean professional look.
+
+COMPOSITION:
+16:9 aspect ratio. Top-down map view. Focal zone positioned using rule of thirds (left-third or center). Legend placeholder in bottom-right corner. Grid overlay faint, geographic texture minimal. Sufficient negative space for text labels to be added later.
+
+CONSTRAINT:
+- NO specific country names, NO real geographical accuracy
+- NO identifiable unit insignia or flags
+- NO realistic aircraft — only generic symbols if needed (triangles, arrows)
+- Generic "archipelago region" — could be anywhere tropical
+- Leave empty spaces for manual text labels (AI text rendering unreliable)
+- Watermark-friendly layout (bottom strip clear for "AI GENERATED" badge)
+
+Purpose: training SITREP illustration, not for operational use.</pre>
+          </div>
 
           <div class="p-4 bg-white/5 rounded-xl">
-            <div class="font-semibold text-indigo-400 mb-2">🎨 4-Komponen Prompt Framework</div>
-            <p class="text-xs text-white/60 mb-3">Gunakan struktur yang sama dengan RISEN (Modul 01): disiplin prompt = disiplin output.</p>
-            <div class="space-y-2 text-xs font-mono">
-              <div class="p-2 bg-indigo-500/10 rounded"><strong class="text-indigo-400">SUBJECT:</strong> <span class="text-white/70">Tactical situational awareness map infographic</span></div>
-              <div class="p-2 bg-indigo-500/10 rounded"><strong class="text-indigo-400">STYLE:</strong> <span class="text-white/70">Modern military briefing, dark navy + amber accent, flat vector</span></div>
-              <div class="p-2 bg-indigo-500/10 rounded"><strong class="text-indigo-400">COMPOSITION:</strong> <span class="text-white/70">Top-down 16:9, labeled zones, legend bottom-right</span></div>
-              <div class="p-2 bg-indigo-500/10 rounded"><strong class="text-indigo-400">CONSTRAINT:</strong> <span class="text-white/70">Generic, no country names, no identifiable aircraft, watermark-ready</span></div>
-            </div>
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips SITREP Image Generation</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Hindari "military"</strong> — Imagen filter sensitif. Gunakan "tactical", "surveillance", "coastal monitoring".</li>
+              <li>• <strong class="text-white">4 variations → pilih 1</strong> — variance antar generate besar, selalu generate multiple dan bandingkan.</li>
+              <li>• <strong class="text-white">Watermark wajib</strong> di semua visual yang keluar internal — "AI GENERATED • FOR TRAINING" biar tidak disalahartikan authentic intel.</li>
+              <li>• <strong class="text-white">Pipeline ke Canvas</strong> — setelah image selesai, insert ke Canvas SITREP document (Embed 2 di bawah) sebagai visual aid.</li>
+            </ul>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-              <div class="font-semibold text-green-400 mb-2">✓ Imagen cocok untuk</div>
-              <ul class="text-xs text-white/70 space-y-1">
-                <li>• Sitrep illustrative / generic map view</li>
-                <li>• Infografis statistik threat assessment</li>
-                <li>• Ilustrasi briefing (non-classified)</li>
-                <li>• Icon/symbol set untuk slide</li>
-              </ul>
-            </div>
-            <div class="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-              <div class="font-semibold text-red-400 mb-2">❌ Imagen tidak untuk</div>
-              <ul class="text-xs text-white/70 space-y-1">
-                <li>• Accurate real location map (hallucinate geography)</li>
-                <li>• Identifiable aircraft/equipment spec</li>
-                <li>• Reconstruct real incident (disinformation risk)</li>
-                <li>• Classified facility layout</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-            <div class="font-semibold text-amber-400 mb-2">⚠ OPSEC Gate Wajib</div>
-            <p class="text-xs text-white/70">Sebelum generate: jalankan 5 OPSEC checks (Classification, Attribution, Deception, Retention, Watermark). Selalu tambahkan label "AI GENERATED • ILUSTRASI" di output yang keluar organisasi.</p>
-          </div>
-
-          <div class="pt-4 border-t border-white/5">
+          <div class="pt-3 border-t border-white/5">
             <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.2 — Create Image (Imagen 4) →
+              Deep dive lengkap: Sesi 6.2 — Create Image →
             </a>
           </div>
         </div>
       </details>
+
+      <!-- EMBED 2: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Draft SITREP Document Layout — Section-Level Iteration</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK SITREP VISUAL</div>
+            <p class="text-sm text-white/70">SITREP punya struktur standar: Header (date/time/period), Situation Summary, Enemy Activity, Friendly Forces, Logistics, Assessment, Recommendations. Canvas memungkinkan Anda <strong class="text-white">draft semua section dalam satu workspace</strong> dan <strong class="text-white">update bagian tertentu tanpa rewrite</strong> — essential saat situasi berkembang dan Anda perlu update hanya section "Enemy Activity" setiap 4 jam tanpa mengubah konteks lain.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — SITREP di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka Canvas, minta skeleton SITREP</strong> — 7 section standar (Header, Sum, Enemy, Friendly, Log, Assess, Recs).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Header dan Situation Summary</strong> manual — ini kerangka narasi yang akan menjiwai section lain.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Insert image placeholder</strong> di Situation Summary — nanti diganti image dari Create Image (Embed 1).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Tambah tabel "Contact Log"</strong> via instruksi Canvas — kolom Time | Contact ID | Location (generic) | Status.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Iterate Enemy Activity section</strong> saat data update — highlight section, instruksi "perbarui HANYA section Enemy Activity dengan data terbaru, jangan ubah lainnya".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Google Docs</strong> → insert final images, add header organisasi, klasifikasi banner, distribusi.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — SITREP Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas SITREP document dengan struktur berikut:
+
+Header:
+- Type: SITREP
+- Periode: [PLACEHOLDER — akan diisi]
+- Dari: [PLACEHOLDER]
+- Kepada: [PLACEHOLDER]
+- Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+
+Section:
+1. SITUATION SUMMARY (3-4 kalimat BLUF, include placeholder "[INSERT SITUATIONAL MAP]")
+2. ENEMY ACTIVITY (24 jam terakhir, gunakan generic terminology)
+   - Tabel: Time | Contact | Location | Status | Confidence
+3. FRIENDLY FORCES
+   - Posture status
+   - Aset on-alert
+   - Operational tempo
+4. LOGISTICS & SUPPORT
+   - Fuel/ammunition status
+   - Maintenance/serviceability
+5. ASSESSMENT
+   - Threat level: [LOW/MEDIUM/HIGH/CRITICAL]
+   - Confidence: [LOW/MEDIUM/HIGH]
+   - Short-term projection (next 24h)
+6. RECOMMENDATIONS
+   - 3 tindakan prioritas
+   - Collection requirements
+7. SIGN-OFF
+
+Format:
+- Bahasa formal militer Indonesia
+- Generic callsign & lokasi (TIDAK ada data real)
+- Siap cetak untuk briefing
+- Section 2-5 siapkan sebagai placeholder yang saya akan isi manual</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips SITREP di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Skeleton dulu, isi kemudian</strong> — jangan minta AI generate isi; isi manual supaya akurat.</li>
+              <li>• <strong class="text-white">Image placeholder</strong> di posisi tepat supaya Anda tahu di mana Create Image output akan di-insert.</li>
+              <li>• <strong class="text-white">Tabel contact log</strong> paling rawan update — minta AI buat markdown table, lebih mudah revisi per row.</li>
+              <li>• <strong class="text-white">Pipeline lengkap</strong>: Create Image (visual) → Canvas (layout) → Google Docs (finalisasi).</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Recommended SITREP Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE (sesi ini)</div><div class="text-white/70">Write narrative + analysis</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CREATE IMAGE</div><div class="text-white/70">Generate situational visuals</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CANVAS</div><div class="text-white/70">Layout SITREP document</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. GOOGLE DOCS</div><div class="text-white/70">Final + distribusi</div></div>
+        </div>
+      </div>
     </div>
   </section>
 

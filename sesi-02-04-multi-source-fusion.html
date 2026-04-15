@@ -1206,61 +1206,137 @@ karena source-grounded (lihat Sesi 6.2).</pre>
     </div>
   </section>
 
-  <!-- Tool Comparison Callout → Modul 06 -->
-  <section class="relative py-16 px-6">
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto">
-      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOW • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">NotebookLM sebagai Fusion Engine</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Multi-source fusion di Claude bekerja tapi punya <strong class="text-white">context limit</strong> — paste 30 SITREP sekaligus akan boros tokens dan Claude kadang "lupa" yang di awal. <strong class="text-indigo-300">NotebookLM</strong> dibuat spesifik untuk problem ini: persistent multi-doc workspace dengan citation wajib untuk setiap klaim. Ini workflow detail untuk task fusion di sesi ini.</p>
+      </div>
+
+      <!-- EMBED: NOTEBOOKLM (SESI 6.8) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group" open>
         <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h4.586a1 1 0 01.707.293l1.414 1.414a1 1 0 00.707.293H18a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
-            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📚</div>
             <div>
-              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
-              <h3 class="text-lg font-semibold">NotebookLM sebagai Fusion Engine</h3>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.8 NOTEBOOKLM</div>
+              <h3 class="text-lg font-semibold">Source-Grounded Multi-Source Fusion dengan Zero Hallucination</h3>
             </div>
           </div>
           <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
-          <p class="text-sm text-white/70">
-            Multi-source fusion di Claude bekerja tapi punya <strong class="text-white">context limit</strong> — paste 30 SITREP sekaligus akan boros tokens dan Claude kadang "lupa" yang di awal. <strong class="text-indigo-400">NotebookLM</strong> dibuat spesifik untuk problem ini: <em>persistent multi-doc workspace dengan citation wajib</em>.
-          </p>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
 
-          <div class="glass p-4 rounded-xl">
-            <div class="font-semibold text-indigo-400 mb-3">🔀 NotebookLM untuk Multi-Source Fusion</div>
-            <div class="grid md:grid-cols-3 gap-3 text-xs">
-              <div class="p-3 bg-white/5 rounded-lg">
-                <div class="font-semibold text-white mb-1">1. Ingest</div>
-                <div class="text-white/60">Upload 50+ SITREP, OSINT report, doktrin, historical ops — dalam 1 notebook. Tidak hilang konteks.</div>
-              </div>
-              <div class="p-3 bg-white/5 rounded-lg">
-                <div class="font-semibold text-white mb-1">2. Cross-Reference</div>
-                <div class="text-white/60">Tanya: "Apakah indicator A yang muncul di source 1 konsisten dengan pattern di source 12, 18, 34?" → NotebookLM citing exact paragraph.</div>
-              </div>
-              <div class="p-3 bg-white/5 rounded-lg">
-                <div class="font-semibold text-white mb-1">3. Synthesize</div>
-                <div class="text-white/60">Generate briefing doc / timeline / mind map yang aggregate insight dari semua 50 sources.</div>
-              </div>
-            </div>
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK MULTI-SOURCE FUSION</div>
+            <p class="text-sm text-white/70">Saat Anda punya <strong class="text-white">corpus dokumen yang besar (20-50+ sources)</strong> dan butuh sintesis di mana <strong class="text-white">setiap klaim traceable ke source exact</strong> — SITREP harian dari berbagai satuan, OSINT report, doktrin, historical ops lessons. NotebookLM lebih tepat dari Claude saat: (1) source count melebihi context window Claude yang praktis, (2) audit trail wajib untuk setiap klaim, atau (3) tim perlu shared baseline intel yang bisa di-query secara konsisten.</p>
           </div>
 
-          <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-            <div class="font-semibold text-amber-400 mb-2">⚠ Limitations NotebookLM untuk Fusion</div>
-            <ul class="text-xs text-white/70 space-y-1">
-              <li>• Tidak punya <em>ranking/weighting</em> antar sources — kalau ada source A1 (highly reliable) dan F6 (unreliable), NotebookLM treat sama. Solusi: pisahkan notebook, atau tag reliability di nama file.</li>
-              <li>• Tidak <em>infer</em> di luar dokumen. Bagus untuk ground truth, tapi kalau butuh strategic prediction → kembali ke Claude setelah dapat baseline dari NotebookLM.</li>
-              <li>• Fusion dari <strong class="text-white">live sources</strong> (news, RSS) masih manual upload — belum ada auto-sync.</li>
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Multi-Source Fusion Pipeline</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka notebooklm.google.com</strong> → New notebook. Beri nama sesuai tema fusion: "Sektor Timur Fusion — April 2026".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Upload sources dengan tag reliability</strong> di filename — prefix "A1_" untuk source highly reliable, "F6_" untuk untested. NotebookLM tidak otomatis ranking, tapi Anda bisa reference reliability di query.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate baseline briefing doc</strong> — NotebookLM auto-create summary lintas semua sources sebagai starting point.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Jalankan fusion queries</strong> — pattern detection, kontradiksi, confidence, data gaps. Lihat prompt di bawah.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Generate mind map</strong> untuk visualisasi hubungan antar entitas/topik lintas sources — export screenshot untuk briefing slide.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Audio overview</strong> — dua host auto-podcast diskusi corpus Anda 10-20 menit. Forward voice memo ke komandan untuk konsumsi mobile.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">7</span><div class="text-white/70"><strong class="text-white">Kembali ke Claude</strong> untuk strategic reasoning — NotebookLM output (grounded baseline) → Claude reasoning (creative analysis). Dual pass = robust fusion.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — 6 Fusion Queries</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Setelah upload 20-50 sources yang sudah di-tag reliability, jalankan 6 query fusion:]
+
+QUERY 1 — Source Overview:
+Buat inventory sources yang sudah di-upload. Kelompokkan berdasarkan:
+(a) tipe source (SITREP, OSINT report, doktrin, historical)
+(b) period (24 jam terakhir, minggu ini, bulan ini, arsip)
+(c) reliability tag (A1, A2, B3, C4, F6 dari nama file)
+Tampilkan count per kategori.
+
+QUERY 2 — Cross-Source Pattern Detection:
+Identifikasi 5 pola/indicator yang muncul di MINIMAL 3 sources berbeda. Untuk setiap pola:
+- Sumber yang mendukung (cite exact)
+- Period pertama muncul
+- Apakah pola ini stabil atau berkembang?
+
+QUERY 3 — Contradictions & Anomalies:
+Di mana saja ada konflik antar sources?
+Contoh: "Source A bilang X di tanggal Y, Source B bilang Z di tanggal yang sama"
+List minimal 3 kontradiksi — JANGAN resolve, hanya dokumentasikan.
+Flag jika kontradiksi antara high-reliability (A*) dan low-reliability (F*) source.
+
+QUERY 4 — Confidence Assessment dengan Reliability Weighting:
+Untuk 10 klaim paling penting dari corpus, berikan assessment:
+- Confidence level (HIGH/MEDIUM/LOW)
+- Justifikasi: jumlah sources independen yang mendukung + average reliability tag
+- Flag klaim yang hanya didukung oleh single source atau source low-reliability
+
+QUERY 5 — Data Gaps & Collection Requirements:
+Apa 5 pertanyaan kritis yang TIDAK bisa dijawab dari corpus ini?
+Untuk setiap gap:
+- Kenapa penting (dampak ke assessment)
+- Sumber apa yang akan menjawab (apakah sudah tersedia tapi belum di-upload, atau butuh collection baru)
+
+QUERY 6 — Fused Executive Summary:
+Buat executive summary 5 bullet untuk Pangkoopsud.
+Setiap bullet WAJIB punya citation ke source terkait.
+Tone: professional military Indonesian, BLUF format.
+Confidence level harus eksplisit di setiap bullet.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips NotebookLM untuk Fusion</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Reliability tag di filename</strong> — NotebookLM tidak otomatis ranking, tapi prefix filename (A1_, B3_, F6_) membuat Anda bisa reference reliability di query.</li>
+              <li>• <strong class="text-white">Kuartal = satu notebook</strong> — untuk ops harian, buat notebook baru per kuartal. Dokumen lama bisa dipisah ke archive notebook untuk historical reference.</li>
+              <li>• <strong class="text-white">OPSEC wajib</strong> — semua upload ke NotebookLM adalah cloud. Jangan upload classified. Pakai SITREP yang sudah di-sanitize atau open-source saja.</li>
+              <li>• <strong class="text-white">Zero hallucination ≠ zero error</strong> — NotebookLM tidak ngarang fakta, tapi bisa salah interpretasi. Tetap verify klaim kritis secara manual.</li>
+              <li>• <strong class="text-white">Dual pass Claude</strong> — NotebookLM untuk grounded baseline, lalu bawa hasilnya ke Claude untuk strategic reasoning. NotebookLM kurang di creative inference — Claude kurang di source citation. Dua tool = lengkap.</li>
+              <li>• <strong class="text-white">Share notebook ke tim</strong> — sekali notebook di-setup, share ke analis lain sebagai shared baseline. Semua tim query corpus yang sama = consistency.</li>
             </ul>
           </div>
 
-          <div class="pt-4 border-t border-white/5">
+          <div class="pt-3 border-t border-white/5">
             <a href="sesi-06-08-notebooklm-deep-dive.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.8 — NotebookLM Deep Dive →
+              Deep dive lengkap: Sesi 6.8 — NotebookLM →
             </a>
           </div>
         </div>
       </details>
+
+      <!-- WORKFLOW DUAL-PASS -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Dual-Pass Fusion Workflow</div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-navy-900/50 rounded-lg">
+            <div class="font-mono text-xs text-indigo-400 mb-2">PASS 1 — GROUNDED BASELINE</div>
+            <div class="text-sm text-white/80 mb-2">NotebookLM</div>
+            <ul class="text-xs text-white/60 space-y-1">
+              <li>• Ingest semua sources</li>
+              <li>• Cross-reference + citation</li>
+              <li>• Identifikasi kontradiksi</li>
+              <li>• Output: grounded fact baseline</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-navy-900/50 rounded-lg">
+            <div class="font-mono text-xs text-teal-400 mb-2">PASS 2 — STRATEGIC REASONING</div>
+            <div class="text-sm text-white/80 mb-2">Claude (sesi ini)</div>
+            <ul class="text-xs text-white/60 space-y-1">
+              <li>• Input: baseline dari Pass 1</li>
+              <li>• Creative inference + analog</li>
+              <li>• Ethical/legal nuance</li>
+              <li>• Output: strategic fusion</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 

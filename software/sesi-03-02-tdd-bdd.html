@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.2 | TDD & BDD: Test-First Workflows</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #6366f1; --ai-color: #ec4899; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.06; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.05) 40%, transparent 100%); }
+    .ai-card { background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(99,102,241,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-testing-quality.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-indigo-400 font-mono">SESI 3.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-03-01-testing-pyramid.html" class="text-white/40 hover:text-white/60 font-mono">← Sesi 3.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-03-03-code-review.html" class="text-indigo-400 hover:text-indigo-300 font-mono">Sesi 3.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-indigo-400 uppercase tracking-wider">Sesi 3.2 • Modul 03 Testing</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          TDD &<br><span class="text-indigo-400">BDD</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Test-first bukan tentang coverage — tentang design. Red-green-refactor dan Given-When-Then sebagai alat berpikir.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-indigo-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-indigo-400">KAMU PAHAMI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🔴</div>
+          <h3 class="font-semibold mb-2">Red-Green-Refactor</h3>
+          <p class="text-sm text-white/60">Siklus TDD klasik: tulis test yang gagal, buat hijau dengan kode minimum, lalu refactor tanpa takut.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📖</div>
+          <h3 class="font-semibold mb-2">Given-When-Then</h3>
+          <p class="text-sm text-white/60">BDD syntax yang dibaca stakeholder: bahasa domain menjadi test executable.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🎯</div>
+          <h3 class="font-semibold mb-2">Outside-In vs Inside-Out</h3>
+          <p class="text-sm text-white/60">Mulai dari acceptance test di luar, atau dari unit di dalam. Kapan pakai yang mana.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🎲</div>
+          <h3 class="font-semibold mb-2">Property-Based Testing</h3>
+          <p class="text-sm text-white/60">Fast-check / Hypothesis: generate 1000 input random untuk menguji invariant, bukan cuma contoh.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — Red-Green-Refactor -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">RED →<br><span class="text-indigo-400">GREEN → REFACTOR</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Disiplin TDD: <strong class="text-white">tidak boleh menulis production code tanpa failing test dulu</strong>. Siklus idealnya pendek — 2-5 menit per putaran.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="font-mono text-xs text-red-400 mb-3">1. RED</div>
+          <pre class="code-block text-xs"><span class="kw">test</span>(<span class="str">'fizz for 3'</span>, () =&gt; {
+  expect(<span class="fn">fizzbuzz</span>(3))
+    .<span class="fn">toBe</span>(<span class="str">'Fizz'</span>);
+});
+<span class="cm">// ❌ ReferenceError</span></pre>
+          <p class="text-xs text-white/60 mt-3">Tulis test yang gagal. Fungsi belum ada.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="font-mono text-xs text-green-400 mb-3">2. GREEN</div>
+          <pre class="code-block text-xs"><span class="kw">function</span> <span class="fn">fizzbuzz</span>(n) {
+  <span class="kw">return</span> <span class="str">'Fizz'</span>;
+}
+<span class="cm">// ✅ passes (cheating!)</span></pre>
+          <p class="text-xs text-white/60 mt-3">Kode minimum untuk hijau — boleh "curang" dulu.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-indigo-500">
+          <div class="font-mono text-xs text-indigo-400 mb-3">3. REFACTOR</div>
+          <pre class="code-block text-xs"><span class="kw">function</span> <span class="fn">fizzbuzz</span>(n) {
+  <span class="kw">if</span> (n % 3 === 0) <span class="kw">return</span> <span class="str">'Fizz'</span>;
+  <span class="kw">return</span> String(n);
+}
+<span class="cm">// ✅ general solution</span></pre>
+          <p class="text-xs text-white/60 mt-3">Setelah hijau, generalisasi. Test tetap hijau = safe.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-indigo-500">
+        <div class="text-xs font-mono text-indigo-400 mb-2">📝 THREE LAWS OF TDD (Uncle Bob)</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• Jangan tulis production code kecuali untuk membuat failing test pass</li>
+          <li>• Jangan tulis lebih banyak test daripada yang diperlukan untuk failing</li>
+          <li>• Jangan tulis lebih banyak production code daripada yang diperlukan untuk pass</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — BDD Given-When-Then -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">BDD:<br><span class="text-indigo-400">GIVEN-WHEN-THEN</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        BDD (Behavior-Driven Development) menggeser bahasa test ke <strong class="text-white">ubiquitous language</strong> domain — stakeholder bisa baca dan validasi behavior, bukan cuma engineer.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6 border-l-4 border-red-500">
+        <div class="font-mono text-xs text-red-400 mb-3">❌ TECH-CENTRIC TEST</div>
+        <pre class="code-block"><span class="kw">test</span>(<span class="str">'handler returns 402'</span>, <span class="kw">async</span> () =&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">POST</span>(<span class="str">'/checkout'</span>, { cart: [], user: <span class="str">'u1'</span> });
+  expect(res.status).<span class="fn">toBe</span>(402);
+});</pre>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+        <div class="font-mono text-xs text-green-400 mb-3">✅ BEHAVIOR-CENTRIC (Gherkin / Vitest describe)</div>
+        <pre class="code-block"><span class="fn">describe</span>(<span class="str">'Checkout'</span>, () =&gt; {
+  <span class="fn">describe</span>(<span class="str">'given user with empty cart'</span>, () =&gt; {
+    <span class="fn">it</span>(<span class="str">'when user proceeds to pay, then payment is rejected'</span>, <span class="kw">async</span> () =&gt; {
+      <span class="kw">const</span> user = <span class="fn">aUser</span>().<span class="fn">withEmptyCart</span>().<span class="fn">build</span>();
+      <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">checkout</span>(user);
+      expect(result.rejected).<span class="fn">toBe</span>(<span class="kw">true</span>);
+      expect(result.reason).<span class="fn">toBe</span>(<span class="str">'empty_cart'</span>);
+    });
+  });
+});</pre>
+        <p class="text-xs text-white/60 mt-3">Business analyst bisa baca, reviewer QA bisa validasi intent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Property-Based -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">PROPERTY-BASED<br><span class="text-indigo-400">TESTING</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Example-based test menguji <em>contoh konkret</em>. Property-based test menguji <strong class="text-white">invariant yang berlaku untuk semua input</strong> — framework generate ratusan input random dan shrinks ke minimal failing case.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-indigo-400 mb-3">EXAMPLE: SORT FUNCTION INVARIANTS</div>
+        <pre class="code-block"><span class="kw">import</span> fc <span class="kw">from</span> <span class="str">'fast-check'</span>;
+
+<span class="fn">test</span>(<span class="str">'sort is idempotent'</span>, () =&gt; {
+  fc.<span class="fn">assert</span>(
+    fc.<span class="fn">property</span>(fc.<span class="fn">array</span>(fc.<span class="fn">integer</span>()), (arr) =&gt; {
+      <span class="kw">const</span> once = <span class="fn">sort</span>(arr);
+      <span class="kw">const</span> twice = <span class="fn">sort</span>(once);
+      expect(twice).<span class="fn">toEqual</span>(once);
+    })
+  );
+});
+
+<span class="fn">test</span>(<span class="str">'sort preserves length'</span>, () =&gt; {
+  fc.<span class="fn">assert</span>(fc.<span class="fn">property</span>(fc.<span class="fn">array</span>(fc.<span class="fn">integer</span>()),
+    (arr) =&gt; <span class="fn">sort</span>(arr).length === arr.length));
+});</pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <h3 class="font-semibold mb-2">Common Invariants</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• Idempotent: f(f(x)) = f(x)</li>
+            <li>• Inverse: decode(encode(x)) = x</li>
+            <li>• Commutative: f(a,b) = f(b,a)</li>
+            <li>• Model-based: matches reference impl</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl" style="border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.05);">
+          <h3 class="font-semibold mb-2 text-indigo-300">Tools</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• JS/TS: <code>fast-check</code></li>
+            <li>• Python: <code>hypothesis</code></li>
+            <li>• Rust: <code>proptest</code>, <code>quickcheck</code></li>
+            <li>• Java: <code>jqwik</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">SIDE-BY-SIDE</div>
+      <h2 class="section-title mb-8">OUTSIDE-IN VS<br><span class="text-indigo-400">INSIDE-OUT</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #3b82f6;">
+          <div class="text-xs font-mono text-blue-400 mb-3">🌐 OUTSIDE-IN (London School)</div>
+          <p class="text-sm text-white/70 mb-3">Mulai dari acceptance test di level UI/API. Turun per lapisan, mock collaborator yang belum ada.</p>
+          <pre class="code-block text-xs"><span class="cm">// 1. E2E: "user can checkout"</span>
+<span class="cm">// 2. Controller test (mock service)</span>
+<span class="cm">// 3. Service test (mock repo)</span>
+<span class="cm">// 4. Repo test (real DB)</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>✓ Drive dari user value</li>
+            <li>✓ Banyak mock di awal</li>
+            <li>✗ Risiko over-mocking</li>
+          </ul>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #10b981;">
+          <div class="text-xs font-mono text-green-400 mb-3">🔬 INSIDE-OUT (Chicago School)</div>
+          <p class="text-sm text-white/70 mb-3">Mulai dari domain object terdalam. Real object semua. Integrasi bottom-up.</p>
+          <pre class="code-block text-xs"><span class="cm">// 1. Domain entity (pure)</span>
+<span class="cm">// 2. Service (real entity)</span>
+<span class="cm">// 3. Controller (real service)</span>
+<span class="cm">// 4. E2E last</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>✓ Zero mock di core</li>
+            <li>✓ Design muncul organik</li>
+            <li>✗ Bisa miss user intent</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">TDD<br><span class="text-pink-400">DENGAN AI TOOLS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        AI tools menambah kecepatan siklus red-green-refactor. Tapi hati-hati: jangan biarkan AI <em>skip</em> fase red. Kamu yang tulis test, AI yang bantu implementasi.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🧠</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — Spec → Failing Test</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Paste user story atau acceptance criteria dari Jira, minta Claude Code tulis failing test dulu:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Acceptance criteria:
+"Given user with 3 items in cart totalling Rp 200.000, when user
+applies coupon WELCOME10, then total becomes Rp 180.000."
+
+Write a failing Vitest test in tests/checkout.test.ts. Use
+Given-When-Then describe/it structure. Do NOT implement the
+function yet — I want to see red first.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">⚡</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor Composer — Red → Green Sweep</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Setelah failing test jadi, panggil Cursor Composer untuk tulis implementasi minimum:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Composer prompt</span>
+The tests in tests/checkout.test.ts are red. Implement
+applyCoupon() in src/checkout.ts with the MINIMUM code needed
+to make all tests pass. Don't add extra features. After, run
+`npm test` and confirm green. Then suggest one refactor.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🤖</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Copilot — Edge Case Generation</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">COPILOT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Setelah 2-3 test happy path, minta Copilot Chat identify edge case yang kamu miss:</p>
+              <pre class="code-block text-xs"><span class="cm"># Copilot Chat prompt</span>
+/tests Review the existing tests for applyCoupon() and suggest
+5 edge cases I might have missed: expired coupon, coupon code
+casing, zero-total cart, coupon stacking, and currency rounding.
+Write each as a new describe block following Given-When-Then.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/25 bg-pink-500/5 text-sm text-white/70">
+        <strong class="text-pink-300">⚠️ Pitfall:</strong> AI gampang tergoda tulis implementasi bareng test. Pegang disiplin: "red first, then green". Kalau test hijau dari awal, test itu tidak bernilai.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-indigo-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Dalam siklus TDD, setelah failing test kamu jadi hijau dengan kode minimum ("cheating" return hardcoded), apa yang harus kamu lakukan berikutnya?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Commit dan lanjut ke fitur berikutnya — test sudah hijau
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Tambah test baru yang memaksa generalisasi, atau refactor implementasi agar benar-benar correct
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Delete test dan tulis ulang dengan implementasi yang benar sekaligus
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Skip refactor phase — refactor hanya dilakukan di akhir sprint
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>B</strong> — cheating adalah langkah sah di TDD tapi hanya sementara. Kamu punya dua jalur: tambah test yang bikin cheating pecah (forces generalization), atau refactor implementasi sekarang. Jangan pernah commit cheating tanpa salah satunya.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">HANDS-ON • 15 MENIT</div>
+      <h2 class="section-title mb-8">LATIHAN<br><span class="text-indigo-400">TDD KATA</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task: String Calculator Kata</h3>
+        <p class="text-white/70 mb-4">Bangun fungsi <code class="text-indigo-300">add(numbers: string): number</code> lewat TDD murni. Tulis SATU test red per langkah, hijau-kan, refactor, baru lanjut.</p>
+
+        <div class="glass p-4 rounded-xl mb-4">
+          <div class="text-xs font-mono text-indigo-400 mb-2">SPEC (tambah satu per satu)</div>
+          <ol class="text-sm text-white/70 space-y-1 list-decimal pl-5">
+            <li><code>add("")</code> → 0</li>
+            <li><code>add("1")</code> → 1</li>
+            <li><code>add("1,2")</code> → 3</li>
+            <li><code>add("1,2,3,4,5")</code> → 15</li>
+            <li><code>add("1\n2,3")</code> → 6 (newline sebagai delimiter)</li>
+            <li><code>add("//;\n1;2")</code> → 3 (custom delimiter)</li>
+            <li>Negatif → throw Error dengan daftar negative numbers</li>
+          </ol>
+        </div>
+
+        <div class="p-4 bg-pink-500/5 border border-pink-500/25 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs">Guide me through the String Calculator kata using strict TDD.
+For each step, write ONE failing Vitest test. Wait for me to
+confirm red, then write the minimum code to make it green.
+Then refactor if needed. Then move to the next spec item.
+Never skip ahead. Start with step 1: add("") → 0.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Recap -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-indigo-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🔴 Red first, always</div>
+          <div class="text-sm text-white/60">Tidak ada production code tanpa failing test dulu.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">📖 Given-When-Then</div>
+          <div class="text-sm text-white/60">Test yang stakeholder bisa baca = dokumentasi behavior.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🎲 Property-based</div>
+          <div class="text-sm text-white/60">Uji invariant, bukan cuma 3 contoh. Fast-check / Hypothesis.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 AI jadi co-driver</div>
+          <div class="text-sm text-white/60">Kamu tulis test. AI implementasi. Jangan dibalik.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-03-01-testing-pyramid.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 3.1: Testing Pyramid
+        </a>
+        <a href="sesi-03-03-code-review.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-navy-900" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+          Sesi 3.3: Code Review →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

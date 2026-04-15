@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.3 | Code Review & Static Analysis</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #6366f1; --ai-color: #ec4899; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.06; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.05) 40%, transparent 100%); }
+    .ai-card { background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(99,102,241,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-testing-quality.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-indigo-400 font-mono">SESI 3.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded-full">DISKUSI</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-03-02-tdd-bdd.html" class="text-white/40 hover:text-white/60 font-mono">← Sesi 3.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-03-04-debugging-profiling.html" class="text-indigo-400 hover:text-indigo-300 font-mono">Sesi 3.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-indigo-400 uppercase tracking-wider">Sesi 3.3 • Modul 03 Testing</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          CODE<br><span class="text-indigo-400">REVIEW</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Review yang kritis tanpa membunuh motivasi. Linter, type checker, dan pre-commit hooks supaya manusia fokus ke hal yang penting.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-indigo-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-indigo-400">KAMU PAHAMI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">💬</div>
+          <h3 class="font-semibold mb-2">Review Tone</h3>
+          <p class="text-sm text-white/60">Bedakan blocking, suggestion, dan nit. Kritik code, bukan orangnya.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🧹</div>
+          <h3 class="font-semibold mb-2">Linter & Formatter</h3>
+          <p class="text-sm text-white/60">ESLint, Biome, Ruff, Clippy — stop debating style di PR, automate it.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🔍</div>
+          <h3 class="font-semibold mb-2">Type Checker</h3>
+          <p class="text-sm text-white/60">TypeScript strict, mypy, pyright — catch bug sebelum runtime.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🪝</div>
+          <h3 class="font-semibold mb-2">Pre-Commit Hooks</h3>
+          <p class="text-sm text-white/60">Husky + lint-staged supaya master branch tidak pernah menerima commit kotor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — Review Tone -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">TONE:<br><span class="text-indigo-400">CODE, BUKAN CODER</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Review yang baik membuat author <strong class="text-white">mau</strong> perbaiki, bukan defensif. Gunakan konvensi label: <code>blocking</code> (harus di-fix), <code>suggestion</code> (pertimbangan), <code>nit</code> (opini minor).
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="font-mono text-xs text-red-400 mb-3">❌ TONE BURUK</div>
+          <pre class="code-block text-xs">"Kenapa pake var di sini?
+Jelek banget. Tolong benerin."
+
+"Kode kamu bakal error kalo
+null. Masa gini aja kelewat."
+
+"Function ini kepanjangan,
+gak efisien."</pre>
+          <p class="text-xs text-white/60 mt-3">Menyerang orang, tidak actionable, tidak jelas level urgensi.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="font-mono text-xs text-green-400 mb-3">✅ TONE BAIK</div>
+          <pre class="code-block text-xs">[blocking] Kalau `user` null di
+baris 42, line 45 akan throw.
+Bisa tambah guard clause?
+
+[suggestion] Bisa di-extract ke
+`calcTotal()` — reusable di
+OrderService juga.
+
+[nit] Konsisten: kita pakai
+`const` di file lain.</pre>
+          <p class="text-xs text-white/60 mt-3">Fokus code, actionable, label jelas sehingga author bisa prioritize.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-indigo-500">
+        <div class="text-xs font-mono text-indigo-400 mb-2">📝 RULES OF ENGAGEMENT</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• Selalu asumsikan author punya konteks yang kamu tidak tahu</li>
+          <li>• Tanya dulu sebelum claim ("Apa pertimbangan pakai X di sini?")</li>
+          <li>• Approve kalau hanya ada nit — biar author yang memutuskan merge</li>
+          <li>• Diskusi panjang (&gt;3 round) → pindah ke sync call / huddle</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — Linters -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">LINTER:<br><span class="text-indigo-400">AUTOMATE THE BORING</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Setiap debate style di PR adalah waste. <strong class="text-white">Setup linter + formatter sekali, lupakan selamanya</strong>. Reviewer bisa fokus ke logic dan design, bukan spasi vs tab.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🟨</div>
+          <h3 class="font-semibold mb-2">JavaScript/TypeScript</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• <code>ESLint</code> + <code>typescript-eslint</code></li>
+            <li>• <code>Biome</code> — fast all-in-one (Rust)</li>
+            <li>• <code>Prettier</code> — format only</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🐍</div>
+          <h3 class="font-semibold mb-2">Python</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• <code>Ruff</code> — 100x faster than pylint</li>
+            <li>• <code>Pylint</code> — comprehensive but slow</li>
+            <li>• <code>Black</code> — opinionated formatter</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🦀</div>
+          <h3 class="font-semibold mb-2">Rust</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• <code>Clippy</code> — built-in, very strict</li>
+            <li>• <code>rustfmt</code> — canonical formatter</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🎯</div>
+          <h3 class="font-semibold mb-2">Type Checkers</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• <code>tsc --strict</code></li>
+            <li>• <code>mypy --strict</code> / <code>pyright</code></li>
+            <li>• <code>flow</code> (Meta)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="glass-lit p-5 rounded-2xl">
+        <div class="font-mono text-xs text-indigo-400 mb-3">EXAMPLE: BIOME CONFIG</div>
+        <pre class="code-block text-xs"><span class="cm">// biome.json</span>
+{
+  <span class="str">"linter"</span>: {
+    <span class="str">"enabled"</span>: <span class="kw">true</span>,
+    <span class="str">"rules"</span>: {
+      <span class="str">"recommended"</span>: <span class="kw">true</span>,
+      <span class="str">"correctness"</span>: { <span class="str">"noUnusedVariables"</span>: <span class="str">"error"</span> },
+      <span class="str">"suspicious"</span>: { <span class="str">"noExplicitAny"</span>: <span class="str">"error"</span> }
+    }
+  },
+  <span class="str">"formatter"</span>: { <span class="str">"indentStyle"</span>: <span class="str">"space"</span>, <span class="str">"indentWidth"</span>: 2 }
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Pre-Commit -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">PRE-COMMIT<br><span class="text-indigo-400">SAFETY NET</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Pre-commit hooks jalan <strong class="text-white">sebelum</strong> commit masuk repo. Dengan <code>husky</code> + <code>lint-staged</code>, kamu run linter + formatter + type-check hanya di file yang di-stage, cepat dan fokus.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-indigo-400 mb-3">SETUP: package.json</div>
+        <pre class="code-block text-xs">{
+  <span class="str">"scripts"</span>: {
+    <span class="str">"prepare"</span>: <span class="str">"husky install"</span>
+  },
+  <span class="str">"lint-staged"</span>: {
+    <span class="str">"*.{ts,tsx}"</span>: [
+      <span class="str">"biome check --write"</span>,
+      <span class="str">"tsc --noEmit"</span>
+    ],
+    <span class="str">"*.{md,json}"</span>: [<span class="str">"biome format --write"</span>]
+  }
+}
+
+<span class="cm"># .husky/pre-commit</span>
+npx lint-staged</pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <h3 class="font-semibold mb-2">✅ Yang layak di pre-commit</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• Linter auto-fix</li>
+            <li>• Formatter</li>
+            <li>• Fast type-check</li>
+            <li>• Leaked secret scanner (gitleaks)</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <h3 class="font-semibold mb-2">❌ Jangan di pre-commit</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• Full test suite (terlalu lambat)</li>
+            <li>• E2E / Playwright</li>
+            <li>• Docker build</li>
+            <li>• Deploy staging</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">SIDE-BY-SIDE</div>
+      <h2 class="section-title mb-8">MANUAL REVIEW VS<br><span class="text-indigo-400">AUTOMATED PIPELINE</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #ef4444;">
+          <div class="text-xs font-mono text-red-400 mb-3">❌ TANPA AUTOMATION</div>
+          <ul class="text-sm text-white/70 space-y-2">
+            <li>• Reviewer debat spasi/tab di PR</li>
+            <li>• Typo unused variable lolos ke main</li>
+            <li>• <code>any</code> di TypeScript tidak ter-detect</li>
+            <li>• Credentials ter-commit ke git history</li>
+            <li>• Style inconsistent antar file</li>
+            <li>• PR 400 komentar, 350 di antaranya nit</li>
+          </ul>
+          <p class="text-xs text-white/50 mt-4">Reviewer fatigue, author frustrated, merge delayed.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #10b981;">
+          <div class="text-xs font-mono text-green-400 mb-3">✅ DENGAN AUTOMATION</div>
+          <ul class="text-sm text-white/70 space-y-2">
+            <li>• Pre-commit: biome + tsc + gitleaks</li>
+            <li>• CI: lint + typecheck + test + coverage</li>
+            <li>• Danger.js: auto-comment di PR</li>
+            <li>• CodeRabbit / Copilot Review: first pass</li>
+            <li>• Reviewer cuma fokus design & logic</li>
+            <li>• Style = konsisten by construction</li>
+          </ul>
+          <p class="text-xs text-white/50 mt-4">PR kecil, reviewer fresh, time-to-merge &lt; 4 jam.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">CODE REVIEW<br><span class="text-pink-400">DENGAN AI TOOLS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        AI reviewer tidak menggantikan manusia, tapi <strong class="text-white">first pass</strong> yang bagus. Kamu fokus ke hal yang AI belum bisa: intent, trade-off, strategi product.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🐇</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">CodeRabbit / Copilot Review — First-Pass</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CODERABBIT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Integrate CodeRabbit sebagai GitHub App. Untuk Copilot Review, enable di repo settings. Di PR baru, auto-scan jalan dan comment:</p>
+              <pre class="code-block text-xs"><span class="cm"># .coderabbit.yaml</span>
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+language: id</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🧠</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — /review-pr Skill</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Claude Code punya built-in review-pr skill. Dari terminal lokal, jalankan:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+/review-pr 1247
+
+<span class="cm"># Or manual with specific focus</span>
+Fetch PR #1247 from origin. Review with focus on:
+1. Security (SQL injection, XSS, secrets)
+2. Performance (N+1 queries, loops in hot path)
+3. Error handling (unhandled rejections, silent catch)
+Label each finding as [blocking] / [suggestion] / [nit].</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">⚡</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor — Bulk Lint Auto-Fix</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Ketika kamu enable strict rule baru dan dapat 200+ lint error, minta Cursor Composer fix bulk:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Composer prompt</span>
+Run `biome check --write src/` and fix all auto-fixable errors.
+For the remaining errors that need manual judgment (e.g.,
+noExplicitAny), list them by file:line with suggested fix.
+Don't touch tests/ for now. Commit as "chore: bulk lint fix".</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/25 bg-pink-500/5 text-sm text-white/70">
+        <strong class="text-pink-300">⚠️ Pitfall:</strong> AI reviewer kadang complain tentang hal yang sebenarnya intentional (misal legacy compat). Author boleh reply "wontfix — intentional because X" dan AI harus dismiss.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-indigo-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Di PR kamu, reviewer meninggalkan komentar: "Kode ini jelek, kenapa gak dipikir dulu sebelum submit?" Apa respons paling profesional?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Balas dengan tone sama: "Kamu juga gak ngerti konteks, baca dulu"
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'wrong': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Close PR, rewrite dari awal sendirian untuk menghindari konflik
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'correct': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Tanya spesifik apa yang harus diperbaiki, escalate ke tech lead soal tone komentar
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Ignore komentar, merge langsung karena CI sudah hijau
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'c' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'c' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>C</strong> — minta klarifikasi actionable ("spesifiknya bagian mana?") sambil tandai bahwa tone komentar tidak sehat ke lead. Eskalasi ke manusia, bukan perang di thread PR. Kode review boleh kritis, tapi tidak boleh merendahkan.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">HANDS-ON • 15 MENIT</div>
+      <h2 class="section-title mb-8">LATIHAN<br><span class="text-indigo-400">SETUP PIPELINE</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Setup full quality pipeline di proyek kamu: Biome untuk lint+format, TypeScript strict, husky + lint-staged pre-commit, dan gitleaks untuk secret scanning.</p>
+
+        <ol class="text-sm text-white/70 space-y-1 list-decimal pl-5 mb-4">
+          <li><code>npm i -D @biomejs/biome husky lint-staged</code></li>
+          <li>Tambahkan <code>"strict": true</code> di tsconfig</li>
+          <li>Jalankan <code>npx husky init</code> dan edit <code>.husky/pre-commit</code></li>
+          <li>Konfigurasi lint-staged di package.json</li>
+          <li>Install gitleaks binary dan jalankan <code>gitleaks protect --staged</code></li>
+          <li>Buat 1 file dengan error sengaja → commit → verify pre-commit block</li>
+        </ol>
+
+        <div class="p-4 bg-pink-500/5 border border-pink-500/25 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs">Set up a quality pipeline for this TypeScript project:
+1. Biome (lint + format) with strict rules
+2. tsc --strict type checking
+3. husky + lint-staged pre-commit hook
+4. gitleaks secret scanner pre-commit
+Generate all config files. Then create a test commit that
+violates each rule and show me the block output.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Recap -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-indigo-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">💬 Code, bukan coder</div>
+          <div class="text-sm text-white/60">Blocking / suggestion / nit. Kritik actionable, tidak personal.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🧹 Automate style</div>
+          <div class="text-sm text-white/60">Linter + formatter hapus debate style. Reviewer fokus logic.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🪝 Pre-commit gate</div>
+          <div class="text-sm text-white/60">Husky + lint-staged. Fast checks di local, heavy di CI.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 AI = first pass</div>
+          <div class="text-sm text-white/60">CodeRabbit / Claude Code scan dulu. Manusia fokus intent.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-03-02-tdd-bdd.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 3.2: TDD & BDD
+        </a>
+        <a href="sesi-03-04-debugging-profiling.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-navy-900" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+          Sesi 3.4: Debugging →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

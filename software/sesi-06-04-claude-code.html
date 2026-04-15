@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.4 | Claude Code: CLI Agent Power</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --module-dark: #db2777; --ai-color: #8b5cf6; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.08; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-dark)); border-radius: 12px; font-weight: 600; color: #ffffff; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.08) 40%, transparent 100%); }
+    .ai-card { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.35); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.4); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(236,72,153,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-pink-400 font-mono">SESI 6.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">75 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] font-mono rounded-full">TOOL</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-06-03-cursor.html" class="text-white/40 hover:text-white/60 font-mono hidden sm:inline">← Sesi 6.3</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-05-aider-windsurf.html" class="text-pink-400 hover:text-pink-300 font-mono">Sesi 6.5 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-pink-400 uppercase tracking-wider">Sesi 6.4 • Claude Code</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          CLAUDE<br><span class="text-pink-400">CODE</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          CLI agent dengan plan mode, skills, hooks, subagents, dan MCP integration. Terminal-native workflow untuk task yang autonomous tapi terkendali.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-pink-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-pink-400">KAMU KUASAI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">💻</div>
+          <h3 class="font-semibold mb-2">CLI Basics & Slash Commands</h3>
+          <p class="text-sm text-white/60">Install, config, interactive mode, /commit, /review, /clear dan custom commands.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📋</div>
+          <h3 class="font-semibold mb-2">Plan Mode & Skills</h3>
+          <p class="text-sm text-white/60">Read-only investigation dulu, skills sebagai domain expertise reusable.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🪝</div>
+          <h3 class="font-semibold mb-2">Hooks & Automation</h3>
+          <p class="text-sm text-white/60">Pre/post tool hooks untuk enforce format, test, security checks otomatis.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🔌</div>
+          <h3 class="font-semibold mb-2">MCP Integration</h3>
+          <p class="text-sm text-white/60">Connect ke database, internal API, file systems via Model Context Protocol.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — CLI & Commands -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">CLI BASICS<br><span class="text-pink-400">& SLASH COMMANDS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Claude Code adalah CLI interactive — kamu bisa chat, beri task, atau ketik slash command. Semua state tersimpan dalam session; keluar dengan <code>/exit</code>.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">BASIC WORKFLOW</div>
+        <pre class="code-block text-xs"><span class="cm"># Install</span>
+$ npm install -g @anthropic-ai/claude-code
+
+<span class="cm"># Start interactive session in project root</span>
+$ cd my-project
+$ claude
+
+<span class="cm"># Inside session — natural language task</span>
+&gt; Refactor src/auth/login.ts to use the new session API
+
+<span class="cm"># Or slash commands</span>
+&gt; /plan Add rate limiting to all public endpoints
+&gt; /commit                 <span class="cm"># stage + commit with generated msg</span>
+&gt; /review                 <span class="cm"># review current diff</span>
+&gt; /clear                  <span class="cm"># reset context window</span>
+&gt; /agents                 <span class="cm"># list & invoke subagents</span>
+&gt; /hooks                  <span class="cm"># manage hooks</span>
+&gt; /mcp                    <span class="cm"># manage MCP servers</span>
+&gt; /help                   <span class="cm"># all commands</span></pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">📁 CLAUDE.md</div>
+          <p class="text-sm text-white/70">File di root yang otomatis di-load sebagai project memory — konvensi, arsitektur, do/don't.</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🎯 CONTEXT</div>
+          <p class="text-sm text-white/70">Claude Code bisa read file, run bash, grep, edit. Setiap aksi minta permission (bisa di-auto-allow via settings).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — Plan Mode, Skills, Hooks -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">PLAN MODE<br><span class="text-pink-400">SKILLS & HOOKS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Tiga fitur advance yang bedakan Claude Code dari "chatbot yang bisa edit file".
+      </p>
+
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-pink-500">
+          <div class="font-mono text-xs text-pink-400 mb-2">PLAN MODE</div>
+          <h3 class="font-semibold mb-2">Read → think → plan → approve → execute</h3>
+          <pre class="code-block text-xs">&gt; /plan Migrate auth from JWT to session cookies
+
+<span class="cm"># Claude reads files, builds a plan:</span>
+# Plan: Migrate to session cookies
+# 1. Install `iron-session`
+# 2. Create src/lib/session.ts with wrapper
+# 3. Update login handler, logout handler
+# 4. Replace withAuth HOC to read from session
+# 5. Remove JWT code after migration verified
+# 6. Update tests
+
+<span class="cm"># You review, approve, then Claude executes step-by-step</span></pre>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-violet-500">
+          <div class="font-mono text-xs text-violet-400 mb-2">SKILLS</div>
+          <h3 class="font-semibold mb-2">Reusable domain expertise</h3>
+          <pre class="code-block text-xs"><span class="cm"># Skills are markdown files that teach Claude a workflow.</span>
+<span class="cm"># Example: ~/.claude/skills/review-pr/SKILL.md</span>
+
+---
+name: review-pr
+description: Review GitHub PR for security, performance, style
+---
+
+When invoked, fetch the PR diff, analyze for:
+1. SQL injection, XSS, auth bypass
+2. N+1 queries, unbounded loops
+3. Missing error handling
+4. Style violations from CLAUDE.md
+
+Report as markdown with severity levels.</pre>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-amber-500">
+          <div class="font-mono text-xs text-amber-400 mb-2">HOOKS</div>
+          <h3 class="font-semibold mb-2">Automation on tool events</h3>
+          <pre class="code-block text-xs"><span class="cm"># ~/.claude/settings.json</span>
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{
+        "type": "command",
+        "command": "npx prettier --write \"$FILE\" &amp;&amp; npm run lint:fix"
+      }]
+    }],
+    "Stop": [{
+      "hooks": [{ "type": "command", "command": "npm test" }]
+    }]
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Long Context + MCP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">LONG CONTEXT<br><span class="text-pink-400">+ MCP</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Claude Code support context window 200k–1M token. Untuk source di luar file system (database, API, Jira, GitHub), pakai <strong class="text-white">MCP servers</strong> — standardized tool integration.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">ENABLE MCP SERVERS</div>
+        <pre class="code-block text-xs"><span class="cm"># ~/.claude/settings.json</span>
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/projects"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres",
+               "postgresql://localhost/dev"]
+    }
+  }
+}
+
+<span class="cm"># Sekarang Claude Code bisa:</span>
+&gt; Query the users table for accounts created last week
+&gt; Check the open PRs on repo foo/bar and summarize
+&gt; List files in /projects/backend/src</pre>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">LONG CONTEXT</div>
+          <p class="text-sm text-white/70">Feed seluruh folder kritis sekaligus — "read src/core/* and explain".</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">MCP</div>
+          <p class="text-sm text-white/70">Tools yang Claude panggil sebagai function — standardized protocol.</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">KOMBINASI</div>
+          <p class="text-sm text-white/70">Long context = breadth, MCP = live data. Keduanya = superpower.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison/Demo -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">LIVE DEMO</div>
+      <h2 class="section-title mb-8">PLAN MODE<br><span class="text-pink-400">REAL EXAMPLE</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">TASK: ADD MULTI-TENANCY</div>
+        <pre class="code-block text-xs">&gt; /plan I need to add multi-tenancy to this app. Every user belongs
+&gt; to one organization. All queries must filter by organization_id.
+&gt; Plan the migration carefully — this is a big change.
+
+<span class="cm"># Claude reads relevant files (db schema, services, middleware)</span>
+<span class="cm"># Outputs structured plan:</span>
+
+# Multi-tenancy Migration Plan
+
+## Phase 1: Schema (1-2 hours)
+- [ ] Add `organizations` table
+- [ ] Add `organization_id` FK to: users, projects, items, logs
+- [ ] Create migration 20260415_multi_tenant.sql
+- [ ] Backfill: every existing user → default org
+
+## Phase 2: Auth middleware (30 min)
+- [ ] Inject `req.organizationId` from user session
+- [ ] Create `requireOrg` middleware
+
+## Phase 3: Query layer (2-3 hours)
+- [ ] Audit all queries in src/db/queries/*
+- [ ] Add organizationId filter to all reads
+- [ ] Add transaction wrapper that asserts org match on writes
+
+## Phase 4: Tests (1 hour)
+- [ ] Update fixtures with orgId
+- [ ] Add cross-tenant leakage test
+
+## Risks
+- Forgotten queries leak data → grep audit + tests
+- Backfill rollback plan needed
+- API clients may break — deprecation notice
+
+Proceed? [y/n]
+&gt; y
+
+<span class="cm"># Claude executes phase by phase, asking confirmation between phases</span></pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl border-l-4 border-green-500">
+          <div class="text-xs font-mono text-green-400 mb-2">✅ WHY IT WORKS</div>
+          <p class="text-sm text-white/70">Plan explicit, risk-aware, phased. Kamu review sebelum execute. Tidak ada surprise.</p>
+        </div>
+        <div class="glass p-4 rounded-xl border-l-4 border-amber-500">
+          <div class="text-xs font-mono text-amber-400 mb-2">⚠️ STILL NEED YOU</div>
+          <p class="text-sm text-white/70">Review diff phase-by-phase. Verify data backfill. Smoke test production replica.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">CLAUDE CODE<br><span class="text-violet-400">POWER PATTERNS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Tiga pattern advanced yang memanfaatkan subagents, hooks, dan skills untuk task yang biasanya butuh 1-2 hari manual.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🎭</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Subagent Orchestration</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">AGENTS</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Delegate ke subagent spesialis untuk task panjang:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Spawn subagents in parallel to audit our API surface:
+- security-auditor: check every public route for auth bypass,
+  injection, IDOR. Report severity.
+- performance-auditor: find N+1 queries, missing indexes,
+  unbounded loops.
+- docs-auditor: check which routes are missing OpenAPI docs.
+
+Each subagent should write a report to reports/&lt;agent&gt;.md.
+When all done, summarize top 10 findings across all three.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🪝</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Hook-Based Automation</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">HOOKS</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Enforce quality gates otomatis setiap Claude edit file:</p>
+              <pre class="code-block text-xs"><span class="cm"># ~/.claude/settings.json — auto quality gate</span>
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{
+        "type": "command",
+        "command": "node scripts/check-file-allowed.js \"$FILE\""
+      }]
+    }],
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [
+        { "type": "command", "command": "prettier --write \"$FILE\"" },
+        { "type": "command", "command": "eslint --fix \"$FILE\"" },
+        { "type": "command", "command": "npm run typecheck -- --noEmit" }
+      ]
+    }]
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🔍</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Codebase Audit via Skill</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">SKILLS</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Skill reusable untuk audit sistematis yang bisa dipanggil kapan saja:</p>
+              <pre class="code-block text-xs"><span class="cm"># ~/.claude/skills/codebase-audit/SKILL.md</span>
+---
+name: codebase-audit
+description: Full-repo audit for code smells, security, perf
+---
+
+Steps:
+1. Read CLAUDE.md to understand project conventions
+2. Scan src/ for:
+   - Functions &gt; 50 lines
+   - Files &gt; 500 lines
+   - TODO/FIXME/HACK markers
+   - `any` types in TypeScript
+   - `console.log` in non-dev code
+   - Missing error handling on async calls
+3. Run `npm audit` and aggregate findings
+4. Report as markdown with file:line citations
+5. Suggest top 5 refactors ranked by impact
+
+Usage: &gt; Run the codebase-audit skill</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-violet-500/35 bg-violet-500/5 text-sm text-white/70">
+        <strong class="text-violet-300">🔑 Kombinasi killer:</strong> Plan mode untuk task besar + subagents untuk parallelism + hooks untuk quality gate + skills untuk reusability. Claude Code jadi "junior developer yang 24/7 standby".
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-pink-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Kamu ingin memastikan setiap kali Claude Code edit file TypeScript, prettier + eslint --fix + typecheck berjalan otomatis. Fitur mana yang paling tepat?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Tulis di CLAUDE.md "please run prettier after every edit"
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Konfigurasi <code>PostToolUse</code> hook di settings.json dengan matcher "Edit|Write"
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Buat skill khusus "format-after-edit"
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Manual jalankan npm run lint setelah session selesai
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>B</strong> — <code>PostToolUse</code> hook adalah mekanisme deterministik yang dieksekusi harness (bukan model). CLAUDE.md/Skill bisa di-ignore model; hanya hook yang guaranteed jalan. Ini cara yang benar untuk quality gate otomatis.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">HANDS-ON • 20 MENIT</div>
+      <h2 class="section-title mb-8">BUILD YOUR<br><span class="text-pink-400">FIRST SKILL</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Buat skill <code>commit-smart</code> yang: (1) stage hanya file yang relevant, (2) generate conventional commit message, (3) tolak jika test failing.</p>
+
+        <pre class="code-block mb-4"><span class="cm"># Steps</span>
+
+<span class="kw">1.</span> Install claude code: <span class="fn">npm install -g @anthropic-ai/claude-code</span>
+<span class="kw">2.</span> Buat direktori: <span class="fn">mkdir -p ~/.claude/skills/commit-smart</span>
+<span class="kw">3.</span> Tulis SKILL.md (template di bawah)
+<span class="kw">4.</span> Di project, buka session: <span class="fn">claude</span>
+<span class="kw">5.</span> Test: <span class="str">&gt; Run the commit-smart skill</span>
+<span class="kw">6.</span> Iterate sampai behavior sesuai</pre>
+
+        <div class="p-4 bg-violet-500/5 border border-violet-500/35 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🤖 SKILL TEMPLATE</div>
+          <pre class="code-block text-xs">---
+name: commit-smart
+description: Stage, commit with conventional message, block on test fail
+---
+
+When invoked:
+1. Run `npm test` — if any test fails, STOP and report failures
+2. Run `git status` and show untracked/modified files
+3. Ask user which files to stage (default: all modified, no new)
+4. Run `git diff --staged` to understand changes
+5. Draft a conventional commit message:
+   - type: feat|fix|refactor|docs|test|chore
+   - scope: inferred from directory
+   - subject: imperative, &lt; 60 chars
+   - body: bullet points of what/why if non-trivial
+6. Show message, ask for confirmation
+7. On confirm: `git commit -m "..."`
+8. Report commit SHA</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Summary + Footer nav -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-pink-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">📋 Plan mode first</div>
+          <div class="text-sm text-white/60">Task besar → /plan → review → approve → execute.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🎭 Skills = reusable expertise</div>
+          <div class="text-sm text-white/60">Markdown templates yang bisa dipanggil kapan saja.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🪝 Hooks = deterministic</div>
+          <div class="text-sm text-white/60">Harness-level automation, bukan prompt yang bisa di-ignore.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-violet-500">
+          <div class="text-lg font-semibold mb-1">🔌 MCP = live data</div>
+          <div class="text-sm text-white/60">DB, GitHub, internal API jadi tool yang Claude bisa panggil.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-03-cursor.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 6.3: Cursor
+        </a>
+        <a href="sesi-06-05-aider-windsurf.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+          Sesi 6.5: Aider + Windsurf →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

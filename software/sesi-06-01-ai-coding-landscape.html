@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.1 | AI Coding Landscape 2026</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --module-dark: #db2777; --ai-color: #8b5cf6; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.08; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-dark)); border-radius: 12px; font-weight: 600; color: #ffffff; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.08) 40%, transparent 100%); }
+    .ai-card { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.35); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.4); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(236,72,153,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-pink-400 font-mono">SESI 6.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">30 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] font-mono rounded-full">OVERVIEW</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-06-ai-assisted-development.html" class="text-white/40 hover:text-white/60 font-mono hidden sm:inline">← Modul 06</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-02-github-copilot.html" class="text-pink-400 hover:text-pink-300 font-mono">Sesi 6.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-pink-400 uppercase tracking-wider">Sesi 6.1 • Modul 06 Deep Dive</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          AI CODING<br><span class="text-pink-400">LANDSCAPE 2026</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Peta lengkap tool AI coding: IDE-native, CLI agents, dan UI-first generators. Kapan pakai yang mana, dan bagaimana memilih yang sesuai workflow tim kamu.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-pink-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-pink-400">KAMU PAHAMI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🗺️</div>
+          <h3 class="font-semibold mb-2">Tool Taxonomy</h3>
+          <p class="text-sm text-white/60">IDE-native (Copilot, Cursor, Windsurf) vs CLI agent (Claude Code, Aider) vs UI-first (v0, Bolt).</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🎯</div>
+          <h3 class="font-semibold mb-2">Positioning Matrix</h3>
+          <p class="text-sm text-white/60">Peta 2D tool vs autonomy level vs context scope — memahami kekuatan masing-masing.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📊</div>
+          <h3 class="font-semibold mb-2">Selection Criteria</h3>
+          <p class="text-sm text-white/60">Ukuran codebase, workflow tim, preferensi IDE, budget — faktor kunci memilih tool.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🧭</div>
+          <h3 class="font-semibold mb-2">Decision Framework</h3>
+          <p class="text-sm text-white/60">Flowchart pragmatis untuk memilih kombinasi tool berdasarkan use case harian.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — Tool Taxonomy -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">TOOL<br><span class="text-pink-400">TAXONOMY</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Tool AI coding 2026 dibagi jadi tiga kategori utama berdasarkan <strong class="text-white">tempat AI bekerja</strong>. Memahami kategori ini adalah langkah pertama memilih tool yang tepat.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-t-4" style="border-top-color: #ec4899;">
+          <div class="font-mono text-xs text-pink-400 mb-3">IDE-NATIVE</div>
+          <h3 class="font-semibold mb-3">Di dalam editor</h3>
+          <ul class="text-sm text-white/70 space-y-1">
+            <li>• GitHub Copilot</li>
+            <li>• Cursor</li>
+            <li>• Windsurf</li>
+            <li>• JetBrains AI</li>
+          </ul>
+          <p class="text-xs text-white/50 mt-3">Inline completion, chat side-panel, multi-file edit via Composer/Cascade.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border-t-4" style="border-top-color: #8b5cf6;">
+          <div class="font-mono text-xs text-violet-400 mb-3">CLI AGENT</div>
+          <h3 class="font-semibold mb-3">Di terminal</h3>
+          <ul class="text-sm text-white/70 space-y-1">
+            <li>• Claude Code</li>
+            <li>• Aider</li>
+            <li>• OpenAI Codex CLI</li>
+            <li>• Gemini CLI</li>
+          </ul>
+          <p class="text-xs text-white/50 mt-3">Autonomous agent, read-plan-edit loop, long-running tasks, Git-native workflow.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border-t-4" style="border-top-color: #f59e0b;">
+          <div class="font-mono text-xs text-amber-400 mb-3">UI-FIRST GEN</div>
+          <h3 class="font-semibold mb-3">Di browser</h3>
+          <ul class="text-sm text-white/70 space-y-1">
+            <li>• v0.dev</li>
+            <li>• Bolt.new</li>
+            <li>• Lovable</li>
+            <li>• Replit Agent</li>
+          </ul>
+          <p class="text-xs text-white/50 mt-3">Prompt → full component/app, preview instan, code export untuk handoff.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-pink-500">
+        <div class="text-xs font-mono text-pink-400 mb-2">💡 INSIGHT</div>
+        <p class="text-sm text-white/70">Tidak ada "winner". Tim modern pakai <strong>kombinasi</strong>: Cursor untuk daily coding, Claude Code untuk refactor besar, v0 untuk prototype UI. Pelajari satu per satu lalu mix.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — Positioning Matrix -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">POSITIONING<br><span class="text-pink-400">MATRIX</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Sumbu X: <strong class="text-white">autonomy</strong> (suggestion → autonomous agent). Sumbu Y: <strong class="text-white">scope</strong> (single file → full codebase).
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <pre class="code-block text-xs"><span class="cm"># Mental model 2x2</span>
+
+                FULL CODEBASE SCOPE
+                         ▲
+                         │
+     Claude Code ────────┼──────── Bolt.new
+     Cursor Composer     │         Replit Agent
+                         │
+  ───────────────────────┼───────────────────────▶ AUTONOMY
+     Copilot Inline      │         v0.dev
+     Aider (chat)        │         Windsurf Cascade
+                         │
+                         ▼
+                  SINGLE FILE SCOPE
+
+<span class="cm"># Left side  = assistive (you drive)</span>
+<span class="cm"># Right side = autonomous (AI drives)</span>
+<span class="cm"># Top        = multi-file / whole repo awareness</span>
+<span class="cm"># Bottom     = line/function level suggestions</span></pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">HIGH AUTONOMY + FULL SCOPE</div>
+          <p class="text-sm text-white/70">Claude Code, Bolt, Replit Agent — pakai saat task jelas dan kamu siap review besar.</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">LOW AUTONOMY + SINGLE FILE</div>
+          <p class="text-sm text-white/70">Copilot inline, Aider chat — pakai saat kamu masih eksplorasi dan butuh fine control.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Selection Criteria -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">SELECTION<br><span class="text-pink-400">CRITERIA</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Lima faktor untuk memilih. Jawab jujur, lalu shortlist tool yang cocok.
+      </p>
+
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl">📏</div>
+            <div class="flex-1">
+              <h3 class="font-semibold mb-1">Codebase Size</h3>
+              <p class="text-sm text-white/60">&lt; 10k LOC: Copilot / v0 cukup. 10k–100k: Cursor + indexing. &gt; 100k: Claude Code + MCP + retrieval.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl">🔁</div>
+            <div class="flex-1">
+              <h3 class="font-semibold mb-1">Workflow Style</h3>
+              <p class="text-sm text-white/60">Keyboard-centric / terminal person → Claude Code, Aider. GUI-loving → Cursor, Windsurf. Design-first → v0, Bolt.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl">👥</div>
+            <div class="flex-1">
+              <h3 class="font-semibold mb-1">Team Adoption</h3>
+              <p class="text-sm text-white/60">Tim yang sudah pakai VSCode → Copilot/Cursor gesekan rendah. Tim polyglot → CLI agent netral.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl">💰</div>
+            <div class="flex-1">
+              <h3 class="font-semibold mb-1">Budget & Licensing</h3>
+              <p class="text-sm text-white/60">Copilot $10/mo per user termurah. Cursor Pro $20. Claude Code pay-per-token (variable). Aider bring-your-own-key (flexible).</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl">🔒</div>
+            <div class="flex-1">
+              <h3 class="font-semibold mb-1">Privacy & Compliance</h3>
+              <p class="text-sm text-white/60">Copilot Enterprise punya zero-data-retention. Cursor Privacy Mode. Untuk regulated industry pilih yang punya BAA / SOC2.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">SIDE-BY-SIDE</div>
+      <h2 class="section-title mb-8">TOOL<br><span class="text-pink-400">COMPARISON</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10 text-xs font-mono text-pink-400">
+              <th class="text-left py-3 px-2">TOOL</th>
+              <th class="text-left py-3 px-2">TYPE</th>
+              <th class="text-left py-3 px-2">BEST FOR</th>
+              <th class="text-left py-3 px-2">WEAKNESS</th>
+            </tr>
+          </thead>
+          <tbody class="text-white/70">
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-2 font-semibold text-white">GitHub Copilot</td>
+              <td class="py-3 px-2">IDE-native</td>
+              <td class="py-3 px-2">Inline completion, team standar</td>
+              <td class="py-3 px-2">Context terbatas per file</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-2 font-semibold text-white">Cursor</td>
+              <td class="py-3 px-2">IDE-native</td>
+              <td class="py-3 px-2">Composer multi-file, codebase chat</td>
+              <td class="py-3 px-2">VSCode fork, indexing lambat repo besar</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-2 font-semibold text-white">Claude Code</td>
+              <td class="py-3 px-2">CLI agent</td>
+              <td class="py-3 px-2">Long-running task, plan mode, skills</td>
+              <td class="py-3 px-2">Terminal learning curve</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-2 font-semibold text-white">Aider</td>
+              <td class="py-3 px-2">CLI chat</td>
+              <td class="py-3 px-2">Git-native, BYO-key, model agnostic</td>
+              <td class="py-3 px-2">No GUI, single-threaded</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3 px-2 font-semibold text-white">Windsurf</td>
+              <td class="py-3 px-2">IDE-native</td>
+              <td class="py-3 px-2">Cascade agent flow, smooth UX</td>
+              <td class="py-3 px-2">Proprietary IDE</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-2 font-semibold text-white">v0.dev</td>
+              <td class="py-3 px-2">UI-first</td>
+              <td class="py-3 px-2">shadcn components cepat</td>
+              <td class="py-3 px-2">Front-end only, not production-ready</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">"FIND A BUG"<br><span class="text-violet-400">CROSS-TOOL COMPARISON</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Satu task identik — <strong class="text-white">"temukan bug race condition di order processing"</strong> — dijalankan di tiga tool berbeda. Lihat perbedaan pendekatan, prompt, dan output.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">💬</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Copilot Chat — Single File Focus</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">COPILOT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Buka file yang dicurigai, invoke Copilot Chat dengan slash command:</p>
+              <pre class="code-block text-xs"><span class="cm"># Copilot Chat prompt (file context)</span>
+/explain #file:order-processor.ts
+Are there any race conditions in how we handle concurrent order
+submissions? Focus on the processOrder() function. If yes, cite
+line numbers and propose a fix using a mutex or atomic DB update.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🎼</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor Composer — Codebase Wide</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Open Composer (Cmd+I), attach codebase, ask the wide question:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Composer prompt</span>
+@codebase Trace all paths that write to the `orders` table.
+Identify any that don't use a transaction or row lock. List each
+as file:line with the risk level (HIGH/MED/LOW). Don't fix yet —
+just report so I can review.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🧠</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — Autonomous Plan Mode</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Di CLI, jalankan plan mode untuk investigasi mendalam:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code (plan mode)</span>
+/plan Investigate potential race conditions in order processing.
+Steps: (1) grep for order writes, (2) map transaction boundaries,
+(3) simulate concurrent runs, (4) propose fix with test cases.
+Report as markdown with file_path:line_number citations.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-violet-500/35 bg-violet-500/5 text-sm text-white/70">
+        <strong class="text-violet-300">🔑 Kunci perbedaan:</strong> Copilot fokus 1 file (cepat, terbatas). Cursor Composer scope codebase (akurat, perlu indexing). Claude Code autonomous plan (mendalam, butuh review lebih besar). Pilih berdasarkan skala task.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-pink-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Tim kamu maintain monorepo 250k LOC, butuh refactor cross-service besar, developer mostly pakai neovim + terminal. Tool AI coding mana yang paling tepat sebagai <strong>primary tool</strong>?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> v0.dev karena paling cepat generate UI
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'wrong': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> GitHub Copilot inline di VSCode karena termurah
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'correct': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Claude Code CLI — cocok terminal workflow, autonomous plan mode untuk refactor besar, long-context untuk repo 250k LOC
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Bolt.new karena bisa generate full project
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'c' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'c' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>C</strong> — Claude Code CLI menang di tiga kriteria krusial: (1) sesuai workflow terminal/neovim, (2) autonomous plan mode + skills untuk refactor besar, (3) long-context window + MCP untuk codebase 250k LOC. Copilot/v0/Bolt tidak pas untuk skala & workflow ini.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">HANDS-ON • 10 MENIT</div>
+      <h2 class="section-title mb-8">BUAT<br><span class="text-pink-400">DECISION MATRIX</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Berdasarkan proyek yang kamu kerjakan sekarang, isi decision matrix di bawah. Output: 2 tool yang akan kamu adopsi plus justifikasi singkat.</p>
+
+        <pre class="code-block mb-4"><span class="cm"># Decision matrix template</span>
+
+<span class="kw">Project</span>: [nama project kamu]
+<span class="kw">Codebase size</span>: [LOC kira-kira]
+<span class="kw">Language/framework</span>: [TS/Go/Rust/...]
+<span class="kw">Team size</span>: [berapa dev]
+<span class="kw">Workflow</span>: [IDE / terminal / mixed]
+<span class="kw">Privacy constraint</span>: [ada/tidak]
+
+<span class="cm"># Score 1-5 per tool (5 = best fit)</span>
+Copilot     : [ ]   Cursor   : [ ]
+Claude Code : [ ]   Aider    : [ ]
+Windsurf    : [ ]   v0/Bolt  : [ ]
+
+<span class="kw">Primary pick</span>  : __________
+<span class="kw">Secondary pick</span>: __________
+<span class="kw">Why</span>: _____________________</pre>
+
+        <div class="p-4 bg-violet-500/5 border border-violet-500/35 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs">I'm evaluating AI coding tools for my team. Here's our context:
+- Codebase: [describe]
+- Team workflow: [describe]
+- Constraints: [privacy/budget/IDE]
+Recommend a primary + secondary tool from: Copilot, Cursor,
+Claude Code, Aider, Windsurf, v0. Justify with 3 concrete reasons
+and note one risk to watch.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Summary + Footer nav -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-pink-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🗺️ Three categories</div>
+          <div class="text-sm text-white/60">IDE-native, CLI agent, UI-first gen — masing-masing punya sweet spot.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🎯 Scope × Autonomy</div>
+          <div class="text-sm text-white/60">Dua sumbu utama untuk menempatkan setiap tool di mental map.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">📊 Five criteria</div>
+          <div class="text-sm text-white/60">Size, workflow, team, budget, privacy — jawab sebelum pilih.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-violet-500">
+          <div class="text-lg font-semibold mb-1">🤖 Mix, don't pick one</div>
+          <div class="text-sm text-white/60">Tim modern kombinasi 2-3 tool. Kuasai dulu, baru mix.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Kembali ke Modul 06
+        </a>
+        <a href="sesi-06-02-github-copilot.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+          Sesi 6.2: GitHub Copilot →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

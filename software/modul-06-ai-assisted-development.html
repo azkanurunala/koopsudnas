@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 06 | AI-Assisted Development (Deep Dive)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --module-color-dark: #db2777; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--module-color); opacity: 0.12; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #8b5cf6; opacity: 0.07; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .module-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--module-color); text-transform: uppercase; letter-spacing: 0.1em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-color-dark)); border-radius: 12px; font-weight: 600; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; text-decoration: none; transition: all 0.3s ease; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+    .session-card { position: relative; overflow: hidden; border-left: 3px solid var(--module-color); }
+    .session-card:hover { background: rgba(255,255,255,0.06); }
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Landing</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-pink-400 font-mono">MODUL 06</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">DEEP DIVE • OPTIONAL</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-05-production-engineering.html" class="text-white/50 hover:text-white font-mono">← Modul 05</a>
+        <a href="index.html" class="text-pink-400 hover:text-pink-300 font-mono">Landing →</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative min-h-[70vh] flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-3 fade-in">
+          <div class="module-badge mb-6"><span class="status-dot"></span>MODUL 06 • AI DEEP DIVE</div>
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">AI-ASSISTED<br><span class="text-pink-400">DEVELOPMENT</span></h1>
+          <p class="text-lg text-white/60 max-w-xl mb-8">Standalone deep dive <strong class="text-white">ekosistem AI coding tooling</strong> — Cursor, GitHub Copilot, Claude Code, Aider, Windsurf, v0/Bolt, MCP tooling, codebase indexing, dan multi-tool workflow capstone. Untuk developer yang mau master AI workflow secara serius.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#sessions" class="cta-primary">Mulai Sesi 6.1<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <a href="#overview" class="cta-secondary">9 Sessions</a>
+          </div>
+        </div>
+        <div class="lg:col-span-2 fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-6 rounded-2xl">
+            <div class="text-xs font-mono text-pink-400 mb-4">DEEP DIVE INFO</div>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm"><span class="text-white/50">Durasi total</span><span>~8 jam</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Jumlah sesi</span><span>9 sesi</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Tools covered</span><span>6+ AI tools</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Akses</span><span class="text-pink-400">Standalone / Optional</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Level</span><span>Tool mastery</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>YANG AKAN DIBAHAS</div>
+        <h2 class="section-title">9 SESI<br><span class="text-pink-400">TOOL MASTERY</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">1 overview + 6 tool-specific sessions + 1 MCP deep-dive + 1 workflow capstone</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-pink-500/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>9 SESI DEEP DIVE</div>
+        <h2 class="section-title">SESI DI<br><span class="text-pink-400">MODUL 06</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+
+        <a href="sesi-06-01-ai-coding-landscape.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.1</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">OVERVIEW • 30 MENIT</div>
+              <h3 class="font-semibold text-sm">AI Coding Landscape</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Peta semua AI coding tools tahun 2026 — positioning, strengths, when to use. Copilot vs Cursor vs Claude Code vs Aider vs Windsurf.</p>
+        </a>
+
+        <a href="sesi-06-02-github-copilot.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.2</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">TOOL • 60 MENIT</div>
+              <h3 class="font-semibold text-sm">GitHub Copilot Mastery</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Autocomplete, chat, agents, workspace features. Shortcut setup, prompt strategies, dan integrasi ke IDE pilihan.</p>
+        </a>
+
+        <a href="sesi-06-03-cursor.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.3</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">TOOL • 60 MENIT</div>
+              <h3 class="font-semibold text-sm">Cursor: Composer + Codebase Chat</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Inline edit, Composer multi-file, codebase-aware chat, .cursorrules, dan workflow untuk refactor besar.</p>
+        </a>
+
+        <a href="sesi-06-04-claude-code.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.4</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">TOOL • 75 MENIT</div>
+              <h3 class="font-semibold text-sm">Claude Code: CLI Agent Power</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">CLI agent dari Anthropic — subagents, skills, hooks, plan mode, long-context, MCP servers. Paling kuat untuk multi-step tasks.</p>
+        </a>
+
+        <a href="sesi-06-05-aider-windsurf.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.5</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">TOOL • 45 MENIT</div>
+              <h3 class="font-semibold text-sm">Aider + Windsurf Alternatives</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Aider (git-native terminal agent) dan Windsurf (IDE alternative to Cursor). Strengths, kapan pakai, dan comparison.</p>
+        </a>
+
+        <a href="sesi-06-06-v0-bolt.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.6</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">TOOL • 45 MENIT</div>
+              <h3 class="font-semibold text-sm">v0 + Bolt: UI-First Generation</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Dari prompt langsung ke React/Next.js component yang running. Prototyping cepat, limitations, production-readiness.</p>
+        </a>
+
+        <a href="sesi-06-07-mcp-tooling.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.7</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">PROTOCOL • 75 MENIT</div>
+              <h3 class="font-semibold text-sm">MCP: Model Context Protocol</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Integrate tools, databases, APIs ke AI agent via MCP. Build your own MCP server, security, dan sharing workflows.</p>
+        </a>
+
+        <a href="sesi-06-08-codebase-indexing.html" class="session-card glass-lit p-5 rounded-2xl block">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-400">6.8</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">DEEP • 60 MENIT</div>
+              <h3 class="font-semibold text-sm">Codebase Indexing & RAG for Code</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">Embeddings, semantic search, RAG pipeline untuk codebase, tradeoffs long-context vs retrieval.</p>
+        </a>
+
+        <a href="sesi-06-09-ai-workflow-capstone.html" class="session-card glass-lit p-5 rounded-2xl block md:col-span-2" style="border-left: 3px solid #ec4899; background: linear-gradient(90deg, rgba(236,72,153,0.08), transparent);">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/30 flex items-center justify-center flex-shrink-0"><span class="font-display text-lg text-pink-300">6.9</span></div>
+            <div class="flex-1">
+              <div class="text-[10px] font-mono text-pink-300 mb-0.5">★ CAPSTONE • 90 MENIT</div>
+              <h3 class="font-semibold text-sm">Multi-Tool AI Workflow Capstone</h3>
+            </div>
+          </div>
+          <p class="text-xs text-white/60">End-to-end capstone: pakai semua tools yang dipelajari untuk ship feature dari spec ke production — plan dengan Claude Code, scaffold dengan Cursor, implement dengan Copilot, test + deploy.</p>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="relative py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-05-production-engineering.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Modul 05: Production Engineering</a>
+        <a href="index.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">Kembali ke Landing →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

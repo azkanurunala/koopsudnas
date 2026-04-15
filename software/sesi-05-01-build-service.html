@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 5.1 | Phase 1: Design & Build a Service</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #d946ef; --ai-color: #ec4899; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #06b6d4; opacity: 0.08; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(217,70,239,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(217,70,239,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(217,70,239,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #d946ef, #c026d3); border-radius: 12px; font-weight: 600; color: #ffffff; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(217,70,239,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.05) 40%, transparent 100%); }
+    .ai-card { background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(217,70,239,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-05-production-engineering.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 05</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-fuchsia-400 font-mono">SESI 5.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">90 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-mono rounded-full">PHASE 1</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-05-production-engineering.html" class="text-white/40 hover:text-white/60 font-mono hidden sm:inline">← Modul 05</a>
+        <span class="text-white/20 hidden sm:inline">|</span>
+        <a href="sesi-05-02-deploy-pipeline.html" class="text-fuchsia-400 hover:text-fuchsia-300 font-mono">Sesi 5.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-fuchsia-400 uppercase tracking-wider">Sesi 5.1 • Capstone Phase 1</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          DESIGN &amp;<br><span class="text-fuchsia-400">BUILD A SERVICE</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Dari requirement mentah jadi repo production-ready. Design doc, ADR, OpenAPI contract, dan implementasi clean code — semua dalam satu phase.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Phase 1
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-fuchsia-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-fuchsia-400">KAMU PRODUKSI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">📄</div>
+          <h3 class="font-semibold mb-2">Design Doc</h3>
+          <p class="text-sm text-white/60">Translate requirement menjadi design doc singkat: problem, constraint, non-goals, high-level architecture.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🏛️</div>
+          <h3 class="font-semibold mb-2">Architecture Decision Record</h3>
+          <p class="text-sm text-white/60">Capture keputusan kunci (DB choice, framework, deployment target) dengan format ADR yang reusable.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🧱</div>
+          <h3 class="font-semibold mb-2">Repository Scaffold</h3>
+          <p class="text-sm text-white/60">Struktur folder, tooling (linter, formatter, pre-commit), dan CI skeleton yang siap pakai.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">✨</div>
+          <h3 class="font-semibold mb-2">Clean Implementation</h3>
+          <p class="text-sm text-white/60">Core business logic dengan SOLID principles, unit test, dan OpenAPI/GraphQL schema yang di-commit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Requirement to Design Doc -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">DARI REQUIREMENT<br><span class="text-fuchsia-400">KE DESIGN DOC</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Sebelum ngetik kode, tulis design doc 1-2 halaman. Tujuannya bukan dokumentasi — tujuannya <strong class="text-white">memaksa kamu berpikir</strong>. Kalau tidak bisa menulisnya dengan jelas, kamu belum paham masalahnya.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-2">STEP 1</div>
+          <h3 class="font-semibold mb-2">Pick Scenario</h3>
+          <p class="text-xs text-white/60">URL shortener, task manager, atau payment webhook receiver. Pilih satu skenario capstone.</p>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-2">STEP 2</div>
+          <h3 class="font-semibold mb-2">Draft Design Doc</h3>
+          <p class="text-xs text-white/60">Problem, goals, non-goals, API surface, data model, risks. Maksimal 2 halaman.</p>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-2">STEP 3</div>
+          <h3 class="font-semibold mb-2">Peer Review</h3>
+          <p class="text-xs text-white/60">Minta teman (atau AI) untuk stress-test asumsi sebelum implementasi.</p>
+        </div>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl border-l-4 border-fuchsia-500">
+        <div class="font-mono text-xs text-fuchsia-400 mb-3">📝 DESIGN DOC TEMPLATE</div>
+        <pre class="code-block"><span class="cm"># Design Doc: URL Shortener Service</span>
+
+## Problem
+Tim internal butuh short link dengan analytics dasar (click count, referrer).
+
+## Goals
+- Shorten URL &lt; 100ms p95
+- Redirect latency &lt; 50ms p95
+- Track click events async
+
+## Non-Goals
+- Custom domain per user
+- A/B testing
+- Real-time dashboard
+
+## API Surface
+POST /api/links        =&gt; { slug, originalUrl }
+GET  /:slug            =&gt; 302 redirect
+GET  /api/links/:slug  =&gt; analytics summary
+
+## Data Model
+links(slug PK, original_url, created_at, created_by)
+click_events(id, slug FK, ts, referrer, user_agent)
+
+## Risks
+- Slug collision (mitigate: base62 + retry)
+- Hot redirect path (mitigate: in-memory cache)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: ADR -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">ARCHITECTURE<br><span class="text-fuchsia-400">DECISION RECORDS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Setiap keputusan arsitektur yang <em>susah di-revert</em> layak dicatat sebagai ADR. Format-nya pendek, tapi disiplin — context, decision, consequences. Disimpan di <code class="text-fuchsia-300">docs/adr/</code> berdampingan dengan code.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6 border-l-4 border-fuchsia-500">
+        <div class="font-mono text-xs text-fuchsia-400 mb-3">📄 ADR-0001: Pilih PostgreSQL untuk primary datastore</div>
+        <pre class="code-block"><span class="cm"># ADR-0001: Use PostgreSQL as Primary Datastore</span>
+
+## Status
+Accepted — 2026-04-15
+
+## Context
+Kita butuh durable storage untuk links + click_events. Click volume
+diestimasi 10k/hari di tahun pertama. Transactional consistency penting
+untuk slug allocation (no duplicates).
+
+## Decision
+Pakai PostgreSQL 16 via Supabase managed service.
+
+## Alternatives Considered
+- DynamoDB — NoSQL, scalable, tapi tim belum familiar &amp; query analytics ribet
+- SQLite — terlalu kecil untuk concurrent writes
+- MongoDB — tidak butuh fleksibilitas document
+
+## Consequences
++ Transactional slug allocation trivial
++ Analytics query pakai SQL standard
+- Vendor lock-in ringan ke Supabase
+- Perlu koneksi pool management di serverless</pre>
+      </div>
+
+      <div class="glass p-5 rounded-xl border-l-4 border-fuchsia-500">
+        <div class="text-xs font-mono text-fuchsia-400 mb-2">📌 ADR RULES OF THUMB</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• Tulis ADR hanya untuk keputusan yang <strong>susah/mahal di-revert</strong></li>
+          <li>• Status: <code>Proposed</code> → <code>Accepted</code> → <code>Superseded by ADR-XXXX</code></li>
+          <li>• Jangan edit ADR lama — tulis ADR baru yang superseded</li>
+          <li>• Simpan di repo sebagai <code>docs/adr/NNNN-title.md</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Clean Implementation with SOLID -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">IMPLEMENTASI<br><span class="text-fuchsia-400">DENGAN SOLID</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Setelah design doc &amp; ADR solid, implementasi jadi mechanical. Pakai layered structure sederhana — route → service → repository — dan pisahkan I/O dari business logic supaya testable.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6 border-l-4 border-green-500">
+        <div class="font-mono text-xs text-green-400 mb-3">✅ CLEAN LAYERED IMPLEMENTATION</div>
+        <pre class="code-block"><span class="cm">// src/services/link-service.ts — business logic only, no I/O</span>
+<span class="kw">export class</span> <span class="fn">LinkService</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> repo: LinkRepository, <span class="kw">private</span> slugGen: SlugGenerator) {}
+
+  <span class="kw">async</span> <span class="fn">shorten</span>(originalUrl: string, createdBy: string): Promise&lt;Link&gt; {
+    <span class="fn">validateUrl</span>(originalUrl);
+    <span class="kw">const</span> slug = <span class="kw">await</span> <span class="kw">this</span>.slugGen.<span class="fn">nextAvailable</span>();
+    <span class="kw">return</span> <span class="kw">this</span>.repo.<span class="fn">insert</span>({ slug, originalUrl, createdBy });
+  }
+
+  <span class="kw">async</span> <span class="fn">resolve</span>(slug: string): Promise&lt;string | null&gt; {
+    <span class="kw">const</span> link = <span class="kw">await</span> <span class="kw">this</span>.repo.<span class="fn">findBySlug</span>(slug);
+    <span class="kw">return</span> link?.originalUrl ?? <span class="kw">null</span>;
+  }
+}
+
+<span class="cm">// src/routes/links.ts — HTTP concerns only</span>
+<span class="fn">router</span>.post(<span class="str">'/api/links'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> link = <span class="kw">await</span> linkService.<span class="fn">shorten</span>(req.body.url, req.user.id);
+  res.<span class="fn">status</span>(201).<span class="fn">json</span>(link);
+});</pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-1">S — Single Responsibility</div>
+          <p class="text-xs text-white/60">LinkService hanya urus business rules, bukan HTTP, bukan DB syntax.</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-1">D — Dependency Inversion</div>
+          <p class="text-xs text-white/60">Service depend pada interface <code>LinkRepository</code>, bukan Postgres driver.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Expected Output Preview -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">EXPECTED OUTPUT PREVIEW</div>
+      <h2 class="section-title mb-8">STRUKTUR<br><span class="text-fuchsia-400">REPO AKHIR</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-3">📁 REPOSITORY TREE</div>
+          <pre class="code-block text-xs">url-shortener/
+├── docs/
+│   ├── design-doc.md
+│   └── adr/
+│       ├── 0001-postgres.md
+│       └── 0002-slug-algo.md
+├── openapi.yaml
+├── src/
+│   ├── routes/
+│   │   └── links.ts
+│   ├── services/
+│   │   └── link-service.ts
+│   ├── repositories/
+│   │   └── link-repository.ts
+│   └── index.ts
+├── test/
+│   └── link-service.test.ts
+├── .github/workflows/ci.yml
+├── package.json
+└── README.md</pre>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-xs font-mono text-fuchsia-400 mb-3">📋 OPENAPI SNIPPET</div>
+          <pre class="code-block text-xs"><span class="kw">openapi</span>: 3.0.3
+<span class="kw">info</span>:
+  <span class="kw">title</span>: URL Shortener
+  <span class="kw">version</span>: 0.1.0
+<span class="kw">paths</span>:
+  /api/links:
+    <span class="kw">post</span>:
+      <span class="kw">summary</span>: Create short link
+      <span class="kw">requestBody</span>:
+        <span class="kw">content</span>:
+          application/json:
+            <span class="kw">schema</span>:
+              <span class="kw">$ref</span>: <span class="str">'#/components/schemas/CreateLinkRequest'</span>
+      <span class="kw">responses</span>:
+        <span class="str">'201'</span>:
+          <span class="kw">description</span>: Link created
+          <span class="kw">content</span>:
+            application/json:
+              <span class="kw">schema</span>:
+                <span class="kw">$ref</span>: <span class="str">'#/components/schemas/Link'</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>• Schema jadi kontrak antara frontend &amp; backend</li>
+            <li>• Di-commit ke repo, bukan auto-generated</li>
+            <li>• Jadi input untuk type generation di CI</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">PHASE 1<br><span class="text-pink-400">DENGAN AI TOOLS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        AI tools bisa memotong waktu Phase 1 dari 2 hari jadi 4 jam. Kunci: <strong class="text-white">kamu tetap penulis design doc — AI adalah editor dan scaffolder</strong>.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">📝</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — Design Doc + ADR dari Requirement</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Di CLI root project kosong, jalankan Claude Code interactive dengan prompt requirement mentah:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Saya akan build URL shortener untuk internal team (~50 user, 10k
+clicks/day). Draft docs/design-doc.md (max 2 halaman) dengan sections:
+Problem, Goals, Non-Goals, API Surface, Data Model, Risks. Lalu
+generate docs/adr/0001-datastore-choice.md dengan format context /
+decision / alternatives / consequences. Pakai Postgres sebagai pilihan.
+Stop di situ — jangan buat code lain dulu.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🏗️</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor Composer — Scaffold Repository Structure</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Buka Cursor Composer (Cmd+I) di folder project, attach design-doc.md sebagai context, lalu minta scaffold lengkap:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Composer prompt</span>
+Baca @docs/design-doc.md. Scaffold TypeScript + Fastify project:
+- src/{routes,services,repositories}/ folders
+- package.json dengan fastify, pg, zod, vitest, eslint, prettier
+- tsconfig.json strict mode
+- .eslintrc dengan @typescript-eslint recommended
+- vitest.config.ts
+- .github/workflows/ci.yml yang run lint + test
+- README.md skeleton dengan setup instructions
+Jangan implement business logic — hanya scaffolding.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🤖</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">GitHub Copilot — Implement Business Logic dengan Naming Bersih</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">COPILOT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Buka <code class="text-pink-300">src/services/link-service.ts</code> kosong, tulis JSDoc di atas class, biarkan Copilot Chat mengisi:</p>
+              <pre class="code-block text-xs"><span class="cm"># Copilot Chat prompt</span>
+/generate Implement LinkService class with methods:
+- shorten(originalUrl, createdBy): validates URL, generates unique
+  base62 slug (retry on collision), persists via injected repo
+- resolve(slug): returns originalUrl or null
+Use dependency injection for LinkRepository and SlugGenerator.
+Follow SOLID — no direct DB or HTTP imports in this file.
+Add Vitest unit tests with mocked repo covering both happy path
+and slug collision retry case.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/25 bg-pink-500/5 text-sm text-white/70">
+        <strong class="text-pink-300">⚠️ Pitfall:</strong> AI sering menulis design doc yang terlalu generic. Setelah AI draft, <em>rewrite</em> section Goals dan Risks berdasarkan konteks tim kamu sendiri — itu yang membuat design doc berharga.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-fuchsia-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Kamu sudah punya design doc &amp; ADR. Saat implementasi, kamu menyadari ADR-0001 (pilihan Postgres) ternyata kurang tepat — harusnya DynamoDB. Apa langkah yang benar?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Edit ADR-0001 langsung, ubah decision jadi DynamoDB
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'wrong': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Hapus ADR-0001 karena sudah tidak akurat
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'correct': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Tulis ADR-0003 baru dengan status "Supersedes ADR-0001", update ADR-0001 status jadi "Superseded by ADR-0003"
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Biarkan ADR lama, cukup ubah kode — ADR hanya formalitas
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'c' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'c' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>C</strong> — ADR adalah historical record, tidak boleh di-edit destructively. Menulis ADR baru yang "supersedes" menjaga history keputusan dan context kenapa kamu pernah berpikir lain, yang sangat berharga saat onboarding anggota tim baru atau saat debug keputusan di masa depan.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On Exercise -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">HANDS-ON • DELIVERABLE</div>
+      <h2 class="section-title mb-8">PHASE 1<br><span class="text-fuchsia-400">DELIVERABLES</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl mb-4">
+        <h3 class="font-semibold mb-4">🎯 Yang Harus Kamu Submit di Akhir Phase 1</h3>
+        <ul class="text-sm text-white/70 space-y-3">
+          <li class="flex items-start gap-3"><span class="text-fuchsia-400 font-mono">1.</span><span><strong class="text-white">Design Doc</strong> (<code>docs/design-doc.md</code>) — max 2 halaman, cover Problem / Goals / Non-Goals / API Surface / Data Model / Risks</span></li>
+          <li class="flex items-start gap-3"><span class="text-fuchsia-400 font-mono">2.</span><span><strong class="text-white">Minimal 2 ADRs</strong> (<code>docs/adr/</code>) — datastore choice + framework choice</span></li>
+          <li class="flex items-start gap-3"><span class="text-fuchsia-400 font-mono">3.</span><span><strong class="text-white">OpenAPI Schema</strong> (<code>openapi.yaml</code>) — seluruh endpoint dengan request/response schemas</span></li>
+          <li class="flex items-start gap-3"><span class="text-fuchsia-400 font-mono">4.</span><span><strong class="text-white">Scaffolded Repo</strong> — folder structure + tooling (ESLint, Prettier, Vitest, CI skeleton)</span></li>
+          <li class="flex items-start gap-3"><span class="text-fuchsia-400 font-mono">5.</span><span><strong class="text-white">Core Business Logic</strong> — minimal 1 service class dengan unit test coverage &gt;80%</span></li>
+        </ul>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Skenario Pilihan</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+            <div class="text-2xl mb-2">🔗</div>
+            <h4 class="font-semibold text-sm mb-1">URL Shortener</h4>
+            <p class="text-xs text-white/60">Shorten, redirect, click analytics</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+            <div class="text-2xl mb-2">✅</div>
+            <h4 class="font-semibold text-sm mb-1">Task Manager API</h4>
+            <p class="text-xs text-white/60">CRUD tasks, assignment, filtering</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+            <div class="text-2xl mb-2">💳</div>
+            <h4 class="font-semibold text-sm mb-1">Payment Webhook Receiver</h4>
+            <p class="text-xs text-white/60">Receive, verify, dispatch events</p>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 bg-pink-500/5 border border-pink-500/25 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs">I'm starting Phase 1 of a capstone project. Scenario: [URL shortener].
+Goal: deliver design doc + 2 ADRs + OpenAPI schema + scaffolded repo
++ one working service class with tests. Walk me through in order:
+1. Draft design doc (ask clarifying questions first)
+2. Draft ADRs for datastore and framework
+3. Generate openapi.yaml
+4. Scaffold repo structure
+5. Implement LinkService with tests
+Stop after each step for my review.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Recap + Footer nav -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-fuchsia-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-fuchsia-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-fuchsia-500">
+          <div class="text-lg font-semibold mb-1">📄 Design doc dulu, code kemudian</div>
+          <div class="text-sm text-white/60">Kalau nggak bisa menulis masalahnya, kamu belum paham masalahnya.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-fuchsia-500">
+          <div class="text-lg font-semibold mb-1">🏛️ ADR menjaga history</div>
+          <div class="text-sm text-white/60">Append-only — superseded, bukan edited. Context penting saat debugging masa depan.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-fuchsia-500">
+          <div class="text-lg font-semibold mb-1">🧱 Layered + SOLID</div>
+          <div class="text-sm text-white/60">Pisahkan business logic dari I/O supaya testable dan replaceable.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 AI sebagai scaffolder</div>
+          <div class="text-sm text-white/60">Biarkan AI men-draft, kamu yang edit jadi kontekstual.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-05-production-engineering.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Kembali ke Modul 05
+        </a>
+        <a href="sesi-05-02-deploy-pipeline.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #d946ef, #c026d3);">
+          Sesi 5.2: Deploy &amp; Pipeline →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

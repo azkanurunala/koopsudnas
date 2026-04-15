@@ -752,69 +752,134 @@ Provide your analysis following the 5 steps above, then conclude with:
     </div>
   </section>
 
-  <!-- Tool Comparison Callout → Modul 06 -->
-  <section class="relative py-16 px-6">
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOW — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto">
-      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOW • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Gemini 2.5 Pro Thinking Mode — Reasoning Audit Trail</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Di Claude, deep thinking dipancing via prompt phrase ("think step by step"). Di <strong class="text-indigo-300">Gemini 2.5 Pro</strong>, thinking mode sudah <strong class="text-white">native</strong> — model otomatis show reasoning trace yang explicit. Untuk strategic reasoning yang butuh <em>audit trail</em> bisa di-review komandan, Gemini Thinking Mode sangat kuat sebagai komplemen Claude.</p>
+      </div>
+
+      <!-- EMBED: GEMINI THINKING MODE (SESI 6.1) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group" open>
         <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🧠</div>
             <div>
-              <div class="font-mono text-xs text-indigo-400 mb-1">TOOL COMPARISON • ALTERNATIVE WORKFLOW</div>
-              <h3 class="text-lg font-semibold">Gemini 2.5 Thinking Mode — Native Chain of Thought</h3>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.1 THINKING MODE</div>
+              <h3 class="text-lg font-semibold">Native Chain-of-Thought untuk Strategic Reasoning</h3>
             </div>
           </div>
           <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
-          <p class="text-sm text-white/70">
-            Di Claude, "deep thinking" dipancing via prompt phrase ("think step by step", "show your reasoning"). Di <strong class="text-indigo-400">Gemini 2.5 Pro</strong>, thinking mode sudah <strong class="text-white">native</strong> — model otomatis reasoning sebelum jawab, dan Anda bisa lihat <em>thinking trace</em> explicit di output.
-          </p>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
 
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-              <div class="text-xs font-mono text-amber-400 mb-2">CLAUDE — PROMPTED CoT</div>
-              <div class="text-xs text-white/70 font-mono leading-relaxed p-2 bg-navy-900/50 rounded">
-                Prompt: "Analyze this COA. <strong class="text-white">Think step by step</strong>, showing your reasoning before concluding."<br><br>
-                <span class="text-amber-300">→ Claude menulis reasoning inline di body response, perlu explicit trigger</span>
-              </div>
-            </div>
-            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <div class="text-xs font-mono text-indigo-400 mb-2">GEMINI 2.5 PRO — NATIVE</div>
-              <div class="text-xs text-white/70 font-mono leading-relaxed p-2 bg-navy-900/50 rounded">
-                Prompt: "Analyze this COA."<br><br>
-                <span class="text-white/40">&lt;thinking&gt;</span><br>
-                <span class="text-white/60">&nbsp;&nbsp;Step 1: understand the tasking...<br>&nbsp;&nbsp;Step 2: identify constraints...</span><br>
-                <span class="text-white/40">&lt;/thinking&gt;</span><br>
-                <span class="text-green-400">Answer: ...</span><br><br>
-                <span class="text-indigo-300">→ Otomatis, separate dari final answer</span>
-              </div>
-            </div>
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DEEP THINKING</div>
+            <p class="text-sm text-white/70">Saat strategic reasoning Anda akan di-<strong class="text-white">review oleh komandan atau lawan debat</strong>, atau saat Anda butuh <strong class="text-white">audit trail</strong> untuk defend kesimpulan. Gemini Thinking Mode menampilkan reasoning chain dalam <code class="bg-navy-900 px-1 rounded text-xs">&lt;thinking&gt;</code> tags yang terpisah dari final answer — jadi komandan bisa "read the math" sebelum menerima kesimpulan. Tidak perlu minta "think step by step" — Gemini 2.5 Pro otomatis.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Strategic Reasoning dengan Trace</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com</strong> → pilih model <strong class="text-indigo-300">Gemini 2.5 Pro</strong> (Thinking Mode hanya di Pro, bukan Flash).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Struktur data input dengan rapi</strong> — bullet list of facts, known constraints, assumptions. Data rapi = reasoning tajam.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Submit question + explicit instruction</strong> untuk consider multiple hypotheses — ini mencegah "jumping to conclusion".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Review thinking trace</strong> — apakah semua hypothesis dipertimbangkan? Ada step yang weak atau melompat? Flag untuk re-query jika ada.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Forward reasoning trace + final answer ke komandan</strong> — komandan dapat context lengkap, bukan black-box kesimpulan. Saat komandan challenge, Anda punya trace untuk defend atau revise.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Dual-tool pass</strong> — draft reasoning awal dengan Claude (ethical nuance), lalu audit via Gemini Thinking Mode (reasoning check). Kombinasi = highest confidence.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Strategic Reasoning dengan Trace</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Role: Senior strategic analyst supporting Koopsudnas commander
+
+Strategic Question:
+[ISI PERTANYAAN — contoh:
+"Apakah peningkatan OPTEMPO yang diamati di sektor X sesuai dengan
+(a) posturing rutin kuartalan, (b) persiapan untuk exercise besar,
+atau (c) pre-positioning untuk kontingensi tertentu?"]
+
+Available Data:
+- Fact 1: [DATA POINT with source reliability]
+- Fact 2: [DATA POINT with source reliability]
+- Fact 3: [DATA POINT with source reliability]
+- Constraint 1: [KONSTRAK yang harus dipertimbangkan]
+- Constraint 2: [KONSTRAK yang harus dipertimbangkan]
+- Assumption 1: [ASUMSI yang saya buat + kenapa]
+
+Reasoning Instructions:
+1. Pertimbangkan KETIGA hipotesis secara terpisah — jangan langsung pilih yang paling likely
+2. Untuk setiap hipotesis:
+   - Evidence yang mendukung (reference specific facts)
+   - Evidence yang bertentangan (reference specific facts)
+   - Base rate priors (seberapa umum hipotesis ini secara historis)
+3. Considerationtentang second-order effects:
+   - If hypothesis X is correct, apa yang akan berubah dalam 48 jam?
+   - What should we observe that we're not yet observing?
+4. Identify assumption yang paling fragile — kalau salah, bagaimana conclusion berubah?
+5. Surface unknown unknowns — apa yang mungkin kita tidak tahu yang critical?
+
+Output Format:
+- <thinking> [reasoning trace lengkap — semua hypothesis, evidence, counter-evidence]
+- Ranked hypotheses dengan confidence (HIGH/MEDIUM/LOW + justifikasi kuantitatif)
+- Most fragile assumption (yang harus di-monitor)
+- Collection requirements untuk disconfirm/confirm
+- 2-kalimat BLUF untuk komandan (non-teknikal)
+
+Catatan: Ini untuk audit trail yang akan di-review komandan, jadi reasoning harus defensible — bukan sekedar confident-sounding.</pre>
           </div>
 
           <div class="p-4 bg-white/5 rounded-xl">
-            <div class="font-semibold text-indigo-400 mb-2">🎯 Kapan Pakai Mana untuk Strategic Reasoning?</div>
-            <ul class="text-sm text-white/70 space-y-2">
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Claude:</strong> lebih baik untuk <em>ethical reasoning</em>, nuanced judgment, narrative brief yang formal. Reasoning inline membantu rekonstruksi logic di commander's brief.</li>
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Gemini 2.5 Pro:</strong> lebih baik untuk <em>audit trail</em> — thinking trace yang explicit adalah <strong class="text-white">built-in evidence log</strong>. Komandan bisa baca trace untuk verify reasoning chain.</li>
-              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Dual-tool approach:</strong> draft dengan Claude (nuance + prose), lalu <em>audit</em> via Gemini 2.5 Pro yang akan check logic chain — combined gives highest confidence.</li>
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Thinking Mode untuk Strategic Reasoning</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Eksplisit pertimbangkan multiple hypotheses</strong> — "consider 3 hypotheses before picking" memaksa kaliberasi.</li>
+              <li>• <strong class="text-white">Most fragile assumption</strong> — selalu minta AI identify asumsi yang kalau salah akan flip conclusion. Ini adalah "risiko utama" Anda.</li>
+              <li>• <strong class="text-white">Base rate priors</strong> — minta AI consider seberapa common hipotesis secara historis. Mengurangi bias towards novel interpretations.</li>
+              <li>• <strong class="text-white">Reasoning trace ≠ correctness</strong> — trace transparan untuk <em>auditability</em>, bukan jaminan benar. Review kritis.</li>
+              <li>• <strong class="text-white">Dual-run dengan Claude</strong> — Claude untuk ethical nuance, Gemini untuk reasoning trace eksplisit. Kedua tool = highest confidence.</li>
+              <li>• <strong class="text-white">Reasoning trace sebagai backup</strong> — saat komandan tanya "kenapa Anda yakin X?", Anda punya trace concrete untuk jawab, bukan "AI bilang".</li>
             </ul>
           </div>
 
-          <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl" style="--accent:#6366f1;border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.1);">
-            <div class="font-semibold mb-2" style="color:#818cf8;">💡 Experiment</div>
-            <p class="text-xs text-white/70">Ambil 1 COA analysis yang sudah Anda buat dengan Claude di Sesi 4.2. Paste ke Gemini 2.5 Pro dengan prompt: "Audit this reasoning for logical gaps, missing assumptions, or unsound inferences. Show your thinking." Bandingkan — apakah Gemini catch something Claude miss?</p>
-          </div>
-
-          <div class="pt-4 border-t border-white/5">
+          <div class="pt-3 border-t border-white/5">
             <a href="sesi-06-01-gemini-ecosystem.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
-              Lihat Sesi 6.1 — Gemini Ecosystem (Thinking Mode section) →
+              Deep dive lengkap: Sesi 6.1 — Gemini Ecosystem (Thinking Mode) →
             </a>
           </div>
         </div>
       </details>
+
+      <!-- DUAL-TOOL DIAGRAM -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🎯 Dual-Tool Strategic Reasoning</div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-navy-900/50 rounded-lg">
+            <div class="font-mono text-xs text-teal-400 mb-2">PASS 1 — CLAUDE (sesi ini)</div>
+            <div class="text-sm text-white/80 mb-2">Nuanced Judgment + Prose</div>
+            <ul class="text-xs text-white/60 space-y-1">
+              <li>• Ethical reasoning</li>
+              <li>• Narrative brief yang polished</li>
+              <li>• Creative inference</li>
+              <li>• Inline reasoning (integrated)</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-navy-900/50 rounded-lg">
+            <div class="font-mono text-xs text-indigo-400 mb-2">PASS 2 — GEMINI 2.5 PRO</div>
+            <div class="text-sm text-white/80 mb-2">Audit Trail + Logic Check</div>
+            <ul class="text-xs text-white/60 space-y-1">
+              <li>• Native thinking trace (explicit)</li>
+              <li>• Built-in evidence log</li>
+              <li>• Logic gap detection</li>
+              <li>• Defensible di commander review</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 

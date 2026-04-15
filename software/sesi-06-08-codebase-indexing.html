@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.8 | Codebase Indexing & RAG for Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }</script>
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --ai-color: #8b5cf6; }
+    * { box-sizing: border-box; } html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.07; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.03) 50%, transparent 100%); }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; } .code-block .fn { color: #60a5fa; } .code-block .str { color: #86efac; } .code-block .cm { color: #6b7280; font-style: italic; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #ec4899, #db2777); border-radius: 12px; font-weight: 600; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.08) 40%, transparent 100%); }
+    .ai-card { background: rgba(139,92,246,0.05); border: 1px solid rgba(139,92,246,0.35); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(236,72,153,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex items-center gap-2 text-white/60 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg><span class="text-sm">Modul 06</span></a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-pink-400 font-mono">SESI 6.8</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">60 Menit</span><span class="ml-2 px-2 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] font-mono rounded-full">DEEP</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-06-07-mcp-tooling.html" class="text-white/40 hover:text-white font-mono">← Sesi 6.7</a>
+        <a href="sesi-06-09-ai-workflow-capstone.html" class="text-pink-400 hover:text-pink-300 font-mono">Sesi 6.9 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav"><template x-for="i in 10" :key="i"><div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div></template></div>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6"><span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span><span class="text-xs font-mono text-pink-400 uppercase tracking-wider">Sesi 6.8 • Modul 06 Deep Dive</span></div>
+      <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">CODEBASE<br><span class="text-pink-400">INDEXING</span></h1>
+      <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">Bagaimana AI tools "understand" codebase besar — embeddings, semantic search, RAG pipeline, dan trade-off antara long-context vs retrieval.</p>
+      <a href="#" @click.prevent="goTo(1)" class="cta-primary">Mulai Sesi<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg></a>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12"><div class="font-mono text-xs text-pink-400 mb-2">LEARNING OBJECTIVES</div><h2 class="section-title">YANG AKAN<br><span class="text-pink-400">KAMU PAHAMI</span></h2></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🧬</div><h3 class="font-semibold mb-2">Embeddings Basics</h3><p class="text-sm text-white/60">Vector representation dari code/text, cosine similarity, dimension tradeoffs.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🔍</div><h3 class="font-semibold mb-2">Semantic Search</h3><p class="text-sm text-white/60">Query → embedding → nearest neighbor. Beyond grep/fulltext search.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">📥</div><h3 class="font-semibold mb-2">RAG for Code</h3><p class="text-sm text-white/60">Chunk, embed, retrieve, inject ke context window. Chunk strategy matters.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">⚖️</div><h3 class="font-semibold mb-2">Long Ctx vs Retrieval</h3><p class="text-sm text-white/60">1M token context vs 100K + RAG — kapan pilih yang mana.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">EMBEDDINGS:<br><span class="text-pink-400">CODE → VECTOR</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Embedding model mengkonversi text/code menjadi <strong class="text-white">vektor high-dimensional</strong> (misal 1536 dimensi). Kode dengan makna mirip = vektor yang berdekatan secara cosine similarity.</p>
+      <div class="glass-lit p-6 rounded-2xl">
+        <pre class="code-block"><span class="cm">// Compute embedding</span>
+<span class="kw">const</span> { embedding } = <span class="kw">await</span> openai.embeddings.<span class="fn">create</span>({
+  model: <span class="str">"text-embedding-3-small"</span>,
+  input: <span class="str">`
+    function calculateTotal(items) {
+      return items.reduce((sum, i) =&gt; sum + i.price, 0);
+    }
+  `</span>
+});
+
+<span class="cm">// embedding = [0.023, -0.041, 0.108, ..., 0.067]  // 1536 numbers</span>
+
+<span class="cm">// Similarity (cosine)</span>
+<span class="kw">function</span> <span class="fn">cosine</span>(a, b) {
+  <span class="kw">const</span> dot = a.<span class="fn">reduce</span>((s, v, i) =&gt; s + v * b[i], 0);
+  <span class="kw">const</span> magA = Math.<span class="fn">sqrt</span>(a.<span class="fn">reduce</span>((s, v) =&gt; s + v*v, 0));
+  <span class="kw">const</span> magB = Math.<span class="fn">sqrt</span>(b.<span class="fn">reduce</span>((s, v) =&gt; s + v*v, 0));
+  <span class="kw">return</span> dot / (magA * magB);  <span class="cm">// 1 = identical, 0 = unrelated</span>
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">RAG PIPELINE<br><span class="text-pink-400">FOR CODE</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Retrieval-Augmented Generation: index codebase sekali, retrieve relevant chunks per query, inject ke LLM context. Alternatif untuk codebase yang tidak muat long context.</p>
+      <div class="glass-lit p-6 rounded-2xl">
+        <pre class="code-block"><span class="cm"># Stage 1: Indexing (once)</span>
+1. Walk codebase, read files
+2. Chunk each file (by function/class, not fixed-size)
+3. For each chunk: compute embedding
+4. Store in vector DB: (chunk, embedding, metadata)
+
+<span class="cm"># Stage 2: Query (per user question)</span>
+1. User: <span class="str">"where is the auth middleware?"</span>
+2. Compute embedding of query
+3. Vector DB: nearest neighbor search (top-K)
+4. Retrieve K chunks (e.g., K=5)
+5. Inject chunks into LLM prompt as context
+6. LLM answers grounded in retrieved code</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">CHUNK<br><span class="text-pink-400">STRATEGY MATTERS</span></h2>
+      <p class="text-lg text-white/70 mb-6 max-w-3xl">Fixed-size chunks (e.g., 500 tokens) merusak semantik. Untuk code, lebih baik chunk berdasarkan <strong class="text-white">struktur AST</strong>: one function/class per chunk.</p>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-red-300 mb-2">❌ Naive Chunking</h3>
+          <pre class="code-block text-xs"><span class="cm">// Fixed 500-char chunks</span>
+chunk1: <span class="str">"...ay = 5;\n  const y = 10;\nfunction calcul..."</span>
+chunk2: <span class="str">"...ateTotal(items) {\n  return items.reduce..."</span>
+
+<span class="cm"># Function split across chunks!</span>
+<span class="cm"># Embedding can't capture full meaning.</span></pre>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-green-500">
+          <h3 class="font-semibold text-green-300 mb-2">✅ AST-Based Chunking</h3>
+          <pre class="code-block text-xs"><span class="cm">// One function per chunk</span>
+chunk1: {
+  path: <span class="str">"src/math.ts"</span>,
+  code: <span class="str">"function calculateTotal(items) {\n ... }"</span>,
+  symbol: <span class="str">"calculateTotal"</span>
+}
+
+<span class="cm"># Self-contained, meaningful embedding.</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">TRADEOFF</div>
+      <h2 class="section-title mb-8">LONG CONTEXT VS<br><span class="text-pink-400">RETRIEVAL</span></h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-t-4" style="border-top-color: #ec4899;">
+          <h3 class="font-semibold text-pink-300 mb-3">Long Context (1M tokens)</h3>
+          <p class="text-xs text-white/70 mb-2">✓ Full codebase visibility<br>✓ No chunking loss<br>✓ Cross-file reasoning<br>✗ Mahal per query<br>✗ Latency tinggi<br>✗ "Needle in haystack" issues</p>
+          <p class="text-xs text-white/50 mt-3">Best for: multi-file refactor, architectural questions, small-medium codebase.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-t-4" style="border-top-color: #8b5cf6;">
+          <h3 class="font-semibold text-violet-300 mb-3">Retrieval (RAG)</h3>
+          <p class="text-xs text-white/70 mb-2">✓ Murah (chunks saja)<br>✓ Scale ke huge codebase<br>✓ Low latency<br>✗ Chunk boundaries<br>✗ Cross-file reasoning limited<br>✗ Retrieval quality = gating factor</p>
+          <p class="text-xs text-white/50 mt-3">Best for: "find where X is done", isolated function edits, huge codebase.</p>
+        </div>
+      </div>
+      <div class="mt-6 glass p-4 rounded-xl border-l-4 border-cyan-500">
+        <strong class="text-cyan-300">💡 Hybrid approach:</strong> RAG to retrieve, then feed to long-context model untuk reasoning. Best of both — Claude Code dan Cursor sudah pakai pattern ini.
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>POWER PATTERNS</div>
+      <h2 class="section-title mb-6">3 INDEXING<br><span class="text-violet-400">WORKFLOW</span></h2>
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="text-lg">📂</span></div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1"><h3 class="font-semibold">Index Large Repo — Tool Choice</h3><span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">TOOLS</span></div>
+              <p class="text-sm text-white/60 mb-2">Options untuk index large repo: Sourcegraph Cody, Continue.dev, Cursor built-in, custom pgvector/Qdrant.</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor: built-in (automatic on open)</span>
+<span class="cm"># Cody: cloud, secure + enterprise</span>
+<span class="cm"># Continue.dev: open source, local</span>
+<span class="cm"># Custom: pgvector + LangChain + tree-sitter</span>
+
+<span class="cm"># Recommendation order (usually):</span>
+1. Cursor first (free, integrated)
+2. Cody for team/enterprise
+3. Custom only if you have unique constraints</pre>
+            </div>
+          </div>
+        </div>
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="text-lg">🔎</span></div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1"><h3 class="font-semibold">Query with Retrieval</h3><span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">QUERY</span></div>
+              <p class="text-sm text-white/60 mb-2">Natural-language query ke Cursor @codebase atau Claude Code — let the tool retrieve relevant chunks.</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor chat</span>
+@codebase Where is our rate limiting implemented?
+Walk me through the middleware chain for an authed request.
+
+<span class="cm"># Claude Code</span>
+Trace how a POST /api/upload request flows through our codebase.
+Include middleware order, validation, storage layer. Cite file:line.</pre>
+            </div>
+          </div>
+        </div>
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="text-lg">🔀</span></div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1"><h3 class="font-semibold">Hybrid: Retrieval + Long Context</h3><span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">HYBRID</span></div>
+              <p class="text-sm text-white/60 mb-2">Retrieve broad → feed to long-context → reason deep.</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code dengan Opus 1M context</span>
+First use retrieval to find all files related to "payment processing":
+- search for "payment", "charge", "stripe"
+- include middleware, routes, services, tests
+
+Then load these files into context and do a security audit:
+- webhook signature validation
+- idempotency keys
+- error handling on 3rd party failures
+- PII exposure in logs</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-violet-500/25 bg-violet-500/5 text-sm text-white/70">
+        <strong class="text-violet-300">⚠️ Pitfall:</strong> Retrieval quality sangat bergantung chunk boundaries. Untuk code, selalu pastikan tool pakai AST-aware chunking (function/class level), bukan fixed-size.
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">QUIZ</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-pink-400">PEMAHAMAN</span></h2>
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Kamu punya monorepo 2M+ LOC. Tim sering bertanya "di mana logic X diimplementasi?" Pendekatan paling scalable?</p>
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted &amp;&amp; quiz === 'a' }" @click="if (!submitted) quiz = 'a'"><span class="font-mono text-xs text-white/50 mr-2">A.</span> Pakai Claude Opus 1M context, load seluruh monorepo tiap query</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted &amp;&amp; quiz === 'b' }" @click="if (!submitted) quiz = 'b'"><span class="font-mono text-xs text-white/50 mr-2">B.</span> RAG dengan AST-aware chunking (Cursor/Cody indexed)</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted &amp;&amp; quiz === 'c' }" @click="if (!submitted) quiz = 'c'"><span class="font-mono text-xs text-white/50 mr-2">C.</span> grep + regex di CI</div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted &amp;&amp; quiz === 'd' }" @click="if (!submitted) quiz = 'd'"><span class="font-mono text-xs text-white/50 mr-2">D.</span> Manual documentation wiki</div>
+        </div>
+        <button @click="submitted = true" x-show="!submitted &amp;&amp; quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm"><strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong> Jawaban <strong>B</strong> — 2M LOC tidak muat dalam 1M token context (rata-rata 4 chars/token → ~500K tokens bisa muat, sisanya harus retrieval). RAG dengan AST chunking + Cursor/Cody paling scalable. grep (C) bagus untuk literal search tapi miss semantic.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">HANDS-ON • 20 MENIT</div>
+      <h2 class="section-title mb-8">LATIHAN<br><span class="text-pink-400">INDEX + QUERY</span></h2>
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Pakai <strong>Cursor codebase chat</strong> (atau Cody / Continue.dev) untuk query codebase favoritmu dengan 3 natural-language question. Evaluate: apakah retrieval akurat? Apakah chunk boundary natural?</p>
+        <div class="p-4 bg-violet-500/5 border border-violet-500/25 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🤖 QUERIES UNTUK DICOBA</div>
+          <pre class="code-block text-xs">1. "Where is the main authentication middleware?"
+2. "How does pagination work on our list endpoints?"
+3. "What does the payment webhook handler do
+    when Stripe signature validation fails?"
+
+Rubric:
+- Does the retrieved context actually answer the question?
+- Are the cited files/lines correct?
+- Any hallucinated file paths?
+- How does it compare to manual grep?</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-pink-400">TAKEAWAYS</span></h2>
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">🧬 Embeddings = meaning</div><div class="text-sm text-white/60">Vector proximity = semantic similarity.</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">📥 RAG for scale</div><div class="text-sm text-white/60">Index once, retrieve per query, cheap.</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500"><div class="text-lg font-semibold mb-1">🌲 AST-aware chunks</div><div class="text-sm text-white/60">Function/class boundaries, not fixed size.</div></div>
+        <div class="glass p-5 rounded-xl border-l-4 border-violet-500"><div class="text-lg font-semibold mb-1">🔀 Hybrid wins</div><div class="text-sm text-white/60">Retrieval → long context → deep reasoning.</div></div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-07-mcp-tooling.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Sesi 6.7: MCP Tooling</a>
+        <a href="sesi-06-09-ai-workflow-capstone.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">Sesi 6.9: Capstone →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+</body>
+</html>

@@ -762,6 +762,272 @@ VISUAL 3: SITREP VISUAL
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — CAPSTONE PHASE 2 EMBED -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">CAPSTONE PHASE 2 • GEMINI WORKFLOWS</div>
+        <h2 class="text-3xl font-bold mb-3">Full Visual-Audio Pipeline untuk Capstone</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Capstone Visual Package adalah kesempatan terbesar untuk aplikasikan <strong class="text-white">tiga tool Gemini sekaligus</strong>: Create Image (infografis & situational visual), Create Video (cinematic briefing elements), dan Create Music (audio scoring). End-to-end pipeline = briefing package level professional tanpa studio.</p>
+      </div>
+
+      <!-- EMBED 1: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Capstone Visual Assets — Hero, Situational, Infografis</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK CAPSTONE VISUAL</div>
+            <p class="text-sm text-white/70">Capstone butuh <strong class="text-white">visual hierarchy yang kuat</strong> — hero image untuk slide pembuka, situational illustrations untuk setiap scenario, dan infografis untuk data visualization. Create Image mengeksekusi semuanya dengan consistency yang sulit dicapai manual. Kunci: <strong class="text-white">define visual system sekali, apply consistent</strong> di semua asset.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Capstone Visual System</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Define visual system</strong> — color palette, style (flat/photorealistic), mood (serious/cinematic). Tulis sebagai reusable STYLE block.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Generate hero banner dulu</strong> — ini establishes tone. Iterate sampai Anda puas. Save reference prompt.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Situational illustrations</strong> — 3-5 image untuk scenario utama di capstone, apply SAME style block untuk consistency.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Infografis elements</strong> — icon set, abstract charts, map views. Same style.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">OPSEC watermark</strong> semua asset — "AI GENERATED • CAPSTONE TRAINING" di footer.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Capstone Visual System Block</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Capstone Visual System — gunakan block STYLE + CONSTRAINT yang sama di semua prompt]
+
+=== REUSABLE STYLE BLOCK ===
+Style: Modern military briefing aesthetic, cinematic professional tone. Flat vector illustration combined with subtle texture (NOT photorealistic, NOT cartoon). Color palette: dark navy background (#050810), indigo primary (#6366f1), cyan accent (#22d3ee), white labels, subtle amber for alert elements (#f59e0b). Clean professional look, no clutter, authoritative but approachable.
+
+=== REUSABLE CONSTRAINT BLOCK ===
+- NO specific country names, NO real geographic accuracy
+- NO realistic aircraft markings, NO identifiable unit insignia
+- NO text overlays (add manually in Slides)
+- Generic archipelago/coastal/maritime context only
+- Safe for training/internal briefing use
+- Watermark-friendly footer area
+
+=== ASSET 1: HERO BANNER ===
+SUBJECT: Abstract wide banner showing concentric radar/sonar visualization rings, subtle hexagonal grid overlay, minimal wireframe globe silhouette right side, dark sky gradient top half, data flow particles
+COMPOSITION: 5:1 aspect ratio, left 2/3 abstract viz, right 1/3 globe anchor
+[+ STYLE BLOCK + CONSTRAINT BLOCK]
+
+=== ASSET 2: SITUATIONAL MAP ===
+SUBJECT: Top-down tactical situational awareness map, generic archipelago, concentric detection range arcs, flight path indicators, zone labels placeholder
+COMPOSITION: 16:9, rule of thirds with focal zone left, legend bottom-right
+[+ STYLE BLOCK + CONSTRAINT BLOCK]
+
+=== ASSET 3: INFOGRAPHIC ELEMENTS ===
+SUBJECT: Set of 6 icons (radar, aircraft silhouette generic, shield, alert, chart, globe) arranged in grid, minimalist flat style
+COMPOSITION: 2x3 grid layout, each icon isolated on navy background
+[+ STYLE BLOCK + CONSTRAINT BLOCK]
+
+=== ASSET 4: SCENARIO ILLUSTRATION ===
+SUBJECT: [spesifik per scenario capstone Anda — abstract representasi situasi, NOT realistic]
+COMPOSITION: 16:9 storytelling composition
+[+ STYLE BLOCK + CONSTRAINT BLOCK]</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capstone Visual System</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Define once, reuse everywhere</strong> — STYLE + CONSTRAINT block sama di semua prompt = visual consistency.</li>
+              <li>• <strong class="text-white">Generate hero dulu</strong> — ini establishes everything else. Iterate sampai puas, lalu lock.</li>
+              <li>• <strong class="text-white">Abstract > realistic</strong> untuk capstone — lebih aman OPSEC, lebih professional, lebih fleksibel.</li>
+              <li>• <strong class="text-white">Icon set dalam 1 prompt</strong> — lebih cepat dan lebih konsisten dari generate 1 per 1.</li>
+              <li>• <strong class="text-white">Text manual di Slides</strong> — AI text rendering masih unreliable. Label di post-production.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CREATE VIDEO (SESI 6.5) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🎬</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.5 CREATE VIDEO</div>
+              <h3 class="text-lg font-semibold">Capstone Video Elements — Intro, Scenario, Transition</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK CAPSTONE</div>
+            <p class="text-sm text-white/70">Video element di capstone = <strong class="text-white">differentiator dari presentation biasa</strong>. Bukan sekadar dekorasi, tapi cinematic intro yang bawa audience ke scenario, atau terrain establishing yang memberi context visual. 3-4 video clip strategis (5-8 detik each) jauh lebih impactful dari 20 slide teks.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Capstone Video Elements</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi 3 video moments kritis</strong> — intro (slide 1), scenario establishing (mid), closing (slide akhir).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Match visual style dengan Create Image</strong> — color palette dan mood harus konsisten dengan asset Create Image.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate 2-3 variasi per clip</strong>, pick best, download MP4.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Insert ke Slides</strong> dengan auto-play + loop jika establishing, single-play jika dramatic moment.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Sync dengan audio</strong> dari Create Music (Embed 3) untuk immersive experience.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Capstone 3-Clip Set</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Generate 3 clips untuk capstone presentation]
+
+CLIP 1 — OPENING (30-45 seconds into presentation):
+Aerial wide shot of Indonesian archipelago at dawn, golden hour warm lighting, multiple tropical islands separated by shimmering sea, dramatic cumulus clouds, slow cinematic pan right across vast horizon. Peaceful but vigilant atmosphere. Deep sense of territorial space. Photorealistic, wide 16:9.
+
+CLIP 2 — SCENARIO ESTABLISHING (mid-presentation):
+Night aerial view over open ocean, countless stars visible above, subtle moonlight reflecting on water surface, distant cumulus clouds silhouetted, slow cinematic forward drift. Sense of vast darkness and watchfulness. Cool dark blue tones, atmospheric, cinematic depth. No aircraft or structures visible.
+
+CLIP 3 — CLOSING (penutup dramatic):
+Sunrise over tropical mountain range with mist filling valleys, first rays of sun breaking through clouds, hopeful yet solemn atmosphere, slow reveal camera pan. Golden orange warm tones gradually replacing darkness. Symbolism: vigilance through the night, hope with dawn. Cinematic, photorealistic.
+
+Technical requirements per clip:
+- Aspect ratio: 16:9
+- Duration: 5-8 seconds (Veo default)
+- Quality: cinematic, dramatic
+- NO military elements visible, NO text, NO realistic aircraft
+- Content filter safe: "aerial", "atmospheric", "cinematic" framing
+
+Generate 2-3 variations per clip. Select best.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capstone Video Elements</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">3 clip maksimal</strong> — lebih = distraksi dari content.</li>
+              <li>• <strong class="text-white">Intro + mid + closing</strong> = structural, bukan dekorasi.</li>
+              <li>• <strong class="text-white">Match dengan Create Image color palette</strong> untuk visual cohesion.</li>
+              <li>• <strong class="text-white">Auto-play + loop</strong> untuk background establishing, single-play untuk dramatic moment.</li>
+              <li>• <strong class="text-white">Test di projection room</strong> — video oke di laptop bisa berbeda di projector besar.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-05-create-video.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.5 — Create Video →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 3: CREATE MUSIC (SESI 6.6) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🎵</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.6 CREATE MUSIC</div>
+              <h3 class="text-lg font-semibold">Capstone Audio Scoring — Intro, Tension, Resolution</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK CAPSTONE</div>
+            <p class="text-sm text-white/70">Audio di capstone = <strong class="text-white">emotional arc</strong>. Intro score bawa audience masuk, tension music di scenario critical, resolution music di closing. Tidak perlu continuous audio (distraksi) — hanya strategic moments. 30-60 detik per cue, 3 cue total cukup.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Capstone Audio Scoring</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Map emotional arc presentasi</strong> — mana moment opening (serious), mana tension (urgency), mana resolution (hopeful).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Generate 3 audio cue</strong> dengan mood berbeda: authoritative opening, tense middle, hopeful closing.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Sync dengan video</strong> dari Create Video — intro audio bareng intro video, tension audio bareng scenario video.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Fade in/out wajib</strong> — audio harus masuk smooth, hilang sebelum narrative, jangan abrupt.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Test volume di real venue</strong> — audio terlalu keras = distraksi, terlalu pelan = tidak terdengar. Calibrate di tempat presentasi.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Capstone 3-Cue Audio Set</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Generate 3 audio cue untuk capstone]
+
+CUE 1 — OPENING (Authoritative Arrival):
+Style: Orchestral cinematic, professional military briefing tone
+Mood: Authoritative, serious, focused — commander arriving atmosphere
+Instruments: Strings (dominant), low brass (accent), minimal percussion
+Tempo: Slow-moderate (60-75 BPM)
+Structure: Subtle start (5s) → build to full (15s) → sustain (10s) → clean fade (5s)
+Duration: 30-40 seconds
+NO vocals, NO lyrics
+Purpose: Plays during opening hero video, fades as speaker begins
+
+CUE 2 — TENSION (Scenario Critical Moment):
+Style: Cinematic dramatic, escalating tension
+Mood: Urgent, high-stakes, decision-critical
+Instruments: Heavy low brass drones, staccato strings, electronic tension elements, subtle percussion
+Tempo: Moderate with irregular tension beats
+Structure: Cold open tension (10s) → building urgency (15s) → peak sustain (10s) → cliff drop (5s)
+Duration: 40-45 seconds
+NO melody, only texture and tension
+Purpose: Plays during critical scenario moment in middle of presentation
+
+CUE 3 — RESOLUTION (Hopeful Closing):
+Style: Cinematic inspirational, uplifting
+Mood: Resolution, hope, determination — "we have a path forward"
+Instruments: Piano intro, strings build, subtle choir or synth pads, light percussion
+Tempo: Moderate (80-90 BPM)
+Structure: Quiet piano open (5s) → strings join (10s) → full arrangement peak (15s) → gentle resolution (10s)
+Duration: 40-50 seconds
+NO vocals
+Purpose: Plays during closing slide, leaves audience with hopeful determination</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capstone Audio</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Emotional arc, bukan continuous</strong> — 3 strategic cue > continuous background.</li>
+              <li>• <strong class="text-white">Fade wajib</strong> — audio harus masuk smooth, keluar sebelum narrative, NEVER abrupt.</li>
+              <li>• <strong class="text-white">Sync dengan video</strong> — audio + video simultan = impact maksimal.</li>
+              <li>• <strong class="text-white">Test di venue aktual</strong> — volume dan akustik berbeda di setiap tempat.</li>
+              <li>• <strong class="text-white">Internal use = aman</strong> — capstone training = no copyright issue.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-06-create-music.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.6 — Create Music →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Capstone Phase 2 — Full Visual Package Pipeline</div>
+        <div class="grid md:grid-cols-5 gap-2 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE</div><div class="text-white/70">Visual narrative plan</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CREATE IMAGE</div><div class="text-white/70">Hero + situational + infografis</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CREATE VIDEO</div><div class="text-white/70">3 cinematic clips</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">4. CREATE MUSIC</div><div class="text-white/70">3 audio cue (emotional arc)</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">5. → PHASE 3</div><div class="text-white/70">COA Wargaming</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.4 | Debugging & Performance Profiling</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #6366f1; --ai-color: #ec4899; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.06; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.05) 40%, transparent 100%); }
+    .ai-card { background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.35); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(99,102,241,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-testing-quality.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-indigo-400 font-mono">SESI 3.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-mono rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-03-03-code-review.html" class="text-white/40 hover:text-white/60 font-mono">← Sesi 3.3</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-04-01-cicd-pipelines.html" class="text-indigo-400 hover:text-indigo-300 font-mono">Modul 04 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-indigo-400 uppercase tracking-wider">Sesi 3.4 • Modul 03 Testing</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          DEBUGGING &<br><span class="text-indigo-400">PROFILING</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Scientific debugging, git bisect, CPU flame graph. Stop "print statement" Whack-a-Mole — pakai metode yang reproducible.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-indigo-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-indigo-400">KAMU PAHAMI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🔬</div>
+          <h3 class="font-semibold mb-2">Scientific Method</h3>
+          <p class="text-sm text-white/60">Hypothesis → experiment → observation → conclusion. Bukan random guess.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🪓</div>
+          <h3 class="font-semibold mb-2">Git Bisect</h3>
+          <p class="text-sm text-white/60">Binary search commit history untuk menemukan regression dalam log(n) langkah.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🔥</div>
+          <h3 class="font-semibold mb-2">Flame Graph</h3>
+          <p class="text-sm text-white/60">Interpretasi CPU flame graph untuk identify hotspot dalam detik.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">💾</div>
+          <h3 class="font-semibold mb-2">Memory Profiler</h3>
+          <p class="text-sm text-white/60">Heap snapshot, retention graph, identifikasi leak di long-running service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — Scientific Debugging -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">SCIENTIFIC<br><span class="text-indigo-400">DEBUGGING METHOD</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Debugging bukan guesswork. Disiplin seperti scientific method: <strong class="text-white">satu hipotesis per eksperimen</strong>, catat hasil, ubah satu variabel saja.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="font-mono text-xs text-red-400 mb-3">❌ SHOTGUN DEBUGGING</div>
+          <pre class="code-block text-xs"><span class="cm">// Add console.log everywhere</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'here 1'</span>, x);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'here 2'</span>, y);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'wtf?'</span>, z);
+<span class="cm">// change 3 things at once</span>
+<span class="cm">// ¯\_(ツ)_/¯ it works now?</span></pre>
+          <p class="text-xs text-white/60 mt-3">Tidak tahu apa yang benar-benar memperbaikinya. Bug balik lagi minggu depan.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="font-mono text-xs text-green-400 mb-3">✅ SCIENTIFIC METHOD</div>
+          <pre class="code-block text-xs"><span class="cm">1. Observe: "Order total wrong"</span>
+<span class="cm">2. Reproduce: minimal case</span>
+<span class="cm">3. Hypothesis: "discount double-</span>
+<span class="cm">   applied when coupon + tier"</span>
+<span class="cm">4. Experiment: isolate one var</span>
+<span class="cm">5. Observe result</span>
+<span class="cm">6. Confirm / revise</span>
+<span class="cm">7. Write failing test</span>
+<span class="cm">8. Fix + test goes green</span></pre>
+          <p class="text-xs text-white/60 mt-3">Reproducible. Test melindungi dari regression.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-indigo-500">
+        <div class="text-xs font-mono text-indigo-400 mb-2">📝 RUBBER DUCK DEBUGGING</div>
+        <p class="text-sm text-white/70">Jelaskan problem ke seseorang (atau bebek karet) baris per baris. 70% bug ketemu hanya dari act of explaining — kamu dipaksa artikulasi asumsi yang selama ini implicit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — Git Bisect -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">GIT BISECT:<br><span class="text-indigo-400">BINARY SEARCH HISTORY</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        "Bug ini kapan mulainya?" — git bisect jawab ini dalam <strong class="text-white">log₂(n) langkah</strong>. 1024 commit = hanya 10 tes manual untuk nemu commit yang memperkenalkan bug.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-indigo-400 mb-3">MANUAL BISECT</div>
+        <pre class="code-block text-xs">$ git bisect start
+$ git bisect bad HEAD              <span class="cm"># known broken</span>
+$ git bisect good v2.3.0           <span class="cm"># last known good</span>
+
+<span class="cm"># Git checks out midpoint commit</span>
+<span class="cm"># You test manually or run the repro</span>
+$ git bisect good   <span class="cm"># or</span>
+$ git bisect bad
+
+<span class="cm"># Repeat. Git narrows down. Usually 5-12 iterations.</span>
+<span class="cm"># Git prints: "abc123def is the first bad commit"</span>
+
+$ git bisect reset</pre>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="font-mono text-xs text-indigo-400 mb-3">AUTOMATED BISECT (SUPER POWERFUL)</div>
+        <pre class="code-block text-xs">$ git bisect start HEAD v2.3.0
+$ git bisect run npm test -- --filter checkout
+<span class="cm"># Git auto-runs your test on each midpoint.</span>
+<span class="cm"># Walks away, comes back, answer ready.</span>
+
+<span class="cm"># Exit code semantics:</span>
+<span class="cm"># 0        = good</span>
+<span class="cm"># 1-124    = bad</span>
+<span class="cm"># 125      = skip (cannot test this commit)</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Profiling -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">PROFILING:<br><span class="text-indigo-400">FLAME GRAPH LITERACY</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Jangan optimize tanpa data. Profile dulu, baca flame graph, baru optimize hotspot yang terbukti. <strong class="text-white">"Premature optimization is the root of all evil" — Knuth</strong>.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="glass-lit p-5 rounded-2xl">
+          <h3 class="font-semibold mb-2">CPU Profilers</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• <code>perf</code> (Linux, kernel-level)</li>
+            <li>• <code>pprof</code> (Go, also multi-lang)</li>
+            <li>• <code>py-spy</code> (Python, sampling)</li>
+            <li>• Chrome DevTools Performance</li>
+            <li>• Node <code>--inspect</code></li>
+          </ul>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <h3 class="font-semibold mb-2">Memory Profilers</h3>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• Chrome heap snapshot</li>
+            <li>• Node <code>--inspect</code> + heap diff</li>
+            <li>• <code>memray</code> (Python)</li>
+            <li>• <code>valgrind --massif</code></li>
+            <li>• <code>jemalloc</code> stats</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl border-l-4 border-indigo-500">
+        <div class="font-mono text-xs text-indigo-400 mb-3">HOW TO READ A FLAME GRAPH</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• <strong>X-axis</strong> = frekuensi (lebar = % CPU yang dihabiskan). <strong>Bukan waktu</strong>.</li>
+          <li>• <strong>Y-axis</strong> = stack depth. Bawah = entry point, atas = leaf function.</li>
+          <li>• <strong>Warna</strong> = biasanya random (untuk kontras), bukan semantic</li>
+          <li>• <strong>Plateau lebar</strong> di atas = hot leaf. Itu optimization target.</li>
+          <li>• <strong>Plateau lebar</strong> di bawah = entry point hot. Cek caller pattern.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Comparison -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">SIDE-BY-SIDE</div>
+      <h2 class="section-title mb-8">GUESS VS<br><span class="text-indigo-400">MEASURE</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #ef4444;">
+          <div class="text-xs font-mono text-red-400 mb-3">❌ "FEELS SLOW" REFACTOR</div>
+          <pre class="code-block text-xs"><span class="cm">// Rewrite to "optimize"</span>
+<span class="cm">// - Replace map with for</span>
+<span class="cm">// - Cache intermediate results</span>
+<span class="cm">// - Add memoization everywhere</span>
+<span class="cm">// - 2 weeks of work</span>
+
+<span class="cm">// Result: 3% faster</span>
+<span class="cm">// Real bottleneck was N+1</span>
+<span class="cm">// query in a different file</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>• Effort di tempat salah</li>
+            <li>• Kode lebih komplex</li>
+            <li>• Real perf problem masih ada</li>
+          </ul>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-t-4" style="border-top-color: #10b981;">
+          <div class="text-xs font-mono text-green-400 mb-3">✅ PROFILE FIRST</div>
+          <pre class="code-block text-xs"><span class="cm">1. Run profiler under load</span>
+<span class="cm">2. Open flame graph</span>
+<span class="cm">3. Spot: 73% time in db.query</span>
+<span class="cm">4. Drill: called 1000x per req</span>
+<span class="cm">5. Root cause: N+1</span>
+<span class="cm">6. Fix: JOIN or batch</span>
+<span class="cm">7. Re-measure: 20x faster</span>
+<span class="cm">8. Commit + test + alert</span></pre>
+          <ul class="text-xs text-white/60 mt-3 space-y-1">
+            <li>• 2 jam kerja, dampak besar</li>
+            <li>• Data yang bicara</li>
+            <li>• Fix targeted</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">DEBUGGING<br><span class="text-pink-400">DENGAN AI TOOLS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        AI sangat bagus untuk <strong class="text-white">pattern matching stack trace</strong> dan <strong class="text-white">menjelaskan output profiler</strong>. Tapi kamu tetap driver — AI tidak punya konteks production lengkap.
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🧠</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Claude Code — Stack Trace Investigation</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CLAUDE CODE</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Paste stack trace dari Sentry/production log, minta Claude Code investigate di kodebase:</p>
+              <pre class="code-block text-xs"><span class="cm"># Claude Code prompt</span>
+Investigate this production stack trace:
+
+TypeError: Cannot read properties of undefined (reading 'total')
+  at calculateCheckout (src/checkout/service.ts:142:18)
+  at POST /api/checkout (src/api/checkout.ts:55:24)
+
+1. Find the exact code path in the repo
+2. Identify which input shape would trigger it
+3. Check if there's a test covering this path
+4. Propose a defensive fix + regression test</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">⚡</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Cursor Chat — Profiler Output Explainer</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">CURSOR</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Screenshot flame graph atau paste pprof text output ke Cursor Chat:</p>
+              <pre class="code-block text-xs"><span class="cm"># Cursor Chat prompt</span>
+Here is a pprof CPU profile for our API under 200 rps load.
+The top 3 self-time functions are:
+- regexp.(*Regexp).doMatch: 42%
+- encoding/json.Marshal: 18%
+- net/http.serveMux.Handler: 7%
+
+Explain what each means, identify the most likely root cause
+of the 42% regexp time, and suggest 3 targeted experiments
+to confirm before optimizing.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🤖</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Copilot — Perf Optimization Suggestion</h3>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-mono">COPILOT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Setelah identify hotspot, select function di editor, panggil Copilot:</p>
+              <pre class="code-block text-xs"><span class="cm"># Copilot Chat prompt</span>
+/optimize The selected function is a hot path (called 5000x/sec,
+currently 12ms per call). Suggest 3 optimization strategies from
+safest to most aggressive. For each, explain the complexity
+trade-off and show a before/after benchmark-ready snippet.
+Don't apply anything yet.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-pink-500/25 bg-pink-500/5 text-sm text-white/70">
+        <strong class="text-pink-300">⚠️ Pitfall:</strong> AI sering confident-hallucinate tentang perf characteristics ("ini O(n²)" padahal sebenarnya amortized O(1)). Selalu konfirmasi dengan benchmark sebelum commit.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-indigo-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Bug regression ditemukan di production. Last known good adalah 2 minggu yang lalu (≈500 commits). Apa pendekatan paling efisien untuk menemukan commit yang memperkenalkan bug?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Manual review satu per satu 500 commit — paling teliti
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'wrong': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Tanya tim siapa yang commit terakhir — biasanya mereka tahu
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'correct': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Git bisect dengan automated repro script — log₂(500) ≈ 9 iterasi
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Revert semua 500 commit sekaligus, lalu replay satu per satu
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'c' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'c' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>C</strong> — git bisect binary search hanya butuh ~9 iterasi untuk 500 commit. Kalau kamu punya repro script yang return exit code, <code>git bisect run</code> bahkan auto-menemukan commit penyebabnya. Manual review atau tanya tim tidak scale.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">HANDS-ON • 15 MENIT</div>
+      <h2 class="section-title mb-8">LATIHAN<br><span class="text-indigo-400">BISECT + PROFILE</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Di sandbox repo yang disediakan instruktur, ada 50 commit. Commit terakhir broken: test <code>checkout.test.ts</code> gagal. Gunakan <code>git bisect run</code> untuk menemukan commit yang memperkenalkan bug, lalu profile endpoint <code>/api/quote</code> pakai <code>autocannon</code> + <code>clinic flame</code>.</p>
+
+        <ol class="text-sm text-white/70 space-y-1 list-decimal pl-5 mb-4">
+          <li><code>git bisect start HEAD HEAD~50</code></li>
+          <li><code>git bisect run npm test -- checkout</code></li>
+          <li>Catat commit hash + diff yang bermasalah</li>
+          <li><code>npx clinic flame -- node server.js</code></li>
+          <li><code>autocannon -c 50 -d 20 http://localhost:3000/api/quote</code></li>
+          <li>Buka flame graph di browser, identifikasi hotspot teratas</li>
+        </ol>
+
+        <div class="p-4 bg-pink-500/5 border border-pink-500/25 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">🤖 AI PROMPT TEMPLATE</div>
+          <pre class="code-block text-xs">Walk me through using git bisect + clinic flame on this repo:
+1. Set up bisect with HEAD (bad) and HEAD~50 (good)
+2. Run automated bisect against `npm test -- checkout`
+3. Once bad commit is found, show the diff and explain the bug
+4. Then profile /api/quote under 50 concurrent clients
+5. Interpret the top 3 flame graph plateaus in plain language</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Recap -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-indigo-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-indigo-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🔬 Scientific method</div>
+          <div class="text-sm text-white/60">Hypothesis → experiment. Satu variabel per tes.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🪓 Git bisect</div>
+          <div class="text-sm text-white/60">Binary search commit history. log₂(n) langkah.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-indigo-500">
+          <div class="text-lg font-semibold mb-1">🔥 Profile, don't guess</div>
+          <div class="text-sm text-white/60">Flame graph dulu. Optimize hotspot yang terbukti.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 AI pattern match</div>
+          <div class="text-sm text-white/60">Stack trace, profiler output. Kamu yang verify.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-03-03-code-review.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 3.3: Code Review
+        </a>
+        <a href="sesi-04-01-cicd-pipelines.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-navy-900" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+          Modul 04: CI/CD Pipelines →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

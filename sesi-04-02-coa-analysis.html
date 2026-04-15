@@ -794,6 +794,230 @@ CAVEATS: [What to watch out for]</pre>
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk COA Analysis</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">COA analysis butuh dua pekerjaan komplementer: (1) <strong class="text-white">precedent research</strong> untuk cari COA historis yang pernah digunakan dalam situasi serupa, dan (2) <strong class="text-white">document drafting</strong> untuk COA comparison matrix dan final recommendation. Dua tool Gemini yang melengkapi Claude untuk keduanya.</p>
+      </div>
+
+      <!-- EMBED 1: DEEP RESEARCH (SESI 6.4) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">COA Precedent Research — Historical Analog dari OSINT</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COA ANALYSIS</div>
+            <p class="text-sm text-white/70">Sebelum Anda develop COA dari awal, selalu tanya: "pernah ada situasi serupa yang di-solve dengan COA tertentu?" — precedent research menghemat waktu dan menghindari reinventing wheel. Deep Research cocok untuk scan OSINT publik (doktrin terbuka, lessons learned, academic case studies) mencari <strong class="text-white">historical COA yang pernah digunakan</strong> untuk situasi serupa di kawasan atau dunia.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — COA Precedent Research</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Karakterisasi situasi</strong> secara struktural — apa trigger, apa constraint, apa decision space. Bukan deskripsi literal, tapi abstract pattern.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Submit Deep Research query</strong> untuk cari analog historis — "negara X di situasi mirip Y memilih COA Z dengan outcome W".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — pastikan agent mencari dari doctrine papers, case studies, not just news.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Extract COA pattern</strong> dari analog — apa COA yang digunakan, apa trade-off, apa outcome. Bukan copy literal tapi prinsip yang applicable.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Feed ke Claude COA analysis</strong> (sesi ini) — "berdasarkan 3 historical analog ini, apa COA yang Anda sarankan untuk situasi sekarang?".</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — COA Historical Analog</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Historical COA Analog untuk Decision Support
+
+Situational Pattern yang saya hadapi:
+[DESKRIPSI STRUKTURAL — contoh:
+- Decision context: airspace sovereignty challenge di FIR
+- Trigger: unidentified contact repeated incursion
+- Constraints: tidak ada escalation mandate, harus proportional response, coalition considerations
+- Decision space: from monitoring-only to visual identification to intercept-and-escort]
+
+Research Question:
+Cari 3-5 kasus historis (terdokumentasi public) di mana negara di kawasan Indo-Pasifik atau global menghadapi decision context serupa:
+
+Untuk setiap analog:
+1. Konteks situasi (negara, waktu, trigger)
+2. COA yang dipilih — deskripsi lengkap
+3. Alternatif COA yang dipertimbangkan (jika dokumentasi ada)
+4. Trade-off analysis yang dilakukan
+5. Outcome — apa yang terjadi sebagai konsekuensi
+6. Lessons learned / post-event reflection (jika ada)
+
+Sumber prioritas:
+- Doctrine papers dan military journals (Naval War College Review, Strategic Studies Quarterly)
+- Case study dari think tanks (CSIS, RAND, IISS, RUSI)
+- Academic publication pada military decision-making
+- Government after-action reports yang dipublikasikan
+
+Format output:
+- Executive summary dari trend pattern (apa yang sering jadi pilihan)
+- 5 detailed case analog dengan citation
+- Pattern extraction: COA apa yang cenderung succeed, apa yang fail
+- Applicability assessment: mana analog yang paling relevan dengan situasi saya, mana yang kurang relevan karena konteks berbeda
+
+Catatan: hanya sumber publik, hindari spekulasi. Label jika information unclear.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips COA Precedent Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Structural pattern > literal match</strong> — analog yang paling valuable biasanya dari context berbeda tapi structural similar.</li>
+              <li>• <strong class="text-white">Cari outcome data</strong> — analog tanpa outcome tidak berguna. Pastikan ada lessons learned atau post-event reflection.</li>
+              <li>• <strong class="text-white">Applicability bukan copy</strong> — extract prinsip, jangan copy COA literal. Context Anda berbeda.</li>
+              <li>• <strong class="text-white">Flag disanalogies</strong> — apa yang membedakan situasi Anda dari analog? Ini membantu tune COA ke context unique Anda.</li>
+              <li>• <strong class="text-white">Pipeline ke Canvas</strong> — temuan analog masuk ke COA comparison matrix di Canvas (Embed 2).</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">COA Comparison Matrix + Final Recommendation Document</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COA ANALYSIS</div>
+            <p class="text-sm text-white/70">COA document punya struktur standar (Problem Statement, COA 1/2/3, Comparison Matrix, Recommendation) dan <strong class="text-white">setiap COA sering di-refine terpisah</strong> saat komandan berikan feedback. Canvas memungkinkan Anda update deskripsi COA 2 tanpa mengubah COA 1 atau Comparison Matrix yang sudah final.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — COA Document di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Skeleton COA document</strong> — Problem Statement, Assumptions, COA 1, COA 2, COA 3, Comparison Matrix, Recommendation, Implementation.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Problem Statement dulu</strong> — 2-3 kalimat clear, measurable. Ini akan drive semua section turunan.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Develop COA satu per satu</strong> dengan struktur konsisten: Description, Required Resources, Timeline, Pros, Cons, Risk.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Generate Comparison Matrix</strong> — markdown table dengan kriteria (Feasibility, Acceptability, Suitability, Distinguishability, Completeness) per COA.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Recommendation section TERAKHIR</strong> — refer ke Matrix, jangan pre-commit sebelum analysis selesai.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Iterate per feedback</strong> — jika komandan minta revisi COA 2, highlight section COA 2 saja, preserve lain.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — COA Document Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas COA Analysis Document dengan struktur lengkap:
+
+Judul: COA Analysis — [ISI TOPIK]
+Classification: UNCLASSIFIED // FOR TRAINING ONLY
+Prepared by: [PLACEHOLDER]
+
+Struktur:
+
+1. PROBLEM STATEMENT (2-3 kalimat)
+   - Situation
+   - Objective
+   - Constraints
+
+2. ASSUMPTIONS (bullet list)
+   - Political
+   - Operational
+   - Resource
+   - Time-based
+
+3. COA 1: [NAMA SINGKAT]
+   3.1 Description (1 paragraf)
+   3.2 Required Resources (list)
+   3.3 Timeline (H+0 to H+72)
+   3.4 Pros (3-5 bullet)
+   3.5 Cons (3-5 bullet)
+   3.6 Key Risks
+   3.7 Historical Analog (jika ada — reference ke Deep Research)
+
+4. COA 2: [NAMA SINGKAT]
+   [Same structure as COA 1]
+
+5. COA 3: [NAMA SINGKAT]
+   [Same structure as COA 1]
+
+6. COMPARISON MATRIX (markdown table)
+   | Criteria | COA 1 | COA 2 | COA 3 |
+   |---|---|---|---|
+   | Feasibility | [score + justif] | [score + justif] | [score + justif] |
+   | Acceptability | [score + justif] | [score + justif] | [score + justif] |
+   | Suitability | [score + justif] | [score + justif] | [score + justif] |
+   | Distinguishability | [score + justif] | [score + justif] | [score + justif] |
+   | Completeness | [score + justif] | [score + justif] | [score + justif] |
+   | TOTAL | [weighted sum] | [weighted sum] | [weighted sum] |
+
+7. RECOMMENDATION
+   - Preferred COA: [COA X]
+   - Justification (refer to Matrix)
+   - Success criteria
+   - Decision authority needed
+
+8. IMPLEMENTATION
+   - Immediate actions (next 24h)
+   - Resource allocation
+   - Coordination requirements
+   - Review/checkpoint schedule
+
+Format: formal military Indonesia, siap cetak untuk briefing komandan.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips COA Document di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Problem Statement dulu</strong> — jika PS tidak clear, semua COA akan goyang.</li>
+              <li>• <strong class="text-white">Same structure per COA</strong> — comparability butuh format identik. Set template sekali, apply ke semua COA.</li>
+              <li>• <strong class="text-white">Recommendation terakhir</strong> — jangan pre-commit. Let the analysis drive the recommendation.</li>
+              <li>• <strong class="text-white">Matrix scoring transparan</strong> — setiap cell butuh justifikasi singkat, bukan angka mentah.</li>
+              <li>• <strong class="text-white">Reference Deep Research analog</strong> — section "Historical Analog" per COA = powerful defend.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 COA Analysis Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">1. DEEP RESEARCH</div><div class="text-white/70">Historical COA analog</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">2. CLAUDE (sesi ini)</div><div class="text-white/70">COA development + reasoning</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CANVAS</div><div class="text-white/70">Document + matrix + iterate</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. GOOGLE DOCS</div><div class="text-white/70">Final brief package</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

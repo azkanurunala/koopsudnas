@@ -779,6 +779,104 @@
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOW — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOW • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Create Image untuk Visual Intelligence Basics</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Prinsip visual yang Anda pelajari di sesi ini (hierarchy, contrast, alignment, repetition) harus diaplikasikan ketika Anda generate visual menggunakan AI. <strong class="text-indigo-300">Create Image</strong> (Imagen 4) adalah tool Gemini untuk image generation — bagaimana menulis prompt yang menghasilkan visual yang mengikuti prinsip-prinsip tersebut.</p>
+      </div>
+
+      <!-- EMBED: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group" open>
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Applied Visual Principles — Dari Teori ke Generated Image</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK VISUAL INTELLIGENCE</div>
+            <p class="text-sm text-white/70">Saat Anda perlu generate <strong class="text-white">ilustrasi, sketsa konsep, atau visual aid</strong> untuk dokumen intel yang tidak mungkin difoto (skenario hipotetik, doktrin abstrak, terrain generic). Create Image melalui Imagen 4 bisa produksi visual kualitas tinggi, tapi <strong class="text-white">prinsip visual dari sesi ini wajib diterapkan di prompt</strong> — AI tidak otomatis tahu apa yang "profesional" untuk konteks militer.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Apply Visual Principles di Prompt</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Definisikan visual hierarchy dulu</strong> — apa focal point, apa supporting, apa background. Tulis di prompt dengan kata eksplisit: "focal point", "foreground", "background".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Sebutkan contrast ratio</strong> — "high contrast between foreground subject and background" atau "subtle low-contrast monochromatic tones". AI ikuti arahan kontras ini.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Komposisi eksplisit</strong> — "rule of thirds with subject at right-third", "centered composition", "symmetric layout". Ini affect alignment di output.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Gaya visual konsisten</strong> — untuk set of images dalam 1 briefing, gunakan gaya visual yang sama ("cinematic photorealistic", "technical illustration style", "infographic flat design"). Repetition = consistency.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Iterate, jangan terima hasil pertama</strong> — generate 3-4 variasi, bandingkan dengan prinsip visual di sesi ini, pilih yang paling ikut prinsip (bukan yang paling "cantik").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">OPSEC check setiap output</strong> — jangan masukkan nama satuan, callsign, insignia, atau wajah personel real. Semua visual harus generic untuk training/briefing internal.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Visual Principle-Driven Image</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Contoh: Generate ilustrasi untuk konsep "Layered Air Defense"]
+
+A technical illustration showing a layered air defense concept.
+
+VISUAL HIERARCHY:
+- Focal point: central terrain cross-section view (archipelago coastline)
+- Foreground: three concentric defense layers (short/medium/long range) shown as subtle arcs
+- Background: sky gradient, dawn lighting
+
+CONTRAST:
+- High contrast between defense layer arcs (bright indigo/cyan) and muted terrain
+- Labels dark against light background areas
+
+COMPOSITION:
+- Horizontal rule of thirds — terrain fills bottom third, sky upper two thirds
+- Symmetric layering — defense arcs radiate from central point
+
+STYLE:
+- Clean technical infographic illustration style
+- No photorealism — flat vector-style with subtle gradient
+- Military briefing aesthetic — professional, authoritative
+- Color palette: navy blue, indigo, muted teal, white labels
+- NO specific unit insignia, NO national flags, NO identifiable locations
+
+TEXT OVERLAY (hints for where labels go, AI will approximate):
+- "Layer 1: Outer" in top-right area
+- "Layer 2: Middle" in middle area
+- "Layer 3: Inner" in bottom-center area
+
+Output aspect ratio: 16:9 (for briefing slide)
+Quality: high detail, suitable for projection</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Visual Principles di Imagen</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Text rendering masih lemah</strong> — AI image generator belum reliable render teks. Label text sebaiknya ditambahkan manual di Google Slides setelah generate, bukan dari prompt.</li>
+              <li>• <strong class="text-white">Consistency via repetition</strong> — untuk briefing dengan 5 visual, gunakan gaya persis sama ("technical illustration, flat vector, indigo palette") di semua prompt. Consistency = professional.</li>
+              <li>• <strong class="text-white">Hindari "military" kata langsung</strong> — Imagen content filter sensitif terhadap kata militer spesifik. Gunakan "defense concept", "aerial surveillance", "coastal patrol" daripada "military operation".</li>
+              <li>• <strong class="text-white">Prinsip visual trumps aesthetics</strong> — sering hasil yang "cantik" secara artistik tidak mengikuti hierarchy yang Anda butuhkan. Pilih yang paling ikut prinsip.</li>
+              <li>• <strong class="text-white">OPSEC non-negotiable</strong> — semua generated image = training purpose, harus generic. Jangan pernah input real unit name atau callsign ke prompt.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

@@ -1283,6 +1283,185 @@ Bahasa Indonesia formal.</pre>
     </div>
   </section>
 
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Pattern Recognition Intel</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Pattern recognition di Claude sangat kuat untuk reasoning dari data yang Anda bawa — tapi Gemini punya dua workflow yang powerful untuk dimensi lain: (1) <strong class="text-white">scanning OSINT publik</strong> mencari pola yang sama muncul di tempat lain, dan (2) <strong class="text-white">reasoning trace transparan</strong> untuk pattern yang ambiguous.</p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- EMBED 1: GEMINI DEEP RESEARCH (SESI 6.4) -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">OSINT Pattern Hunting — Scan Web untuk Pola yang Sama</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK PATTERN RECOGNITION</div>
+            <p class="text-sm text-white/70">Setelah Anda identifikasi pola di data lokal (via Claude di sesi ini), sering muncul pertanyaan berikutnya: <strong class="text-white">"pernah ada pola seperti ini di tempat lain?"</strong> — misal pola frekuensi sortie, timing exercise, signature komunikasi, atau tempo operasional. Deep Research adalah cara paling efektif untuk scan web publik mencari <strong class="text-white">historical analog</strong> atau <strong class="text-white">precedent</strong> pola tersebut, tanpa Anda harus buka satu per satu tab browser.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Pattern Cross-Reference</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Deskripsikan pola yang Anda temukan</strong> secara spesifik — bukan "ada pattern", tapi "frequency sortie meningkat 3x dalam window 72 jam menjelang aktivitas X". Spesifisitas = better pattern matching di web.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Buat Deep Research query</strong> untuk cari historical analog — "cari kasus di mana pola X terjadi, bagaimana follow-up-nya, apa outcome-nya".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — pastikan agent tidak terlalu sempit (hanya match literal) atau terlalu luas (kehilangan konteks).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Bandingkan historical analog dengan pola Anda</strong> — apa kesamaan dan perbedaannya? Analog memberikan <em>confidence booster</em> atau justru <em>counter-evidence</em>.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Tambahkan ke pattern assessment</strong> sebagai "corroboration" section — pola yang punya precedent punya confidence lebih tinggi dari pola yang first-seen.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Historical Pattern Analog</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Historical Analog untuk Pattern Berikut
+
+Pola yang saya amati di data lokal:
+[DESKRIPSI POLA — contoh:
+- Peningkatan frekuensi sortie air patrol dari baseline ~2/hari menjadi ~6/hari
+- Dalam window 72 jam
+- Diawali 1 event komunikasi-radio yang tidak biasa
+- Diikuti pergeseran posisi radar mobile]
+
+Pertanyaan riset:
+1. Apakah ada kasus historis terdokumentasi di kawasan Indo-Pasifik (2015-2024) di mana pola serupa muncul?
+2. Untuk setiap kasus yang ditemukan: apa konteks geopolitik/operasional saat itu? Apa follow-up yang terjadi (exercise, incident, normal ops)?
+3. Apakah pola ini biasanya precursor untuk kegiatan tertentu, atau apakah ini pola rutin yang disalahartikan?
+4. Sumber open-source mana (IISS, CSIS, Jane's, media internasional) yang paling sering melaporkan pola seperti ini?
+5. Apa indicator tambahan yang biasa muncul bersama pola ini di kasus historis?
+
+Format output:
+- Timeline 3-5 kasus historis paling relevan dengan citation
+- Tabel perbandingan: kasus historis vs pola yang saya amati (similarity + difference)
+- Confidence assessment: pola ini punya historical precedent atau first-of-kind
+- Indicator tambahan yang perlu di-collect untuk reduce uncertainty
+
+Scope: hanya open-source public. Jangan spekulasi tanpa dasar.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Pattern Hunting di Deep Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Deskripsi generik, bukan literal</strong> — jangan masukan nama unit/callsign nyata ke Deep Research. Deskripsikan pola secara struktural ("peningkatan sortie 3x dalam 72 jam" bukan "Skadron X bergerak").</li>
+              <li>• <strong class="text-white">Dua skenario, dua analog</strong> — kalau pola Anda bisa diinterpretasi 2 cara, minta analog untuk kedua interpretasi, lalu bandingkan.</li>
+              <li>• <strong class="text-white">Fresh eyes</strong> — jalankan Deep Research SEBELUM Anda finalize assessment Anda sendiri. Kalau run setelah, Anda cenderung konfirmasi bias.</li>
+              <li>• <strong class="text-white">Precedent ≠ kepastian</strong> — historical analog naikkan confidence tapi tidak pernah bikin 100%. Label tetap HIGH/MEDIUM/LOW.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- ======================================== -->
+      <!-- EMBED 2: GEMINI THINKING MODE (SESI 6.1) -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🧠</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.1 THINKING MODE</div>
+              <h3 class="text-lg font-semibold">Pattern Reasoning Trace — Untuk Pola yang Ambiguous</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK PATTERN RECOGNITION</div>
+            <p class="text-sm text-white/70">Saat pola yang Anda lihat <strong class="text-white">ambiguous</strong> — bisa diinterpretasi multiple way, confidence-nya di range MEDIUM, dan Anda butuh <strong class="text-white">reasoning trace transparan</strong> yang bisa di-review komandan. Gemini 2.5 Pro Thinking Mode menampilkan step-by-step reasoning eksplisit (di dalam <code class="bg-navy-900 px-1 rounded text-xs">&lt;thinking&gt;</code> tags) — bagus untuk pattern assessment yang perlu audit trail, bukan sekadar kesimpulan.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Reasoning Trace Pattern</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com</strong> → pilih model <strong class="text-indigo-300">Gemini 2.5 Pro</strong>. Thinking Mode hanya available di Pro, bukan Flash/Flash-Lite.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Struktur data pola</strong> dalam format yang rapi — tabel frekuensi, timeline, atau matrix relasi. Data yang rapi = reasoning yang lebih tajam.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Prompt dengan eksplisit "think step by step"</strong> dan minta pertimbangkan 3+ alternatif interpretasi sebelum ambil kesimpulan. Thinking Mode akan tampilkan trace reasoning lengkap.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Review reasoning trace</strong> — apakah AI pertimbangkan semua hipotesis? Apakah ada step yang lemah? Apakah kesimpulan follow dari reasoning atau lompat?</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Forward reasoning trace + kesimpulan ke komandan</strong> — komandan dapat audit trail yang bisa di-challenge di briefing, bukan black box.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Ambiguous Pattern Assessment</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Role: Senior Intelligence Analyst, Pamen Koopsudnas
+
+Task: Pattern Assessment dengan Reasoning Trace Transparan
+
+Data yang saya observe (period 72 jam):
+[ISI DATA — contoh tabel:
+Day 1: 4 sortie (baseline 2/hari), 3 radio check tidak biasa
+Day 2: 6 sortie, 1 radar mobile shift ke posisi baru
+Day 3: 5 sortie, komunikasi kembali normal, 1 aircraft tidak kembali ke base]
+
+Pertanyaan analitik:
+Apakah pola ini konsisten dengan (a) exercise rutin, (b) pre-positioning untuk kontingensi, atau (c) respons terhadap trigger eksternal yang belum saya ketahui?
+
+Instruksi reasoning:
+1. Pertimbangkan KETIGA hipotesis secara terpisah — tidak langsung pilih yang paling likely.
+2. Untuk setiap hipotesis: apa evidence yang support, apa evidence yang counter?
+3. Think step by step — tampilkan reasoning trace lengkap sebelum kesimpulan.
+4. Di akhir: rank ketiga hipotesis dengan confidence level + justifikasi.
+5. Identifikasi 3 data point tambahan yang akan paling membedakan antar hipotesis (collection requirements).
+
+Output format:
+- &lt;thinking&gt; [reasoning step-by-step, tampilkan alternatif yang dipertimbangkan]
+- Ranked hypotheses dengan confidence (HIGH/MEDIUM/LOW + justifikasi)
+- Collection requirements untuk reduce uncertainty
+- Satu paragraph assessment untuk komandan (non-teknikal)</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Thinking Mode untuk Pattern</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Reasoning trace ≠ ground truth</strong> — trace transparan adalah untuk <em>auditability</em>, bukan karena AI selalu benar. Review kritis.</li>
+              <li>• <strong class="text-white">Minta alternatif eksplisit</strong> — kalau tidak diminta, AI akan cenderung jump ke kesimpulan favorit. "Pertimbangkan 3 hipotesis sebelum pilih" = paksa kaliberasi.</li>
+              <li>• <strong class="text-white">Reasoning trace sebagai briefing backup</strong> — saat komandan challenge "kenapa Anda yakin X?", Anda punya trace reasoning yang bisa di-walk-through, bukan sekadar "AI bilang".</li>
+              <li>• <strong class="text-white">Kombinasikan dengan Claude</strong> — Claude punya ethical nuance yang lebih dalam; Gemini Thinking Mode punya reasoning trace lebih eksplisit. Dual-run untuk pola kritis.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-01-gemini-ecosystem.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.1 — Gemini Ecosystem (Thinking Mode) →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- ROUTING GUIDE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🎯 Pattern Recognition Tool Routing</div>
+        <div class="grid md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-teal-400 mb-1">CLAUDE (sesi ini)</div><div class="text-white/70">Primary pattern detection dari data yang Anda bawa, framework-driven</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-indigo-400 mb-1">GEMINI DEEP RESEARCH</div><div class="text-white/70">Cross-reference pola ke historical analog di web publik</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-indigo-400 mb-1">GEMINI THINKING MODE</div><div class="text-white/70">Reasoning trace untuk pola ambiguous yang butuh audit trail</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- GEMINI TOOLKIT — 6 TOOLS -->
   <section class="relative py-16 px-6 border-t border-white/5">
     <div class="max-w-6xl mx-auto">

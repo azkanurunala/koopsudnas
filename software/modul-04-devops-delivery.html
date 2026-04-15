@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 04 | DevOps & Delivery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #8b5cf6; --module-color-dark: #7c3aed; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--module-color); opacity: 0.12; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #ec4899; opacity: 0.06; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .module-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--module-color); text-transform: uppercase; letter-spacing: 0.1em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-color-dark)); border-radius: 12px; font-weight: 600; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(139,92,246,0.35); }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; text-decoration: none; transition: all 0.3s ease; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+    .session-card { position: relative; overflow: hidden; border-left: 3px solid var(--module-color); }
+    .session-card:hover { background: rgba(255,255,255,0.06); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 2000px; }
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Landing</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm"><span class="text-violet-400 font-mono">MODUL 04</span><span class="text-white/40 mx-2">•</span><span class="text-white/60">ADVANCED</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="modul-03-testing-quality.html" class="text-white/50 hover:text-white font-mono">← Modul 03</a>
+        <a href="modul-05-production-engineering.html" class="text-violet-400 hover:text-violet-300 font-mono">Modul 05 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative min-h-[70vh] flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-3 fade-in">
+          <div class="module-badge mb-6"><span class="status-dot"></span>MODUL 04 • ADVANCED</div>
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">DEVOPS<br><span class="text-violet-400">& DELIVERY</span></h1>
+          <p class="text-lg text-white/60 max-w-xl mb-8">Dari laptop ke produksi tanpa drama — <strong class="text-white">CI/CD pipelines</strong>, <strong class="text-white">containerization</strong> dengan Docker/Kubernetes, <strong class="text-white">Infrastructure as Code</strong> pakai Terraform, dan <strong class="text-white">observability</strong> yang actionable.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#sessions" class="cta-primary">Mulai Sesi 4.1<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <a href="#overview" class="cta-secondary">Learning Objectives</a>
+          </div>
+        </div>
+        <div class="lg:col-span-2 fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-6 rounded-2xl">
+            <div class="text-xs font-mono text-violet-400 mb-4">MODULE INFO</div>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm"><span class="text-white/50">Durasi total</span><span>~5 jam</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Jumlah sesi</span><span>4 sesi</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Hands-on exercise</span><span>4 latihan</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">AI-Assisted slide</span><span class="text-pink-400">✓ Setiap sesi</span></div>
+              <div class="flex justify-between text-sm"><span class="text-white/50">Level</span><span>Advanced</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-violet-400">KAMU KUASAI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">⚙️</div><h3 class="font-semibold mb-2">CI/CD Pipelines</h3><p class="text-sm text-white/60">GitHub Actions, GitLab CI, build/test/deploy stages, secrets management, cache strategies.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🐳</div><h3 class="font-semibold mb-2">Containers & K8s</h3><p class="text-sm text-white/60">Dockerfile best practice, multi-stage builds, Kubernetes basics, Helm, health checks.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">🏛️</div><h3 class="font-semibold mb-2">Infrastructure as Code</h3><p class="text-sm text-white/60">Terraform state, modules, GitOps workflow, Pulumi as alternative, drift detection.</p></div>
+        <div class="glass-lit p-6 rounded-2xl"><div class="text-3xl mb-3">📊</div><h3 class="font-semibold mb-2">Observability</h3><p class="text-sm text-white/60">Logs + metrics + traces (3 pillars), SLOs & error budgets, alerting discipline.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="module-badge inline-flex mb-4"><span class="status-dot"></span>4 SESI INTERAKTIF</div>
+        <h2 class="section-title">SESI DI<br><span class="text-violet-400">MODUL 04</span></h2>
+      </div>
+      <div class="space-y-6" x-data="{ open: 0 }">
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 1 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-violet-400">4.1</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-violet-500/20 text-violet-300 text-[10px] font-mono rounded">PRAKTIK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">CI/CD Pipelines: GitHub Actions & GitLab CI</h3>
+                <p class="text-sm text-white/60">Design pipeline yang cepat, reproducible, dan safe. Secrets management, caching, matrix builds.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-04-01-cicd-pipelines.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 1 ? 0 : 1" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 1 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 1 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-violet-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Build → test → scan → deploy stages</li><li>• Matrix builds & parallelization</li><li>• Secrets & OIDC for cloud deploys</li><li>• Cache invalidation strategies</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk generate workflow YAML</li><li>• Cursor untuk debug failing pipeline</li><li>• Copilot untuk scaffold reusable actions</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 2 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-violet-400">4.2</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-violet-500/20 text-violet-300 text-[10px] font-mono rounded">PRAKTIK</span><span class="text-xs text-white/40">~75 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Containers & Kubernetes Basics</h3>
+                <p class="text-sm text-white/60">Dockerfile best practices, multi-stage builds, K8s deployment/service/ingress, Helm.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-04-02-containers-orchestration.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 2 ? 0 : 2" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 2 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 2 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-violet-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Dockerfile: layers, cache, multi-stage</li><li>• K8s primitives: Pod/Deploy/Service/Ingress</li><li>• ConfigMap, Secret, health probes</li><li>• Helm charts untuk packaging</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk generate optimized Dockerfile</li><li>• Cursor untuk scaffold K8s manifests dari app</li><li>• Copilot untuk Helm values template</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 3 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-violet-400">4.3</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-violet-500/20 text-violet-300 text-[10px] font-mono rounded">PRAKTIK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Infrastructure as Code: Terraform & GitOps</h3>
+                <p class="text-sm text-white/60">Terraform state, modules, GitOps workflow, drift detection, dan Pulumi sebagai alternatif.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-04-03-infrastructure-as-code.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 3 ? 0 : 3" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 3 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 3 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-violet-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Terraform state management (remote, locking)</li><li>• Modules & reusable composition</li><li>• GitOps (ArgoCD, Flux)</li><li>• Policy as Code (OPA, Sentinel)</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk generate Terraform module</li><li>• Cursor untuk convert cloud console → IaC</li><li>• Copilot untuk Terraform linting & refactor</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="session-card glass-lit p-6 rounded-2xl" :class="{ 'bg-white/5': open === 4 }">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0"><span class="font-display text-xl text-violet-400">4.4</span></div>
+              <div>
+                <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-violet-500/20 text-violet-300 text-[10px] font-mono rounded">FRAMEWORK</span><span class="text-xs text-white/40">~60 menit</span></div>
+                <h3 class="text-xl font-semibold mb-1">Observability: Logs, Metrics, Traces, SLOs</h3>
+                <p class="text-sm text-white/60">3 pillars observability, SLO & error budget, alerting discipline, OpenTelemetry.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a href="sesi-04-04-observability.html" class="cta-primary text-sm !py-2 !px-4">Buka Sesi →</a>
+              <button @click="open = open === 4 ? 0 : 4" class="p-2 rounded-lg bg-white/5 hover:bg-white/10"><svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open === 4 }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+            </div>
+          </div>
+          <div class="accordion-content" :class="{ 'open': open === 4 }">
+            <div class="pt-6 mt-6 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm">
+              <div><div class="text-violet-400 font-mono text-xs mb-2">KEY TOPICS</div><ul class="text-white/60 space-y-1"><li>• Structured logging</li><li>• Prometheus metrics + Grafana</li><li>• Distributed tracing (OTel, Jaeger)</li><li>• SLO, SLI, error budget policy</li></ul></div>
+              <div><div class="text-pink-400 font-mono text-xs mb-2">🤖 AI-ASSISTED WORKFLOW</div><ul class="text-white/60 space-y-1"><li>• Claude Code untuk instrument code dengan OTel</li><li>• Cursor untuk generate dashboard JSON</li><li>• Copilot untuk alert rules yang sane</li></ul></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-03-testing-quality.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">← Modul 03: Testing & Quality</a>
+        <a href="modul-05-production-engineering.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Modul 05: Production Engineering →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>

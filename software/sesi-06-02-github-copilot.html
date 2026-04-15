@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.2 | GitHub Copilot Mastery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = { theme: { extend: { colors: { 'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' } }, fontFamily: { display: ['Bebas Neue', 'sans-serif'], body: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --module-color: #ec4899; --module-dark: #db2777; --ai-color: #8b5cf6; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 10s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--module-color); opacity: 0.1; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: var(--ai-color); opacity: 0.08; animation-delay: -4s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.06); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(236,72,153,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--module-color), var(--ai-color)); z-index: 100; transition: width 0.2s ease; }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(236,72,153,0.03) 50%, transparent 100%); }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: none; flex-direction: column; gap: 10px; }
+    @media (min-width: 1024px) { .slide-nav { display: flex; } }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.5); }
+    .slide-nav-dot.active { background: var(--module-color); box-shadow: 0 0 12px var(--module-color); transform: scale(1.3); }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: 0.05em; line-height: 1; }
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #60a5fa; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #6b7280; font-style: italic; }
+
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--module-color), var(--module-dark)); border-radius: 12px; font-weight: 600; color: #ffffff; transition: all 0.3s ease; text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.35); }
+
+    .ai-slide { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.08) 40%, transparent 100%); }
+    .ai-card { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.35); border-radius: 16px; padding: 1.25rem; }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.4); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ai-color); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .quiz-option { display: block; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px; font-size: 0.9rem; }
+    .quiz-option:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+    .quiz-option.selected { border-color: var(--module-color); background: rgba(236,72,153,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+  </style>
+</head>
+<body x-data="{ progress: 0, currentSlide: 0, quiz: null, submitted: false, init() { window.addEventListener('scroll', () => { const h = document.documentElement; this.progress = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100); const slides = document.querySelectorAll('.slide-section'); slides.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) this.currentSlide = i; }); }); }, goTo(i) { document.querySelectorAll('.slide-section')[i]?.scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-ai-assisted-development.html" class="flex items-center gap-2 text-white/60 hover:text-white">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-pink-400 font-mono">SESI 6.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] font-mono rounded-full">TOOL</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="sesi-06-01-ai-coding-landscape.html" class="text-white/40 hover:text-white/60 font-mono hidden sm:inline">← Sesi 6.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-03-cursor.html" class="text-pink-400 hover:text-pink-300 font-mono">Sesi 6.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="slide-nav">
+    <template x-for="i in 10" :key="i">
+      <div class="slide-nav-dot" :class="{ 'active': currentSlide === i - 1 }" @click="goTo(i - 1)"></div>
+    </template>
+  </div>
+
+  <!-- Slide 1: Title -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+          <span class="text-xs font-mono text-pink-400 uppercase tracking-wider">Sesi 6.2 • GitHub Copilot</span>
+        </div>
+        <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none mb-6">
+          COPILOT<br><span class="text-pink-400">MASTERY</span>
+        </h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          Autocomplete strategies, prompt-in-comments, Chat commands, dan Copilot Workspace agents. Dari ghost-text ke multi-file agent dalam satu sesi.
+        </p>
+        <a href="#" @click.prevent="goTo(1)" class="cta-primary">
+          Mulai Sesi
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Learning Objectives -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="text-center mb-12">
+        <div class="font-mono text-xs text-pink-400 mb-2">LEARNING OBJECTIVES</div>
+        <h2 class="section-title">YANG AKAN<br><span class="text-pink-400">KAMU KUASAI</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">💡</div>
+          <h3 class="font-semibold mb-2">Autocomplete Strategy</h3>
+          <p class="text-sm text-white/60">Prompt-in-comment pattern, nama file sebagai context, dan teknik "mengarahkan" ghost-text.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">💬</div>
+          <h3 class="font-semibold mb-2">Copilot Chat</h3>
+          <p class="text-sm text-white/60">Slash commands (/explain, /fix, /tests), #file references, workspace scope.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">🤖</div>
+          <h3 class="font-semibold mb-2">Copilot Workspace</h3>
+          <p class="text-sm text-white/60">Task → spec → plan → code flow untuk feature development agen-style.</p>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-3xl mb-3">⚙️</div>
+          <h3 class="font-semibold mb-2">Custom Instructions</h3>
+          <p class="text-sm text-white/60">.github/copilot-instructions.md untuk inject team conventions ke setiap prompt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Concept — Autocomplete -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 1/3</div>
+      <h2 class="section-title mb-8">AUTOCOMPLETE:<br><span class="text-pink-400">PROMPT-IN-COMMENTS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Copilot inline completion membaca <strong class="text-white">konteks sekitar cursor</strong> — comment, nama variabel, imports, function signature. Gunakan comment sebagai prompt untuk mendapatkan suggestion yang akurat.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="font-mono text-xs text-red-400 mb-3">❌ VAGUE CONTEXT</div>
+          <pre class="code-block"><span class="cm">// sort</span>
+<span class="kw">function</span> <span class="fn">sortItems</span>(items) {
+  <span class="cm">// cursor here</span>
+}</pre>
+          <p class="text-xs text-white/60 mt-3">Copilot tidak tahu: sort by apa? ascending? tipe items apa?</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="font-mono text-xs text-green-400 mb-3">✅ PROMPT-IN-COMMENT</div>
+          <pre class="code-block"><span class="cm">// Sort products by createdAt DESC,</span>
+<span class="cm">// tie-break by priority DESC.</span>
+<span class="cm">// Return new array, don't mutate.</span>
+<span class="kw">function</span> <span class="fn">sortProducts</span>(products: Product[]) {
+  <span class="cm">// cursor here — Copilot knows exactly what to do</span>
+}</pre>
+          <p class="text-xs text-white/60 mt-3">Intent + sort keys + immutability + tipe. Suggestion langsung akurat.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 glass p-5 rounded-xl border-l-4 border-pink-500">
+        <div class="text-xs font-mono text-pink-400 mb-2">📝 AUTOCOMPLETE TIPS</div>
+        <ul class="text-sm text-white/70 space-y-1">
+          <li>• <strong>File name matters</strong>: <code>user-repository.ts</code> biases Copilot to DB patterns</li>
+          <li>• <strong>Imports first</strong>: import libs yang kamu mau (e.g. <code>zod</code>) — Copilot akan pakai</li>
+          <li>• <strong>Accept partial</strong>: Tab untuk full, Ctrl+→ untuk per-word, esc untuk reject</li>
+          <li>• <strong>Cycle suggestions</strong>: Alt+] untuk lihat alternative</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Concept — Chat & Commands -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 2/3</div>
+      <h2 class="section-title mb-8">COPILOT CHAT<br><span class="text-pink-400">& SLASH COMMANDS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Chat panel menjadi "second brain". Gunakan slash commands untuk task umum, <code>#file:</code> dan <code>@workspace</code> untuk scope context dengan presisi.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">CORE SLASH COMMANDS</div>
+        <pre class="code-block"><span class="cm"># Penjelasan</span>
+/explain          <span class="cm">-- jelaskan selected code / file saat ini</span>
+/fix              <span class="cm">-- perbaiki bug/warning di selection</span>
+/tests            <span class="cm">-- generate unit tests untuk selection</span>
+/doc              <span class="cm">-- tambah JSDoc/docstring</span>
+/optimize         <span class="cm">-- perbaiki performance</span>
+/new              <span class="cm">-- scaffold project/file baru</span>
+
+<span class="cm"># Scope references</span>
+#file:path/to/x.ts    <span class="cm">-- include file sebagai context</span>
+#selection            <span class="cm">-- gunakan text yang di-highlight</span>
+@workspace            <span class="cm">-- scope ke seluruh workspace</span>
+@terminal             <span class="cm">-- interpret output terminal</span></pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-pink-400 mb-2">DAILY BREAD</div>
+          <p class="text-sm text-white/70"><code>/tests</code> setelah tulis function, <code>/fix</code> untuk error, <code>/explain</code> untuk legacy code.</p>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">POWER USER</div>
+          <p class="text-sm text-white/70"><code>@workspace</code> untuk pertanyaan arsitektur, <code>#file:</code> chain untuk cross-file refactor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Concept — Workspace & Agents -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">KONSEP 3/3</div>
+      <h2 class="section-title mb-8">COPILOT WORKSPACE<br><span class="text-pink-400">& AGENTS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Copilot Workspace = <strong class="text-white">task-to-PR flow</strong>. Kamu kasih task (bisa dari issue GitHub), Copilot generate spec → plan → code → test → PR draft. Kamu review setiap tahap.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">WORKSPACE FLOW</div>
+        <pre class="code-block"><span class="kw">1. TASK</span>     → <span class="str">"Add dark mode toggle to settings page"</span>
+<span class="kw">2. SPEC</span>     → Copilot drafts: user stories, acceptance criteria
+<span class="kw">3. PLAN</span>     → file-by-file changes proposed (you edit)
+<span class="kw">4. CODE</span>     → implementation per file (you review)
+<span class="kw">5. TEST</span>     → tests auto-generated
+<span class="kw">6. PR</span>       → draft PR created, you polish &amp; merge</pre>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🎯</div>
+          <h3 class="font-semibold mb-2">Best For</h3>
+          <p class="text-xs text-white/60">Well-defined feature, bug dari issue tracker, boilerplate scaffolding.</p>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">⚠️</div>
+          <h3 class="font-semibold mb-2">Not For</h3>
+          <p class="text-xs text-white/60">Task exploratory, refactor arsitektur, debugging kompleks yang butuh interaksi cepat.</p>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="text-2xl mb-2">🧠</div>
+          <h3 class="font-semibold mb-2">Human Role</h3>
+          <p class="text-xs text-white/60">Review spec, revise plan, verify tests — kamu tetap decision-maker.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Live Demo Walkthrough -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">LIVE DEMO</div>
+      <h2 class="section-title mb-8">FROM ZERO<br><span class="text-pink-400">TO TESTED FEATURE</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="font-mono text-xs text-pink-400 mb-3">STEP-BY-STEP</div>
+        <pre class="code-block"><span class="cm"># 1. Prompt-in-comment untuk scaffold</span>
+<span class="cm">// Create an Express route POST /api/orders</span>
+<span class="cm">// - Validate body with zod schema (items, email)</span>
+<span class="cm">// - Call orderService.create()</span>
+<span class="cm">// - Return 201 with order JSON, 400 on invalid</span>
+
+<span class="cm"># 2. Copilot generates handler — accept with Tab</span>
+
+<span class="cm"># 3. Select handler, open chat, /tests</span>
+/tests Generate Vitest tests covering happy path, invalid body,
+and service failure. Use supertest for integration.
+
+<span class="cm"># 4. Run tests, fix with /fix</span>
+/fix The "invalid email" test is failing — the zod schema needs
+a proper email validator.
+
+<span class="cm"># 5. Ask for docs</span>
+/doc Add JSDoc with @param, @returns, @throws</pre>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl border-l-4 border-green-500">
+          <div class="text-xs font-mono text-green-400 mb-2">✅ WHAT WORKED</div>
+          <p class="text-sm text-white/70">Comment spec → accurate handler in 1 tab. Tests generated cover edge cases. Flow ~5 menit untuk feature yang biasanya 30 menit.</p>
+        </div>
+        <div class="glass p-4 rounded-xl border-l-4 border-amber-500">
+          <div class="text-xs font-mono text-amber-400 mb-2">⚠️ WHAT TO WATCH</div>
+          <p class="text-sm text-white/70">Copilot kadang invent import yang tidak ada. Selalu check imports, lint sebelum commit, run tests.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: AI-Assisted Workflow -->
+  <section class="slide-section ai-slide">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="ai-badge mb-4"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>AI-ASSISTED WORKFLOW</div>
+      <h2 class="section-title mb-6">COPILOT<br><span class="text-violet-400">POWER PATTERNS</span></h2>
+
+      <p class="text-lg text-white/70 mb-8 max-w-3xl">
+        Tiga pola power-user yang bikin Copilot terasa 3x lebih powerful dari default "autocomplete only".
+      </p>
+
+      <div class="space-y-4">
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">📂</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Multi-File Edit via Chat</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">COPILOT CHAT</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Chain <code>#file:</code> references untuk refactor yang span banyak file:</p>
+              <pre class="code-block text-xs"><span class="cm"># Copilot Chat — multi-file refactor</span>
+I need to add a `deletedAt` soft-delete column across these files.
+Update all of them consistently:
+#file:src/db/schema.ts #file:src/services/user.ts
+#file:src/routes/users.ts #file:tests/user.test.ts
+
+For each file: add the field, update queries to filter deleted,
+add tests. Show me each file as a separate code block.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">🧪</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">TDD Loop dengan Copilot</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">TDD</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Tulis test dulu, biarkan Copilot implement sampai hijau:</p>
+              <pre class="code-block text-xs"><span class="cm"># 1. Write failing test first</span>
+<span class="cm">// describe('calculatePricing', () =&gt; {</span>
+<span class="cm">//   it('applies 10% discount for GOLD tier', ...)</span>
+
+<span class="cm"># 2. Open implementation file, chat prompt:</span>
+/fix Implement calculatePricing() so that the test in
+#file:pricing.test.ts passes. Don't change the test. Keep the
+function pure, no side effects. Add types.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">📜</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold">Custom Instructions (.github/copilot-instructions.md)</h3>
+                <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono">TEAM CONVENTIONS</span>
+              </div>
+              <p class="text-sm text-white/60 mb-2">Inject team conventions otomatis ke setiap prompt Copilot:</p>
+              <pre class="code-block text-xs"><span class="cm"># .github/copilot-instructions.md</span>
+# Project Conventions
+
+- Language: TypeScript strict mode, no `any`
+- Validation: zod for all external input
+- Testing: Vitest, file-per-module, `describe` block per function
+- Errors: Custom error classes extending AppError (see src/errors.ts)
+- Imports: absolute paths from `@/` alias
+- Database: Drizzle ORM, transactions for multi-write operations
+
+Always follow these when suggesting code.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-violet-500/35 bg-violet-500/5 text-sm text-white/70">
+        <strong class="text-violet-300">🔑 Pro tip:</strong> Custom instructions adalah force-multiplier. Sekali setup, setiap Copilot suggestion otomatis "paham" team conventions tanpa kamu ulang-ulang jelaskan.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Quiz -->
+  <section class="slide-section">
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">QUIZ • VALIDATE</div>
+      <h2 class="section-title mb-8">TEST<br><span class="text-pink-400">PEMAHAMAN</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <p class="text-lg mb-6">Tim kamu ingin memastikan Copilot selalu suggest code yang pakai zod untuk validasi dan Vitest untuk test — tanpa harus ingatkan di setiap chat. Cara terbaik?</p>
+
+        <div class="space-y-2">
+          <div class="quiz-option" :class="{ 'selected': quiz === 'a', 'wrong': submitted && quiz === 'a' }" @click="if (!submitted) quiz = 'a'">
+            <span class="font-mono text-xs text-white/50 mr-2">A.</span> Tulis comment "gunakan zod dan vitest" di setiap file
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'b', 'correct': submitted && quiz === 'b' }" @click="if (!submitted) quiz = 'b'">
+            <span class="font-mono text-xs text-white/50 mr-2">B.</span> Buat <code>.github/copilot-instructions.md</code> yang mencantumkan konvensi tim
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'c', 'wrong': submitted && quiz === 'c' }" @click="if (!submitted) quiz = 'c'">
+            <span class="font-mono text-xs text-white/50 mr-2">C.</span> Ganti ke Cursor karena support .cursorrules
+          </div>
+          <div class="quiz-option" :class="{ 'selected': quiz === 'd', 'wrong': submitted && quiz === 'd' }" @click="if (!submitted) quiz = 'd'">
+            <span class="font-mono text-xs text-white/50 mr-2">D.</span> Selalu awali chat prompt dengan "use zod and vitest"
+          </div>
+        </div>
+
+        <button @click="submitted = true" x-show="!submitted && quiz" class="mt-6 cta-primary">Submit Jawaban</button>
+
+        <div x-show="submitted" x-cloak class="mt-6 p-4 rounded-xl" :class="quiz === 'b' ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+          <p class="text-sm">
+            <strong x-text="quiz === 'b' ? '✅ Benar!' : '❌ Kurang tepat.'"></strong>
+            Jawabannya <strong>B</strong> — <code>.github/copilot-instructions.md</code> di-read otomatis oleh Copilot Chat dan di-inject ke setiap prompt. Satu kali setup, seluruh tim dapat manfaat. Opsi A dan D bisa dilupakan; opsi C mengganti tool bukan solusinya.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Hands-On -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">HANDS-ON • 15 MENIT</div>
+      <h2 class="section-title mb-8">BUILD<br><span class="text-pink-400">CRUD ENDPOINT</span></h2>
+
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">📝 Task</h3>
+        <p class="text-white/70 mb-4">Pakai Copilot untuk build endpoint <code>POST /api/products</code> end-to-end: route → validation → service → test. Target &lt; 15 menit.</p>
+
+        <pre class="code-block mb-4"><span class="cm"># Steps</span>
+
+<span class="kw">1.</span> Buat file <span class="str">src/routes/products.ts</span>
+<span class="kw">2.</span> Tulis comment spec di atas, biarkan Copilot generate handler
+<span class="kw">3.</span> Open chat, <span class="fn">/tests</span> untuk generate Vitest file
+<span class="kw">4.</span> Run tests, pakai <span class="fn">/fix</span> untuk error apapun
+<span class="kw">5.</span> Pakai <span class="fn">/doc</span> tambah JSDoc
+<span class="kw">6.</span> Commit dengan pesan yang di-generate Copilot via chat</pre>
+
+        <div class="p-4 bg-violet-500/5 border border-violet-500/35 rounded-xl">
+          <div class="text-xs font-mono text-violet-400 mb-2">🤖 STARTER PROMPT</div>
+          <pre class="code-block text-xs"><span class="cm">// Create Express route POST /api/products</span>
+<span class="cm">// - Validate body with zod: { name: string, priceIDR: number &gt; 0, stock: int &gt;= 0 }</span>
+<span class="cm">// - Call productService.create() — assume it exists</span>
+<span class="cm">// - Return 201 with new product JSON</span>
+<span class="cm">// - Return 400 with { error, details } on validation fail</span>
+<span class="cm">// - Return 500 with generic message on service error, log the real error</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Summary + Footer nav -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="font-mono text-xs text-pink-400 mb-2">RECAP</div>
+      <h2 class="section-title mb-8">KEY<br><span class="text-pink-400">TAKEAWAYS</span></h2>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-10">
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">💡 Prompt-in-comment</div>
+          <div class="text-sm text-white/60">Spec lengkap dalam comment = suggestion akurat.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">💬 Slash commands</div>
+          <div class="text-sm text-white/60">/explain /fix /tests /doc /optimize — daily workflow.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-pink-500">
+          <div class="text-lg font-semibold mb-1">🤖 Workspace = task-to-PR</div>
+          <div class="text-sm text-white/60">Spec → plan → code → test → PR untuk feature terstruktur.</div>
+        </div>
+        <div class="glass p-5 rounded-xl border-l-4 border-violet-500">
+          <div class="text-lg font-semibold mb-1">📜 copilot-instructions.md</div>
+          <div class="text-sm text-white/60">Force-multiplier untuk konvensi tim.</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-01-ai-coding-landscape.html" class="flex-1 py-4 px-6 glass rounded-xl text-center hover:bg-white/10 transition-all">
+          ← Sesi 6.1: AI Coding Landscape
+        </a>
+        <a href="sesi-06-03-cursor.html" class="flex-1 py-4 px-6 rounded-xl text-center font-semibold text-white" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+          Sesi 6.3: Cursor →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5 text-center z-10">
+    <p class="text-white/40 text-sm">© 2026 Velo CT — Modern Software Development Training</p>
+  </footer>
+
+</body>
+</html>
