@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.1 | Gemini Ecosystem Overview</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+
+    .model-card { transition: all 0.3s ease; }
+    .model-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.4); }
+
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .prompt-block .label { color: #818cf8; font-weight: 600; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+
+    .thinking-trace { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.7; }
+    .thinking-trace .think-tag { color: rgba(255,255,255,0.3); }
+    .thinking-trace .think-content { color: rgba(255,255,255,0.65); }
+    .thinking-trace .final { color: #86efac; }
+
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 12, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">KONSEP + PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="text-xs text-white/40 hover:text-white/60">← Overview</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-02-create-image.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 1 • EKOSISTEM</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">ECOSYSTEM OVERVIEW</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Peta lengkap keluarga Gemini: <strong class="text-white">kapabilitas unik</strong>, model variants (2.5 Pro / Flash / Flash-Lite), thinking mode, Deep Research, multimodal input (teks, gambar, video, audio), dan Google Workspace integration — lengkap dengan prompt library siap pakai untuk Koopsudnas.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🧠</div><div class="text-accent font-mono text-xs mb-1">THINKING MODE</div><div class="text-sm text-white/70">Native reasoning trace</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🔬</div><div class="text-accent font-mono text-xs mb-1">DEEP RESEARCH</div><div class="text-sm text-white/70">Multi-step web agent</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🎥</div><div class="text-accent font-mono text-xs mb-1">MULTIMODAL</div><div class="text-sm text-white/70">Video + audio + image</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🔍</div><div class="text-accent font-mono text-xs mb-1">SEARCH GROUNDING</div><div class="text-sm text-white/70">Native Google Search</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div>
+            <div><div class="font-semibold text-white mb-1">Mapping Model Variants</div><div class="text-sm text-white/60">Tahu kapan pakai Gemini 2.5 Pro vs Flash vs Flash-Lite, dan trade-off speed/quality/cost</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div>
+            <div><div class="font-semibold text-white mb-1">Kapabilitas Unik + Thinking Mode</div><div class="text-sm text-white/60">Kuasai thinking mode, Deep Research, search grounding, dan native multimodal — cara pakai bukan sekadar tahu</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div>
+            <div><div class="font-semibold text-white mb-1">Platform Access</div><div class="text-sm text-white/60">gemini.google.com vs AI Studio vs Vertex AI — mana yang cocok untuk Pamen, mana untuk dev</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div>
+            <div><div class="font-semibold text-white mb-1">Decision Framework + Prompt Library</div><div class="text-sm text-white/60">Routing yang defensible + 6 prompt template Gemini siap pakai untuk konteks Koopsudnas</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div>
+            <div><div class="font-semibold text-white mb-1">Hands-on Practice</div><div class="text-sm text-white/60">Latihan 20 menit langsung: 3 skenario nyata Koopsudnas dengan Gemini — identifikasi tool & workflow yang tepat</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div>
+            <div><div class="font-semibold text-white mb-1">Knowledge Check</div><div class="text-sm text-white/60">Quiz 4 pertanyaan untuk validasi pemahaman sebelum lanjut ke sesi berikutnya</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: MODEL FAMILY -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MODEL FAMILY</div>
+        <h2 class="slide-title">GEMINI <span class="text-accent">2.5 FAMILY</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">3 model utama — pilih berdasarkan <strong class="text-white">speed/quality/cost</strong> trade-off</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center"><span class="font-display text-accent text-2xl">2.5</span></div>
+            <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full font-mono">PRO</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Pro</h3>
+          <p class="text-sm text-white/60 mb-4">Flagship — reasoning tertinggi, 1M+ context, native thinking mode, Deep Research.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M–2M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-amber-400">⚡ Moderate</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-red-400">$$$ Premium</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Strategic</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg text-xs text-white/70"><strong class="text-accent">Best for:</strong> COA analysis kompleks, multi-doc intel synthesis, long-form briefing.</div>
+        </div>
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center"><span class="font-display text-accent text-2xl">⚡</span></div>
+            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-mono">FLASH</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Flash</h3>
+          <p class="text-sm text-white/60 mb-4">Workhorse — 80% kualitas Pro dengan kecepatan 3x dan cost jauh lebih murah.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-green-400">⚡⚡⚡ Fast</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-green-400">$ Cheap</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Daily ops</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-green-500/10 rounded-lg text-xs text-white/70"><strong class="text-green-400">Best for:</strong> SITREP harian, quick summary, pattern scan, bulk processing.</div>
+        </div>
+        <div class="model-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center"><span class="font-display text-accent text-2xl">⚡⚡</span></div>
+            <span class="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full font-mono">FLASH-LITE</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Gemini 2.5 Flash-Lite</h3>
+          <p class="text-sm text-white/60 mb-4">Ultra-fast — real-time, cocok untuk task sederhana bervolume tinggi.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-white/50">Context:</span><span class="text-white">1M tokens</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Speed:</span><span class="text-cyan-400">⚡⚡⚡⚡ Ultra</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Cost:</span><span class="text-cyan-400">¢ Very cheap</span></div>
+            <div class="flex justify-between"><span class="text-white/50">Use case:</span><span class="text-white">Mass ingest</span></div>
+          </div>
+          <div class="mt-4 p-3 bg-cyan-500/10 rounded-lg text-xs text-white/70"><strong class="text-cyan-400">Best for:</strong> Mass classification, OCR, short Q&A, triage pipeline.</div>
+        </div>
+      </div>
+      <div class="mt-8 p-5 glass rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">💡</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Rule of thumb untuk Pamen</div>
+            <div class="text-sm text-white/70">Mulai dari <strong class="text-accent">Flash</strong> (sweet spot). Naik ke <strong class="text-accent">Pro</strong> hanya kalau reasoning-nya tidak cukup tajam atau konteks dokumen di atas ~500k tokens. <strong class="text-accent">Flash-Lite</strong> untuk automation/skrip, bukan untuk analisis strategis.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: UNIQUE CAPABILITIES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">UNIQUE CAPABILITIES</div>
+        <h2 class="slide-title">YANG <span class="text-accent">TIDAK ADA</span> DI CLAUDE</h2>
+      </div>
+      <div class="space-y-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div><div class="text-4xl mb-2">🧠</div><h3 class="text-xl font-semibold text-accent mb-1">Thinking Mode (2.5 Pro)</h3><div class="text-xs text-white/40 font-mono">NATIVE REASONING TRACE</div></div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">Gemini 2.5 Pro punya <strong class="text-white">explicit thinking tokens</strong> — model berpikir step-by-step sebelum jawab, dan Anda bisa lihat trace-nya. Mirip chain-of-thought, tapi native (tidak perlu prompt "think step by step").</p>
+              <div class="thinking-trace mb-3">
+                <span class="think-tag">&lt;thinking&gt;</span><br>
+                <span class="think-content">&nbsp;&nbsp;Analyzing threat indicators from provided data...<br>&nbsp;&nbsp;Step 1: Baseline posture for Q4 2025 shows pattern X<br>&nbsp;&nbsp;Step 2: Deviation observed: +23% sortie frequency near Natuna<br>&nbsp;&nbsp;Step 3: Historical analog: similar pattern preceded 2023 incident<br>&nbsp;&nbsp;Confidence: MEDIUM — single source, not corroborated yet</span><br>
+                <span class="think-tag">&lt;/thinking&gt;</span><br><br>
+                <span class="final">Assessment: Elevated activity consistent with pre-exercise phase. Recommend increase ISR coverage for next 72 hours...</span>
+              </div>
+              <p class="text-xs text-white/50"><strong>Ops value:</strong> Built-in audit trail untuk intel komandan — tidak perlu minta "show your reasoning" secara manual.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div><div class="text-4xl mb-2">🎥</div><h3 class="text-xl font-semibold text-accent mb-1">Native Multimodal</h3><div class="text-xs text-white/40 font-mono">VIDEO + AUDIO + IMAGE</div></div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">Gemini adalah satu-satunya LLM yang bisa menerima <strong class="text-white">video mentah</strong> (hingga ~1 jam), <strong class="text-white">audio mentah</strong>, dokumen PDF, dan gambar secara native — tanpa OCR atau preprocessing terpisah.</p>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="p-3 bg-accent/10 rounded-lg text-center"><div class="text-2xl mb-1">📹</div><div class="text-xs text-white/70"><strong>Video</strong><br>hingga 1 jam</div></div>
+                <div class="p-3 bg-accent/10 rounded-lg text-center"><div class="text-2xl mb-1">🎙️</div><div class="text-xs text-white/70"><strong>Audio</strong><br>direct ingest</div></div>
+                <div class="p-3 bg-accent/10 rounded-lg text-center"><div class="text-2xl mb-1">🖼️</div><div class="text-xs text-white/70"><strong>Image</strong><br>multi-frame</div></div>
+              </div>
+              <p class="mt-3 text-xs text-white/50"><strong>Ops value:</strong> Analisis langsung drone footage, intercept audio, surveillance video tanpa pre-processing manual.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div><div class="text-4xl mb-2">🔍</div><h3 class="text-xl font-semibold text-accent mb-1">Search Grounding</h3><div class="text-xs text-white/40 font-mono">REAL-TIME GOOGLE SEARCH</div></div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">Aktifkan toggle <strong class="text-white">"Grounding with Google Search"</strong> dan Gemini akan otomatis query Google live, cite sumber URL, dan refuse jawab kalau tidak ada data real.</p>
+              <div class="p-4 bg-navy-900/50 rounded-lg border border-accent/20">
+                <div class="text-xs font-mono text-accent mb-2">CONTOH:</div>
+                <div class="text-sm text-white/70">Q: "Status terbaru latihan gabungan ASEAN di laut Natuna minggu ini?"</div>
+                <div class="text-sm text-green-400 mt-2">→ Gemini live-search, jawab dengan citation [1][2][3] ke sumber berita aktual.</div>
+              </div>
+              <p class="mt-3 text-xs text-white/50"><strong>Ops value:</strong> Intel OSINT real-time tanpa keluar dari chat. Search Grounding native — tidak perlu setup tambahan, langsung aktif.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="grid md:grid-cols-3 gap-6 items-start">
+            <div><div class="text-4xl mb-2">🧮</div><h3 class="text-xl font-semibold text-accent mb-1">Code Execution</h3><div class="text-xs text-white/40 font-mono">SANDBOXED PYTHON</div></div>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/70 mb-3">Gemini bisa <strong class="text-white">eksekusi Python</strong> untuk hitung/plot data tanpa hallucination. Upload CSV intel metrics → "plot trend senjata selama 6 bulan" → dapat actual chart.</p>
+              <p class="text-xs text-white/50"><strong>Ops value:</strong> Data analysis tanpa perlu tools separate (Excel/Python notebook).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: THINKING MODE DEEP DIVE -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DEEP DIVE</div>
+        <h2 class="slide-title">THINKING MODE: <span class="text-accent">CARA PAKAI</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Bukan cukup tahu — harus bisa <strong class="text-white">aktifkan, baca, dan verifikasi</strong> thinking trace dengan benar</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="text-lg font-semibold text-accent mb-4">🔧 Cara Mengaktifkan</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-sm font-bold">1</div>
+              <div class="text-sm text-white/70">Buka <strong class="text-white">gemini.google.com</strong>, pastikan model = <strong class="text-accent">Gemini 2.5 Pro</strong> (Flash tidak punya thinking mode)</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-sm font-bold">2</div>
+              <div class="text-sm text-white/70">Di input area, cari ikon <strong class="text-white">⚙️ Settings</strong> atau <strong class="text-white">🧠 Thinking</strong> — klik untuk enable thinking mode</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-sm font-bold">3</div>
+              <div class="text-sm text-white/70">Kirim prompt — sebelum jawaban final muncul, Anda akan lihat collapsible <strong class="text-white">"Thinking..."</strong> section yang bisa di-expand</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-sm font-bold">4</div>
+              <div class="text-sm text-white/70">Klik expand untuk lihat full trace — baca dari atas ke bawah mengikuti <strong class="text-white">alur reasoning</strong> model</div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="text-lg font-semibold text-accent mb-4">📖 Cara Membaca Thinking Trace</h3>
+          <div class="space-y-3 text-sm text-white/70">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-accent font-mono text-xs mb-1">TANDA REASONING KUAT</div>
+              <ul class="space-y-1 text-xs">
+                <li>✓ Model mempertimbangkan multiple interpretasi</li>
+                <li>✓ Explicit uncertainty flagging ("not sure about X")</li>
+                <li>✓ Memeriksa sendiri kalau ada kontradiksi</li>
+                <li>✓ Merujuk ke data spesifik dari input</li>
+              </ul>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+              <div class="text-red-400 font-mono text-xs mb-1">RED FLAGS DI TRACE</div>
+              <ul class="space-y-1 text-xs">
+                <li>⚠ Trace sangat pendek untuk soal kompleks</li>
+                <li>⚠ Langsung confident tanpa pertimbangan alternatif</li>
+                <li>⚠ Trace tidak match dengan jawaban final</li>
+                <li>⚠ Banyak "I assume" tanpa data pendukung</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <h3 class="text-lg font-semibold mb-4">⚔️ Kapan Thinking Mode vs Standard Mode?</h3>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <div class="text-accent font-mono text-xs mb-3">GUNAKAN THINKING MODE UNTUK:</div>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span> COA analysis yang harus bisa di-audit</li>
+              <li class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Threat assessment dengan ambiguitas tinggi</li>
+              <li class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Briefing komandan — reasoning harus defensible</li>
+              <li class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Problem yang punya trade-off tidak obvious</li>
+              <li class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Kalau Anda ingin "peer review" reasoning AI</li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-red-400 font-mono text-xs mb-3">SKIP THINKING MODE UNTUK:</div>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-red-400 flex-shrink-0">✗</span> Quick factual lookup (lambat, tidak perlu)</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 flex-shrink-0">✗</span> Formatting/editing teks (overkill)</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 flex-shrink-0">✗</span> Simple translation</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 flex-shrink-0">✗</span> Kalau real-time speed lebih penting dari depth</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 flex-shrink-0">✗</span> Flash model (tidak tersedia di Flash)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="p-5 glass rounded-xl border border-accent/30">
+        <div class="font-semibold text-accent mb-2">🎯 Kapan Aktifkan Thinking Mode Gemini 2.5 Pro?</div>
+        <p class="text-sm text-white/70">Thinking Mode paling powerful untuk: <strong class="text-white">COA analysis</strong> (banyak variabel, trade-off), <strong class="text-white">risk wargaming</strong> (scenario branching), dan <strong class="text-white">doctrine synthesis</strong> (multi-source reasoning). Untuk query simpel (draft email, terjemahan), pakai Gemini Flash — lebih cepat dan hemat. Gunakan 2.5 Pro Thinking saat Anda butuh <strong class="text-white">audit trail reasoning</strong> yang bisa di-challenge komandan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: DEEP RESEARCH -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">POWER FEATURE</div>
+        <h2 class="slide-title">GEMINI <span class="text-accent">DEEP RESEARCH</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Bukan sekadar search — ini <strong class="text-white">autonomous research agent</strong> yang bisa browsing, synthesize, dan produce laporan lengkap dalam hitungan menit</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <div class="flex items-start gap-6 mb-6">
+          <div class="text-5xl flex-shrink-0">🔬</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Cara Kerja Deep Research</h3>
+            <p class="text-sm text-white/70">Deep Research adalah agentic feature — bukan 1 search query, tapi <strong class="text-white">loop multi-langkah</strong>: plan → search → read → synthesize → check gaps → repeat. Hasilnya: laporan 10-20+ halaman dengan hundreds of citations dalam 5-10 menit.</p>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-4 gap-4 mb-6">
+          <div class="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="text-2xl mb-2">🗺️</div>
+            <div class="text-accent font-mono text-xs mb-1">STEP 1</div>
+            <div class="text-sm font-semibold">Plan Research</div>
+            <div class="text-xs text-white/60 mt-1">Gemini break down topik jadi sub-questions, tunjukkan research plan ke user</div>
+          </div>
+          <div class="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="text-2xl mb-2">🔍</div>
+            <div class="text-accent font-mono text-xs mb-1">STEP 2</div>
+            <div class="text-sm font-semibold">Multi-Web Search</div>
+            <div class="text-xs text-white/60 mt-1">Dozens of searches otomatis, baca full articles, tidak cuma snippet</div>
+          </div>
+          <div class="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="text-2xl mb-2">🧩</div>
+            <div class="text-accent font-mono text-xs mb-1">STEP 3</div>
+            <div class="text-sm font-semibold">Synthesize</div>
+            <div class="text-xs text-white/60 mt-1">Cross-reference sources, identify agreements & contradictions</div>
+          </div>
+          <div class="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="text-2xl mb-2">📋</div>
+            <div class="text-accent font-mono text-xs mb-1">STEP 4</div>
+            <div class="text-sm font-semibold">Full Report</div>
+            <div class="text-xs text-white/60 mt-1">Report terstruktur dengan inline citations, exportable ke Google Docs</div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="p-5 bg-white/5 rounded-xl">
+            <h4 class="font-semibold text-accent mb-3">✓ Use Cases untuk Koopsudnas</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Regional threat landscape</strong> — "What are the current UAV programs of regional militaries and their capabilities?"</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Doctrine research</strong> — "How have ASEAN air forces updated their air defense doctrines post-2020?"</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Equipment assessment</strong> — "Compare specs and procurement history of [generic aircraft type] across regional operators"</li>
+              <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Exercise patterns</strong> — "Analyze frequency and scope of air exercises in Southeast Asia 2023-2025"</li>
+            </ul>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl">
+            <h4 class="font-semibold text-amber-400 mb-3">⚠ Constraints untuk Ops</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="text-amber-400">•</span> Butuh <strong class="text-white">Gemini Advanced</strong> (paid tier) — tidak tersedia di free</li>
+              <li class="flex items-start gap-2"><span class="text-amber-400">•</span> Hanya bisa research <strong class="text-white">OSINT publicly available</strong> — bukan classified</li>
+              <li class="flex items-start gap-2"><span class="text-amber-400">•</span> Duration: 3-15 menit — <strong class="text-white">tidak untuk kebutuhan real-time</strong></li>
+              <li class="flex items-start gap-2"><span class="text-amber-400">•</span> Wajib <strong class="text-white">fact-check sampling</strong> sebelum forward ke komandan — AI tetap bisa miss context</li>
+              <li class="flex items-start gap-2"><span class="text-amber-400">•</span> Kualitas bergantung pada <strong class="text-white">kualitas research question</strong> — RISEN tetap berlaku</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold mb-4">🔍 Deep Research vs NotebookLM vs Standard Gemini Search</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-2 pr-4 text-white/50 font-normal">Aspek</th>
+                <th class="text-left py-2 pr-4 text-accent font-mono text-xs">DEEP RESEARCH</th>
+                <th class="text-left py-2 pr-4 text-violet-400 font-mono text-xs">NOTEBOOKLM</th>
+                <th class="text-left py-2 text-indigo-300 font-mono text-xs">STANDARD SEARCH</th>
+              </tr>
+            </thead>
+            <tbody class="space-y-2">
+              <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white/60">Sumber</td><td class="py-2 pr-4 text-white">Web live</td><td class="py-2 pr-4 text-white">Dokumen Anda</td><td class="py-2 text-white">Web live</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white/60">Depth</td><td class="py-2 pr-4 text-white">Sangat dalam (20+ sources)</td><td class="py-2 pr-4 text-white">Sesuai docs upload</td><td class="py-2 text-white">Permukaan (few sources)</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white/60">Citation</td><td class="py-2 pr-4 text-white">Inline + full URL</td><td class="py-2 pr-4 text-white">Page-level citation</td><td class="py-2 text-white">URL citation</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white/60">Speed</td><td class="py-2 pr-4 text-amber-400">3-15 menit</td><td class="py-2 pr-4 text-white">Tergantung query</td><td class="py-2 pr-4 text-green-400">Detik</td></tr>
+              <tr><td class="py-2 pr-4 text-white/60">Best for</td><td class="py-2 pr-4 text-white">Research baru, broad topic</td><td class="py-2 pr-4 text-white">Analisis doc internal</td><td class="py-2 text-white">Quick fact check</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PLATFORM ACCESS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PLATFORM</div>
+        <h2 class="slide-title">DI MANA <span class="text-accent">AKSES</span>?</h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Gemini bisa diakses dari 3 platform berbeda — pilih sesuai kebutuhan</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4"><span class="text-2xl">💬</span></div>
+          <h3 class="text-xl font-semibold mb-2">gemini.google.com</h3>
+          <div class="text-xs text-blue-400 font-mono mb-3">CONSUMER UI</div>
+          <p class="text-sm text-white/60 mb-4">Chat interface end-user. Free tier dengan 2.5 Flash, Pro butuh Google One AI Premium.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: Pamen operasional</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Setup: zero, pakai akun Google</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Fitur: Canvas, Deep Research, Gems</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Thinking Mode (dengan Pro)</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-red-400">✗</span> Tidak bisa adjust parameter lanjutan</div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4"><span class="text-2xl">🛠️</span></div>
+          <h3 class="text-xl font-semibold mb-2">AI Studio</h3>
+          <div class="text-xs text-accent font-mono mb-3">DEVELOPER PLAYGROUND</div>
+          <p class="text-sm text-white/60 mb-4">Sandbox untuk eksplorasi teknis: adjust temperature, system instructions, tools, function calling.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: analyst/tech-savvy Pamen</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Free tier generous</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Test prompt sebelum deploy</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Control thinking budget/tokens</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-amber-400">⚠</span> URL: aistudio.google.com</div>
+          </div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4"><span class="text-2xl">🏢</span></div>
+          <h3 class="text-xl font-semibold mb-2">Vertex AI</h3>
+          <div class="text-xs text-purple-400 font-mono mb-3">ENTERPRISE / CLOUD</div>
+          <p class="text-sm text-white/60 mb-4">Enterprise tier: data residency, audit logs, VPC-SC, customer-managed keys.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Audience: institutional deployment</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Compliance-ready</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-green-400">✓</span> Bisa host di region Asia</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-red-400">✗</span> Butuh GCP admin & setup</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 p-5 glass rounded-xl border border-accent/20">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">🎯</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Rekomendasi untuk training Pamen</div>
+            <div class="text-sm text-white/70">Mulai dari <strong class="text-accent">gemini.google.com</strong> (lowest friction, fitur Canvas + Deep Research built-in). Naik ke <strong class="text-accent">AI Studio</strong> kalau perlu eksperimen system prompt / RISEN framework dengan parameter kontrol. Vertex AI hanya kalau deployment institusional dengan data classified.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: DECISION TREE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DECISION TREE</div>
+        <h2 class="slide-title">CLAUDE <span class="text-accent">ATAU</span> GEMINI?</h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Pertanyaan cepat untuk routing tool yang defensible</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-3">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Input-nya video, audio, atau bundle foto?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini (native multimodal)</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Butuh real-time web search dengan citation?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini (search grounding native)</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Butuh research laporan 10+ halaman dari web?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini Deep Research</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Butuh generate gambar/infografis/video?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini (Imagen/Canvas/Veo built-in)</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-indigo-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Deep reasoning + COA / risk wargaming Koopsudnas?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini 2.5 Pro + Thinking Mode (explicit reasoning trace)</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-indigo-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Narrative / commander brief / laporan doktrin komprehensif?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-accent font-semibold">Gemini 2.5 Pro + Canvas (draft & iterate section-level)</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 text-violet-400 font-bold">?</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Input-nya 50+ dokumen (SITREP, Satrad reports) dan butuh citation ketat?</div>
+              <div class="flex items-center gap-3 text-sm"><span class="text-green-400">YA</span><span class="text-white/40">→</span><span class="text-violet-400 font-semibold">NotebookLM (zero hallucination, wajib citation)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-accent/10 border border-accent/30 rounded-xl">
+          <div class="text-center text-accent font-semibold mb-2">🎯 Default kalau ragu</div>
+          <div class="text-center text-white/70 text-sm">Mulai dengan <strong class="text-accent">Gemini 2.5 Pro</strong> (reasoning kuat, multimodal, search grounding). Switch ke <strong class="text-violet-400">NotebookLM</strong> kalau butuh synthesis dari banyak dokumen dengan citation wajib.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: PROMPT LIBRARY -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">6 TEMPLATE <span class="text-accent">SIAP PAKAI</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Copy-paste langsung — dioptimalkan untuk kapabilitas unik Gemini dalam konteks Koopsudnas</p>
+      </div>
+      <div class="space-y-4">
+
+        <!-- Template 1 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">T-01</span>
+              <span class="font-semibold">Search Grounding — Regional Force Posture Update</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="p61-t1">
+                <button class="copy-btn" @click="copyText('p61-t1')" x-text="copied === 'p61-t1' ? '✓ Copied!' : 'Copy'"></button>
+                <span class="label">[Aktifkan: Search Grounding]</span><br><br>
+                Role: Senior Intelligence Analyst Koopsudnas<br><br>
+                Task: Lakukan update force posture assessment untuk kawasan Indo-Pasifik.<br>
+                Cari laporan terbaru (30 hari terakhir) tentang:<br>
+                1. Perubahan postur militer udara negara-negara regional<br>
+                2. Latihan udara atau naval yang baru selesai atau sedang berlangsung<br>
+                3. Akuisisi atau deployment alutsista udara baru yang diumumkan publik<br><br>
+                Format output:<br>
+                - Tabel per negara: Indikator | Detail | Sumber | Tingkat Signifikansi (Tinggi/Sedang/Rendah)<br>
+                - Flag segera items yang berpotensi mempengaruhi postur pertahanan udara Indonesia<br>
+                - Ringkasan 1 paragraf untuk komandan<br><br>
+                Narrowing: Fokus hanya OSINT publicly available. Gunakan sumber defense news, think tanks, official announcements.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template 2 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">T-02</span>
+              <span class="font-semibold">Deep Research — UAV Capability Assessment</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="p61-t2">
+                <button class="copy-btn" @click="copyText('p61-t2')" x-text="copied === 'p61-t2' ? '✓ Copied!' : 'Copy'"></button>
+                <span class="label">[Gunakan: Deep Research mode]</span><br><br>
+                Research Question: Conduct a comprehensive assessment of UAV/UCAV capability development among Southeast Asian and Northeast Asian militaries from 2022 to present.<br><br>
+                Include for each country/program:<br>
+                1. Current operational UAV systems (indigenous + imported)<br>
+                2. Programs in development or procurement pipeline<br>
+                3. Doctrinal integration — how UAVs are being incorporated into operational concepts<br>
+                4. Notable incidents or operational deployments (exercises, actual use)<br>
+                5. Identified capability gaps vs. stated ambitions<br><br>
+                Output format: Structured report with country-by-country sections, summary comparison table, and strategic implications section for Indonesian air defense considerations.<br><br>
+                Sources: Jane's, IISS, CSIS, defense ministry announcements, credible defense media only.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template 3 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">T-03</span>
+              <span class="font-semibold">Thinking Mode — Threat Assessment dengan Reasoning Audit</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="p61-t3">
+                <button class="copy-btn" @click="copyText('p61-t3')" x-text="copied === 'p61-t3' ? '✓ Copied!' : 'Copy'"></button>
+                <span class="label">[Enable: Thinking Mode (Gemini 2.5 Pro)]</span><br><br>
+                Role: Senior Intelligence Analyst<br><br>
+                Input: [PASTE SITREP atau data intel di sini]<br><br>
+                Task: Lakukan threat assessment berdasarkan data yang diberikan.<br>
+                Saya ingin melihat reasoning Anda secara explicit — jangan skip langkah.<br><br>
+                Dalam thinking trace, harus ada:<br>
+                1. Identifikasi semua indikator yang diberikan<br>
+                2. Pertimbangan interpretasi alternatif (minimal 2)<br>
+                3. Faktor yang meningkatkan vs menurunkan keyakinan<br>
+                4. Identifikasi explicit uncertainty dan data gaps<br><br>
+                Output final:<br>
+                - Assessment level: CRITICAL / HIGH / MEDIUM / LOW / NEGLIGIBLE<br>
+                - Confidence level: HIGH / MEDIUM / LOW + justification<br>
+                - Rekomendasi tindakan (3 bullet points)<br>
+                - Intelligence requirements untuk reduce uncertainty
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template 4 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">T-04</span>
+              <span class="font-semibold">Multimodal — Video/Image Intel Analysis</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="p61-t4">
+                <button class="copy-btn" @click="copyText('p61-t4')" x-text="copied === 'p61-t4' ? '✓ Copied!' : 'Copy'"></button>
+                <span class="label">[Upload: video/image file]</span><br><br>
+                Role: Imagery Intelligence (IMINT) Analyst<br><br>
+                Task: Analyze the attached [video/image] for intelligence value.<br><br>
+                Provide systematic analysis:<br>
+                1. WHAT is visible — describe all observable elements objectively<br>
+                2. EQUIPMENT identification — type, configuration, visible modifications if any<br>
+                3. ACTIVITY assessment — what activity is occurring or appears to have occurred<br>
+                4. INDICATORS — what does this suggest about capability, intention, or readiness?<br>
+                5. CONFIDENCE level for each observation — HIGH/MEDIUM/LOW<br>
+                6. LIMITATIONS — what cannot be determined from this material alone<br>
+                7. COLLECTION REQUIREMENTS — what additional information would increase confidence?<br><br>
+                Important: Flag any observations that are ambiguous or uncertain rather than asserting confidence you don't have.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template 5 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-violet-500/20 text-violet-400 text-xs rounded font-mono">T-05</span>
+              <span class="font-semibold">Code Execution — Visualisasi Data Intel dari CSV</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="p61-t5">
+                <button class="copy-btn" @click="copyText('p61-t5')" x-text="copied === 'p61-t5' ? '✓ Copied!' : 'Copy'"></button>
+                <span class="label">[Upload: CSV file dengan data intel]</span><br><br>
+                Saya upload CSV dengan data aktivitas [jenis aktivitas] untuk periode [tanggal].<br><br>
+                Tolong lakukan analisis data berikut menggunakan code execution:<br><br>
+                1. TREND ANALYSIS — plot line chart aktivitas per bulan, identify anomaly (> 2 standard deviation dari mean)<br>
+                2. PATTERN BREAKDOWN — bar chart per kategori/lokasi<br>
+                3. SUMMARY STATISTICS — min, max, mean, dan perubahan month-over-month<br>
+                4. FLAG — highlight 3 data point yang paling anomalous dengan penjelasan singkat<br><br>
+                Visualisasi: dark background (#050810), warna accent indigo (#6366f1), professional style cocok untuk command briefing.<br><br>
+                Output: charts + summary tabel + 1 paragraph assessment untuk komandan.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template 6 -->
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-violet-500/20 text-violet-400 text-xs rounded font-mono">T-06</span>
+              <span class="font-semibold">Gemini Gems — Personal Intel Analyst System Prompt</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <p class="text-xs text-white/50 mt-4 mb-3">Gunakan ini sebagai System Prompt di Gemini Gems (personal AI assistant yang bisa dikonfigurasi) untuk Pamen Intel</p>
+              <div class="prompt-block" id="p61-t6">
+                <button class="copy-btn" @click="copyText('p61-t6')" x-text="copied === 'p61-t6' ? '✓ Copied!' : 'Copy'"></button>
+                You are an experienced senior intelligence analyst embedded with Koopsudnas (Indonesian Air Force Operational Command). Your role is to support Indonesian Air Force officers in analyzing open-source intelligence, assessing threats, and preparing intelligence products.<br><br>
+                Your operating principles:<br>
+                1. ALWAYS base assessments on provided data — do not fabricate or hallucinate facts<br>
+                2. ALWAYS distinguish between "observed fact," "assessment," and "assumption"<br>
+                3. ALWAYS express confidence levels (HIGH/MEDIUM/LOW) with justification<br>
+                4. ALWAYS flag when data is insufficient to support a claim<br>
+                5. Use professional military intelligence terminology (SITREP, COA, IMINT, OSINT, etc.)<br>
+                6. Format outputs suitable for Indonesian military briefings<br>
+                7. OPSEC awareness: never request or encourage sharing of classified information<br><br>
+                When analyzing threats, always consider: capability, intent, opportunity, and historical pattern.<br>
+                When uncertain, say so explicitly — a well-calibrated assessment beats overconfident guessing.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: HANDS-ON EXERCISE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">20 MENIT</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">3 skenario Koopsudnas — identifikasi tool & workflow Gemini yang tepat untuk tiap situasi</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka dua tab browser: <strong class="text-white">claude.ai</strong> dan <strong class="text-white">gemini.google.com</strong>. Anda akan menjalankan prompt yang sama (atau mirip) di kedua tools dan membandingkan hasilnya. Tujuan: merasakan langsung perbedaan, bukan sekadar membaca teorinya.</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-red-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 text-red-400 font-bold">1</div>
+              <div><div class="font-semibold text-white">Skenario Hanud: Threat Assessment Brief (6 menit)</div><div class="text-xs text-red-400 font-mono">CONTEXT: OPS PERTAHANAN UDARA</div></div>
+            </div>
+            <div class="text-sm text-white/70 mb-3">Skenario fiktif (non-classified): "Kontak udara unidentified approaching FIR Ujung Pandang dari arah timur laut. Buat threat assessment brief 1 halaman + rekomendasi tindakan." Gunakan Gemini 2.5 Pro dengan Search Grounding aktif. Tambahkan follow-up: aktifkan Thinking Mode untuk COA options.</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini cite live OSINT sources. Thinking Mode tunjukkan reasoning trace untuk COA. Seberapa commander-ready output-nya untuk hanud real-time?</div>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div>
+              <div><div class="font-semibold text-white">Skenario OMSP: SAR Coordination Brief — CENDRAWASIH RESCUE (7 menit)</div><div class="text-xs text-green-400 font-mono">CONTEXT: SAR MULTI-AGENCY</div></div>
+            </div>
+            <div class="text-sm text-white/70 mb-3">Skenario: "Pesawat sipil hilang kontak di Pegunungan Bintang, Papua. Susun SAR coordination brief: prioritas search area, aset yang dibutuhkan, timeline, koordinasi dengan BASARNAS &amp; Pemda." Gunakan Gemini: (1) Search Grounding untuk weather/terrain real-time, (2) Canvas untuk draft brief terstruktur, (3) Thinking Mode untuk prioritisasi search area.</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Gemini cite weather dan NOTAM aktual. Canvas bantu iterasi section koordinasi multi-agency. Pipeline Gemini = end-to-end SAR brief dalam satu session.</div>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div>
+              <div><div class="font-semibold text-white">Skenario Doktrin: IADS Review Synthesis Memo (7 menit)</div><div class="text-xs text-purple-400 font-mono">CONTEXT: PENGEMBANGAN DOKTRIN</div></div>
+            </div>
+            <div class="text-sm text-white/70 mb-3">Skenario: "Review doktrin IADS (Integrated Air Defense System) 3 negara regional — susun memo sintesis best practice yang applicable untuk Koopsudnas." Pipeline: Deep Research (collect doctrine papers) → NotebookLM (upload & fuse dokumen, citation-grounded) → Gemini 2.5 Pro + Canvas (draft memo final).</div>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs font-mono text-white/60">Observe: Deep Research pull doctrine sources. NotebookLM synthesis zero-hallucination dengan citation. Canvas iterasi memo Koopsudnas. Multi-tool pipeline = doctrine paper akademik berkualitas tinggi.</div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-white/5 rounded-xl">
+          <div class="font-semibold text-white mb-2">📝 Debrief (2 menit)</div>
+          <div class="text-sm text-white/70">Jawab 3 pertanyaan di kertas: (a) Skenario mana yang paling surprised Anda? (b) Untuk ops sehari-hari Anda, tools mana yang paling langsung applicable? (c) Apa 1 task yang selama ini Anda kerjakan manual yang bisa di-automate dengan Gemini?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'c') this.score++;
+      if (this.answers.q2 === 'b') this.score++;
+      if (this.answers.q3 === 'a') this.score++;
+      if (this.answers.q4 === 'd') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.1</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman sebelum lanjut ke NotebookLM</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <!-- Q1 -->
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Komandan meminta update real-time "ada laporan apa hari ini soal aktivitas militer di Selat Malaka?" — tool mana yang paling tepat?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Pro dengan Thinking Mode untuk analisis mendalam</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">NotebookLM dengan upload dokumen terbaru</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini dengan Search Grounding aktif</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini Flash-Lite karena paling cepat</span>
+                </label>
+              </div>
+            </div>
+            <!-- Q2 -->
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Anda sedang buat COA analysis untuk skenario eskalasi bilateral yang melibatkan pertimbangan hukum internasional dan ROE yang kompleks. Tool mana yang paling sesuai?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Flash untuk kecepatan analisis</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Pro + Thinking Mode — explicit reasoning trace untuk audit COA</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini dengan Search Grounding untuk cari preseden</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Keduanya sama saja untuk task ini</span>
+                </label>
+              </div>
+            </div>
+            <!-- Q3 -->
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Thinking Mode di Gemini tersedia di model mana, dan apa nilai utamanya untuk intel ops?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Pro — menyediakan audit trail reasoning yang bisa di-review komandan</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Semua model Gemini 2.5 — membuat respons lebih cepat</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Flash saja — Pro sudah punya jawaban langsung</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Semua model Gemini — untuk reduce hallucination</span>
+                </label>
+              </div>
+            </div>
+            <!-- Q4 -->
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Anda harus buat research report mendalam tentang perkembangan anti-drone systems di kawasan ASEAN selama 5 tahun terakhir — full citations, 15+ halaman. Tool yang paling efisien?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">NotebookLM — upload semua PDF yang Anda punya</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini 2.5 Pro dengan 2M token context window — paste semua dokumen sekaligus</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini Search Grounding — beberapa query berturut-turut</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''">
+                  <input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500">
+                  <span class="text-sm text-white/80">Gemini Deep Research — autonomous agent yang browse dan synthesize otomatis</span>
+                </label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              Submit Jawaban
+            </button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Anda siap untuk Sesi 6.2.' : score >= 3 ? 'Baik! Review 1 topik yang missed sebelum lanjut.' : score >= 2 ? 'Cukup. Disarankan ulang baca slide Thinking Mode dan Deep Research.' : 'Kembali ke slide 4-6 untuk reinforce konsep dasar.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q1 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'c' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Jawaban: Gemini dengan Search Grounding aktif (real-time data dengan citation URL)</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q2 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'b' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Jawaban: Gemini 2.5 Pro + Thinking Mode — COA kompleks butuh reasoning trace yang bisa di-audit komandan</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q3 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'a' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Jawaban: Gemini 2.5 Pro saja — memberikan audit trail reasoning eksplisit</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q4 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'd' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Jawaban: Gemini Deep Research — autonomous multi-step browsing + synthesis untuk laporan mendalam</span>
+              </div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Model Selection</div><div class="text-sm text-white/60">Default Flash (sweet spot). Pro untuk strategic/long context + Thinking Mode. Flash-Lite untuk volume automation.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Unique Strengths</div><div class="text-sm text-white/60">Thinking mode, native multimodal (video/audio), search grounding live, Deep Research autonomous agent, Code Execution built-in.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">Thinking Mode</div><div class="text-sm text-white/60">Pro only. Gunakan untuk COA/threat assessment yang butuh reasoning audit trail — baca trace sebelum trust output.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Deep Research</div><div class="text-sm text-white/60">Autonomous agent untuk research report mendalam dari web. 3-15 menit, bukan untuk real-time. Fact-check wajib.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">5</span><div><div class="font-semibold text-white mb-1">Tool Routing</div><div class="text-sm text-white/60">Real-time/search/visual/research → Gemini + Search Grounding. Reasoning/COA/strategic → Gemini 2.5 Pro + Thinking Mode. Multi-doc + citation → NotebookLM.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">6</span><div><div class="font-semibold text-white mb-1">Prompt Library</div><div class="text-sm text-white/60">6 template tersedia (T-01 s/d T-06) — copy-paste dan adaptasi untuk ops harian Anda.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">NotebookLM</strong> — source-grounded intel synthesis untuk multi-document analysis dengan zero hallucination</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Overview Modul 06</a>
+        <a href="sesi-06-02-create-image.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.2: Create Image →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

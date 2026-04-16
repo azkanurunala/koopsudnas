@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 1.2 | Framework RISEN: Prompt Engineering untuk Militer</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#22d3ee',
+            'accent-light': '#67e8f9',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #22d3ee;
+      --accent-glow: rgba(34, 211, 238, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    /* Background Effects */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 600px; height: 600px; 
+      top: -200px; left: -100px; 
+      background: var(--accent); 
+      opacity: 0.12; 
+    }
+    .blob-2 { 
+      width: 400px; height: 400px; 
+      bottom: -100px; right: -50px; 
+      background: #0891b2; 
+      opacity: 0.1; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    /* Glass Cards */
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset,
+                  0 32px 64px -16px rgba(0,0,0,0.5);
+    }
+    
+    /* Slide Section */
+    .slide-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 24px;
+      position: relative;
+    }
+    
+    .slide-section:nth-child(even) {
+      background: linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.03) 50%, transparent 100%);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #67e8f9);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Slide Navigation */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .slide-nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .slide-nav-dot.active {
+      background: var(--accent);
+      border-color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    /* Typography */
+    .slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+    
+    .slide-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+    }
+    
+    /* RISEN Letter Cards */
+    .risen-letter {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      transition: all 0.3s ease;
+    }
+    
+    .risen-letter:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Code Block */
+    .code-block {
+      background: #0a0f1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+    }
+    
+    .code-line {
+      padding: 4px 0;
+      border-left: 3px solid transparent;
+      padding-left: 12px;
+    }
+    
+    .code-line.highlight-r { border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); }
+    .code-line.highlight-i { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+    .code-line.highlight-s { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+    .code-line.highlight-e { border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+    .code-line.highlight-n { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+    
+    /* Interactive Elements */
+    .reveal-card {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .reveal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(34, 211, 238, 0.2);
+    }
+    
+    /* Quiz Styles */
+    .quiz-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.1);
+    }
+    
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.2);
+    }
+    
+    .quiz-option.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .quiz-option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Copy Button */
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #10b981;
+      color: #10b981;
+    }
+    
+    /* Comparison */
+    .comparison-bad {
+      border-left: 4px solid #ef4444;
+    }
+    
+    .comparison-good {
+      border-left: 4px solid #10b981;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.5); }
+    
+    /* Mobile Nav */
+    @media (max-width: 768px) {
+      .slide-nav { display: none; }
+    }
+    
+    /* Tab System */
+    .tab-btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .tab-btn.active {
+      background: var(--accent);
+      color: #050810;
+    }
+    
+    .tab-btn:not(.active) {
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .tab-btn:not(.active):hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0,
+  totalSlides: 13,
+  progress: 0,
+  copiedTemplate: null,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  },
+  copyToClipboard(text, id) {
+    navigator.clipboard.writeText(text);
+    this.copiedTemplate = id;
+    setTimeout(() => this.copiedTemplate = null, 2000);
+  }
+}">
+
+  <!-- Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <!-- Slide Navigation Dots -->
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" 
+           :class="currentSlide === i-1 ? 'active' : ''"
+           @click="scrollToSlide(i-1)"
+           :title="'Slide ' + i">
+      </div>
+    </template>
+  </div>
+  
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-01-ai-fundamentals.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Modul 01</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 1.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-01-01-demistifikasi-ai.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 1.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-01-03-hands-on-prompt.html" class="text-xs text-white/40 hover:text-white/60">Sesi 1.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 01 • SESI 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        FRAMEWORK RISEN<br>
+        <span class="text-accent">PROMPT ENGINEERING UNTUK MILITER</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Struktur 5 komponen untuk menyusun prompt yang menghasilkan output 
+        <strong class="text-white">berkualitas tinggi dan konsisten</strong> — 
+        khusus untuk konteks operasional pertahanan.
+      </p>
+      
+      <!-- RISEN Preview -->
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="risen-letter bg-accent/20 text-accent">R</div>
+        <div class="risen-letter bg-blue-500/20 text-blue-400">I</div>
+        <div class="risen-letter bg-purple-500/20 text-purple-400">S</div>
+        <div class="risen-letter bg-amber-500/20 text-amber-400">E</div>
+        <div class="risen-letter bg-green-500/20 text-green-400">N</div>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">45</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">5</div>
+          <div class="text-xs text-white/50">KOMPONEN</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3</div>
+          <div class="text-xs text-white/50">TEMPLATE</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: LEARNING OBJECTIVES ==================== -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TUJUAN PEMBELAJARAN</div>
+        <h2 class="slide-subtitle">
+          SETELAH SESI INI, ANDA AKAN MAMPU:
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl reveal-card">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🎯</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Memahami 5 Komponen RISEN</h3>
+          <p class="text-white/60 text-sm">
+            Role, Instructions, Steps, End Goal, Narrowing — 
+            dan bagaimana masing-masing berkontribusi pada kualitas output.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl reveal-card">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">✍️</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menyusun Prompt Terstruktur</h3>
+          <p class="text-white/60 text-sm">
+            Menulis prompt yang jelas, spesifik, dan menghasilkan 
+            output yang konsisten untuk berbagai kebutuhan operasional.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl reveal-card">
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">🚫</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menghindari Kesalahan Umum</h3>
+          <p class="text-white/60 text-sm">
+            Mengenali dan menghindari kesalahan prompting yang sering 
+            menyebabkan output tidak optimal.
+          </p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl reveal-card">
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+            <span class="text-2xl">📋</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Menggunakan Template Siap Pakai</h3>
+          <p class="text-white/60 text-sm">
+            Memanfaatkan template prompt yang sudah terbukti efektif 
+            untuk konteks militer.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: WHY FRAMEWORK MATTERS ==================== -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MENGAPA PERLU FRAMEWORK?</div>
+        <h2 class="slide-title">
+          PROMPT BIASA vs<br>
+          <span class="text-accent">PROMPT DENGAN RISEN</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Bad Example -->
+        <div class="glass-lit p-6 rounded-2xl comparison-bad">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 text-xl">✕</span>
+            </div>
+            <div class="text-red-400 font-semibold">TANPA STRUKTUR</div>
+          </div>
+          
+          <div class="code-block p-4 mb-4">
+            <div class="text-white/60 text-sm">
+              "Tolong analisis situasi di perbatasan utara"
+            </div>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start gap-2 text-red-400">
+              <span>✕</span>
+              <span>Terlalu vague — situasi apa? Data apa?</span>
+            </div>
+            <div class="flex items-start gap-2 text-red-400">
+              <span>✕</span>
+              <span>Tidak ada konteks role AI</span>
+            </div>
+            <div class="flex items-start gap-2 text-red-400">
+              <span>✕</span>
+              <span>Output tidak jelas — format? panjang?</span>
+            </div>
+            <div class="flex items-start gap-2 text-red-400">
+              <span>✕</span>
+              <span>Sulit di-iterate jika hasil tidak sesuai</span>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-red-500/10 rounded-lg text-center">
+            <span class="text-red-400 text-sm">Output: Tidak konsisten, sering miss the point</span>
+          </div>
+        </div>
+        
+        <!-- Good Example -->
+        <div class="glass-lit p-6 rounded-2xl comparison-good">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span class="text-green-400 text-xl">✓</span>
+            </div>
+            <div class="text-green-400 font-semibold">DENGAN RISEN</div>
+          </div>
+          
+          <div class="code-block p-4 mb-4">
+            <div class="text-white/60 text-sm leading-relaxed">
+              "Sebagai <span class="text-accent">analis intelijen senior</span>, 
+              <span class="text-blue-400">analisis data radar 48 jam terakhir di sektor utara</span>. 
+              <span class="text-purple-400">Identifikasi pola, nilai ancaman, rekomendasikan respons</span>. 
+              <span class="text-amber-400">Output: Brief 1 halaman untuk Komandan</span>. 
+              <span class="text-green-400">Format: Exec Summary + Analisis + Rekomendasi, max 500 kata</span>."
+            </div>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start gap-2 text-green-400">
+              <span>✓</span>
+              <span>Spesifik — jelas data dan scope</span>
+            </div>
+            <div class="flex items-start gap-2 text-green-400">
+              <span>✓</span>
+              <span>Role memberikan konteks expertise</span>
+            </div>
+            <div class="flex items-start gap-2 text-green-400">
+              <span>✓</span>
+              <span>Output terukur — format dan panjang jelas</span>
+            </div>
+            <div class="flex items-start gap-2 text-green-400">
+              <span>✓</span>
+              <span>Mudah di-iterate per komponen</span>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-green-500/10 rounded-lg text-center">
+            <span class="text-green-400 text-sm">Output: Konsisten, actionable, siap pakai</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: RISEN OVERVIEW ==================== -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">FRAMEWORK OVERVIEW</div>
+        <h2 class="slide-title">
+          5 KOMPONEN<br>
+          <span class="text-accent">RISEN</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-5 gap-4 mb-8">
+        <div class="glass-lit p-6 rounded-2xl text-center reveal-card">
+          <div class="risen-letter bg-accent/20 text-accent mx-auto mb-4" style="width: 60px; height: 60px; font-size: 2rem;">R</div>
+          <div class="font-semibold text-accent">Role</div>
+          <div class="text-xs text-white/50 mt-1">Siapa AI-nya?</div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center reveal-card">
+          <div class="risen-letter bg-blue-500/20 text-blue-400 mx-auto mb-4" style="width: 60px; height: 60px; font-size: 2rem;">I</div>
+          <div class="font-semibold text-blue-400">Instructions</div>
+          <div class="text-xs text-white/50 mt-1">Apa tugasnya?</div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center reveal-card">
+          <div class="risen-letter bg-purple-500/20 text-purple-400 mx-auto mb-4" style="width: 60px; height: 60px; font-size: 2rem;">S</div>
+          <div class="font-semibold text-purple-400">Steps</div>
+          <div class="text-xs text-white/50 mt-1">Langkah-langkah</div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center reveal-card">
+          <div class="risen-letter bg-amber-500/20 text-amber-400 mx-auto mb-4" style="width: 60px; height: 60px; font-size: 2rem;">E</div>
+          <div class="font-semibold text-amber-400">End Goal</div>
+          <div class="text-xs text-white/50 mt-1">Target akhir</div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl text-center reveal-card">
+          <div class="risen-letter bg-green-500/20 text-green-400 mx-auto mb-4" style="width: 60px; height: 60px; font-size: 2rem;">N</div>
+          <div class="font-semibold text-green-400">Narrowing</div>
+          <div class="text-xs text-white/50 mt-1">Batasan/format</div>
+        </div>
+      </div>
+      
+      <div class="glass p-6 rounded-2xl text-center">
+        <p class="text-white/70">
+          Kelima komponen ini bekerja bersama untuk memberikan <strong class="text-white">konteks lengkap</strong> 
+          kepada AI, sehingga output yang dihasilkan lebih <strong class="text-accent">akurat, relevan, dan actionable</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: R - ROLE ==================== -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="risen-letter bg-accent/20 text-accent">R</div>
+        <div>
+          <div class="text-accent font-mono text-sm mb-1">KOMPONEN 1 OF 5</div>
+          <h2 class="slide-title leading-tight">
+            ROLE<br>
+            <span class="text-accent text-2xl">Siapa AI-nya?</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Mengapa Role Penting?</h3>
+            <p class="text-white/70 mb-4">
+              Role memberikan <strong class="text-white">"lensa"</strong> yang digunakan AI untuk memproses informasi. 
+              Perspektif yang berbeda menghasilkan analisis yang berbeda.
+            </p>
+            <div class="p-4 bg-accent/10 rounded-xl">
+              <div class="text-sm text-white/60">
+                Seorang <strong class="text-accent">"analis intelijen"</strong> akan fokus pada pola ancaman, 
+                sementara <strong class="text-accent">"logistics officer"</strong> akan fokus pada supply chain.
+              </div>
+            </div>
+          </div>
+          
+          <div class="glass p-4 rounded-xl">
+            <div class="text-sm text-white/40 mb-3">Contoh Role untuk Konteks Militer:</div>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 bg-accent/20 rounded-full text-accent text-sm">Analis Intelijen Senior TNI AU</span>
+              <span class="px-3 py-1 bg-accent/20 rounded-full text-accent text-sm">Staff Officer Operasi</span>
+              <span class="px-3 py-1 bg-accent/20 rounded-full text-accent text-sm">Air Defense Specialist</span>
+              <span class="px-3 py-1 bg-accent/20 rounded-full text-accent text-sm">Advisor Keamanan Nasional</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl comparison-bad mb-4">
+            <div class="text-sm text-red-400 font-mono mb-2">❌ KURANG EFEKTIF</div>
+            <div class="code-block p-3">
+              <code class="text-white/60">"Analisis data ini"</code>
+            </div>
+            <div class="text-xs text-white/50 mt-2">Tidak ada konteks — AI tidak tahu perspektif apa yang dibutuhkan</div>
+          </div>
+          
+          <div class="glass-lit p-6 rounded-2xl comparison-good">
+            <div class="text-sm text-green-400 font-mono mb-2">✓ LEBIH EFEKTIF</div>
+            <div class="code-block p-3">
+              <code class="text-white/70">"Sebagai <span class="text-accent">analis intelijen senior dengan 15 tahun pengalaman di bidang air defense</span>, analisis data ini..."</code>
+            </div>
+            <div class="text-xs text-white/50 mt-2">AI memahami expertise level dan domain focus yang dibutuhkan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: I - INSTRUCTIONS ==================== -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="risen-letter bg-blue-500/20 text-blue-400">I</div>
+        <div>
+          <div class="text-blue-400 font-mono text-sm mb-1">KOMPONEN 2 OF 5</div>
+          <h2 class="slide-title leading-tight">
+            INSTRUCTIONS<br>
+            <span class="text-blue-400 text-2xl">Apa tugasnya?</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-blue-400">Tips Menulis Instructions</h3>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">1</div>
+                <div>
+                  <div class="font-semibold text-sm">Gunakan Kata Kerja Aktif</div>
+                  <div class="text-xs text-white/50">Analisis, Identifikasi, Evaluasi, Bandingkan, Sintesis</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">2</div>
+                <div>
+                  <div class="font-semibold text-sm">Satu Tugas Utama per Prompt</div>
+                  <div class="text-xs text-white/50">Jika kompleks, pecah menjadi beberapa prompt</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">3</div>
+                <div>
+                  <div class="font-semibold text-sm">Hindari Ambiguitas</div>
+                  <div class="text-xs text-white/50">"Bahas" → "Jelaskan penyebab dan dampak"</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-blue-400">Contoh Instructions</h3>
+            
+            <div class="space-y-4">
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "<span class="text-blue-400 font-semibold">Analisis</span> pola pergerakan pesawat asing dalam 72 jam terakhir dan 
+                  <span class="text-blue-400 font-semibold">identifikasi</span> anomali yang memerlukan perhatian."
+                </code>
+              </div>
+              
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "<span class="text-blue-400 font-semibold">Bandingkan</span> tiga opsi COA berikut berdasarkan kriteria: 
+                  risiko, resource requirement, dan probability of success."
+                </code>
+              </div>
+              
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "<span class="text-blue-400 font-semibold">Evaluasi</span> threat level dan 
+                  <span class="text-blue-400 font-semibold">rekomendasikan</span> respons yang sesuai."
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: S - STEPS ==================== -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="risen-letter bg-purple-500/20 text-purple-400">S</div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm mb-1">KOMPONEN 3 OF 5</div>
+          <h2 class="slide-title leading-tight">
+            STEPS<br>
+            <span class="text-purple-400 text-2xl">Langkah-langkah</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-purple-400">Mengapa Steps Penting?</h3>
+            <p class="text-white/70 mb-4">
+              Steps memaksa AI untuk berpikir <strong class="text-white">secara sistematis</strong>. 
+              Tanpa steps, AI mungkin melompat ke kesimpulan tanpa analisis proper.
+            </p>
+            
+            <div class="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+              <div class="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-2">
+                <span>💡</span> PRO TIP
+              </div>
+              <div class="text-sm text-white/60">
+                Gunakan <strong class="text-white">numbered list</strong> (1, 2, 3) untuk steps. 
+                AI akan mengikuti urutan dengan lebih konsisten.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-purple-400">Contoh Steps untuk Threat Assessment</h3>
+            
+            <div class="code-block p-4">
+              <div class="space-y-2 text-sm">
+                <div class="code-line highlight-s"><span class="text-purple-400">1.</span> <span class="text-white/70">Review semua data yang tersedia</span></div>
+                <div class="code-line highlight-s"><span class="text-purple-400">2.</span> <span class="text-white/70">Identifikasi pola dan anomali</span></div>
+                <div class="code-line highlight-s"><span class="text-purple-400">3.</span> <span class="text-white/70">Korelasikan dengan data historis</span></div>
+                <div class="code-line highlight-s"><span class="text-purple-400">4.</span> <span class="text-white/70">Nilai tingkat ancaman (Low/Med/High)</span></div>
+                <div class="code-line highlight-s"><span class="text-purple-400">5.</span> <span class="text-white/70">Rekomendasikan respons</span></div>
+                <div class="code-line highlight-s"><span class="text-purple-400">6.</span> <span class="text-white/70">Identifikasi intelligence gaps</span></div>
+              </div>
+            </div>
+            
+            <div class="mt-4 text-xs text-white/50 text-center">
+              Setiap step menghasilkan output yang menjadi input untuk step berikutnya
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: E - END GOAL ==================== -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="risen-letter bg-amber-500/20 text-amber-400">E</div>
+        <div>
+          <div class="text-amber-400 font-mono text-sm mb-1">KOMPONEN 4 OF 5</div>
+          <h2 class="slide-title leading-tight">
+            END GOAL<br>
+            <span class="text-amber-400 text-2xl">Target akhir</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-amber-400">Jelaskan Output dengan Detail</h3>
+            
+            <div class="space-y-4">
+              <div class="p-4 bg-white/5 rounded-xl">
+                <div class="font-semibold text-sm text-amber-400 mb-2">📄 Jenis Dokumen</div>
+                <div class="text-sm text-white/60">Brief, Report, Summary, Analysis, Recommendation, Matrix</div>
+              </div>
+              
+              <div class="p-4 bg-white/5 rounded-xl">
+                <div class="font-semibold text-sm text-amber-400 mb-2">👥 Audience</div>
+                <div class="text-sm text-white/60">Untuk siapa? Komandan? Staff meeting? Publik?</div>
+              </div>
+              
+              <div class="p-4 bg-white/5 rounded-xl">
+                <div class="font-semibold text-sm text-amber-400 mb-2">🎯 Decision Support</div>
+                <div class="text-sm text-white/60">Apakah perlu actionable recommendations?</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-amber-400">Contoh End Goal</h3>
+            
+            <div class="space-y-4">
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "Hasilkan <span class="text-amber-400 font-semibold">intelligence brief 1 halaman</span> 
+                  yang bisa dipresentasikan kepada <span class="text-amber-400 font-semibold">Panglima</span> 
+                  dalam morning briefing."
+                </code>
+              </div>
+              
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "Output berupa <span class="text-amber-400 font-semibold">decision matrix</span> 
+                  dengan scoring untuk setiap COA agar 
+                  <span class="text-amber-400 font-semibold">mudah dibandingkan</span>."
+                </code>
+              </div>
+              
+              <div class="code-block p-4">
+                <code class="text-white/70 text-sm">
+                  "Buat <span class="text-amber-400 font-semibold">executive summary</span> yang bisa 
+                  dibaca dalam <span class="text-amber-400 font-semibold">2 menit</span>."
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: N - NARROWING ==================== -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-6 mb-8">
+        <div class="risen-letter bg-green-500/20 text-green-400">N</div>
+        <div>
+          <div class="text-green-400 font-mono text-sm mb-1">KOMPONEN 5 OF 5</div>
+          <h2 class="slide-title leading-tight">
+            NARROWING<br>
+            <span class="text-green-400 text-2xl">Batasan & Format</span>
+          </h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-green-400">Jenis-jenis Narrowing</h3>
+            
+            <div class="space-y-3">
+              <div class="p-3 bg-green-500/10 rounded-xl flex items-center gap-3">
+                <div class="w-20 text-green-400 font-semibold text-sm">Length</div>
+                <div class="text-sm text-white/60">"Maksimal 500 kata" / "1 halaman" / "3 paragraf"</div>
+              </div>
+              
+              <div class="p-3 bg-green-500/10 rounded-xl flex items-center gap-3">
+                <div class="w-20 text-green-400 font-semibold text-sm">Format</div>
+                <div class="text-sm text-white/60">"Bullet points" / "Tabel" / "Exec Summary + Detail"</div>
+              </div>
+              
+              <div class="p-3 bg-green-500/10 rounded-xl flex items-center gap-3">
+                <div class="w-20 text-green-400 font-semibold text-sm">Tone</div>
+                <div class="text-sm text-white/60">"Formal" / "Direct" / "Objective tanpa opini"</div>
+              </div>
+              
+              <div class="p-3 bg-green-500/10 rounded-xl flex items-center gap-3">
+                <div class="w-20 text-green-400 font-semibold text-sm">Scope</div>
+                <div class="text-sm text-white/60">"Fokus 72 jam terakhir" / "Hanya sektor utara"</div>
+              </div>
+              
+              <div class="p-3 bg-green-500/10 rounded-xl flex items-center gap-3">
+                <div class="w-20 text-green-400 font-semibold text-sm">Language</div>
+                <div class="text-sm text-white/60">"Bahasa Indonesia formal" / "Terminologi NATO"</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-green-400">Contoh Narrowing Lengkap</h3>
+            
+            <div class="code-block p-4">
+              <div class="space-y-2 text-sm text-white/60">
+                <div class="code-line highlight-n">• Format: Executive Summary (50 kata) + Analisis (200 kata) + Rekomendasi (100 kata)</div>
+                <div class="code-line highlight-n">• Gunakan bullet points untuk key findings</div>
+                <div class="code-line highlight-n">• Sertakan confidence level (Low/Medium/High) untuk setiap assessment</div>
+                <div class="code-line highlight-n">• Bahasa Indonesia formal, hindari jargon teknis berlebihan</div>
+                <div class="code-line highlight-n">• Fokus pada ancaman prioritas tinggi saja</div>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-green-500/10 rounded-lg text-center">
+              <span class="text-green-400 text-sm">Narrowing membuat output lebih fokus dan actionable</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: COMPLETE EXAMPLE ==================== -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">PUTTING IT ALL TOGETHER</div>
+        <h2 class="slide-title">
+          CONTOH PROMPT<br>
+          <span class="text-accent">LENGKAP DENGAN RISEN</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" 
+                @click="
+                  navigator.clipboard.writeText(document.getElementById('full-prompt').innerText);
+                  copied = true;
+                  setTimeout(() => copied = false, 2000);
+                ">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: INTELLIGENCE SUMMARY</div>
+        
+        <div class="code-block p-6" id="full-prompt">
+          <div class="space-y-4 text-sm">
+            <div class="code-line highlight-r py-2">
+              <span class="text-accent font-semibold">[ROLE]</span>
+              <span class="text-white/70"> Kamu adalah analis intelijen senior TNI AU dengan spesialisasi air defense dan pengalaman 15 tahun dalam threat assessment.</span>
+            </div>
+            
+            <div class="code-line highlight-i py-2">
+              <span class="text-blue-400 font-semibold">[INSTRUCTIONS]</span>
+              <span class="text-white/70"> Analisis data pergerakan pesawat asing di sektor utara ADIZ Indonesia selama 48 jam terakhir. Identifikasi pola yang tidak biasa dan nilai potensi ancaman.</span>
+            </div>
+            
+            <div class="code-line highlight-s py-2">
+              <span class="text-purple-400 font-semibold">[STEPS]</span>
+              <span class="text-white/70"> Lakukan analisis dengan langkah berikut:</span>
+              <div class="pl-6 mt-2 space-y-1 text-white/60">
+                <div>1. Review data radar dan korelasikan dengan data ADS-B</div>
+                <div>2. Identifikasi pola flight path dan frekuensi</div>
+                <div>3. Bandingkan dengan baseline aktivitas normal</div>
+                <div>4. Nilai tingkat ancaman menggunakan skala Low/Medium/High</div>
+                <div>5. Rumuskan rekomendasi respons</div>
+              </div>
+            </div>
+            
+            <div class="code-line highlight-e py-2">
+              <span class="text-amber-400 font-semibold">[END GOAL]</span>
+              <span class="text-white/70"> Hasilkan intelligence brief 1 halaman yang siap dipresentasikan kepada Panglima Koopsudnas dalam morning briefing.</span>
+            </div>
+            
+            <div class="code-line highlight-n py-2">
+              <span class="text-green-400 font-semibold">[NARROWING]</span>
+              <span class="text-white/70"> Format output:</span>
+              <div class="pl-6 mt-2 space-y-1 text-white/60">
+                <div>• Executive Summary (maksimal 50 kata)</div>
+                <div>• Key Findings (3-5 bullet points)</div>
+                <div>• Threat Assessment dengan confidence level</div>
+                <div>• Recommended Actions (2-3 opsi)</div>
+                <div>• Intelligence Gaps yang perlu di-follow up</div>
+                <div>• Total maksimal 400 kata, bahasa Indonesia formal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 11: COMMON MISTAKES ==================== -->
+  <section class="slide-section" id="slide-11">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-red-400 font-mono text-sm mb-4">HINDARI KESALAHAN INI</div>
+        <h2 class="slide-title">
+          6 KESALAHAN UMUM<br>
+          <span class="text-red-400">DALAM PROMPTING</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Terlalu Vague</div>
+          <div class="text-xs text-white/40 mb-2">"Analisis situasi"</div>
+          <div class="text-xs text-green-400">✓ "Analisis pola pergerakan pesawat di sektor X selama 48 jam"</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Tidak Ada Output Spec</div>
+          <div class="text-xs text-white/40 mb-2">"Buat laporan"</div>
+          <div class="text-xs text-green-400">✓ "Buat brief 1 halaman dengan format Exec Summary + Detail"</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Terlalu Banyak Sekaligus</div>
+          <div class="text-xs text-white/40 mb-2">10 tugas dalam 1 prompt</div>
+          <div class="text-xs text-green-400">✓ Pecah menjadi beberapa prompt terpisah</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Tidak Ada Konteks</div>
+          <div class="text-xs text-white/40 mb-2">Tidak kasih background data</div>
+          <div class="text-xs text-green-400">✓ Sertakan data atau paste dokumen yang perlu dianalisis</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Tidak Iterate</div>
+          <div class="text-xs text-white/40 mb-2">Terima output pertama begitu saja</div>
+          <div class="text-xs text-green-400">✓ Minta AI untuk refine, expand, atau adjust</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+          <div class="text-red-400 font-semibold mb-2">❌ Tidak Verifikasi</div>
+          <div class="text-xs text-white/40 mb-2">Percaya 100% output AI</div>
+          <div class="text-xs text-green-400">✓ Selalu cross-check fakta dan angka penting</div>
+        </div>
+      </div>
+      
+      <div class="mt-8 glass p-6 rounded-2xl text-center">
+        <p class="text-white/70">
+          <strong class="text-white">Ingat:</strong> Prompt yang baik adalah prompt yang bisa di-<span class="text-accent">iterate</span>. 
+          Jika output tidak sesuai, perbaiki komponen RISEN yang relevan.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 12: RISEN LINTAS DOMAIN ==================== -->
+  <section class="slide-section" id="slide-12">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-4">BEYOND INTELLIGENCE</div>
+        <h2 class="slide-title">
+          RISEN <span class="text-accent">LINTAS DOMAIN</span><br>
+          <span class="text-xl text-white/60 font-normal">Framework yang sama, 5 tugas pokok Koopsudnas</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4 text-sm">
+          RISEN bukan milik analis intelijen saja. Struktur <strong class="text-white">Role / Input / Steps / Expected / Narrowing</strong>
+          berlaku universal untuk tugas SAR, pembinaan satuan, doktrin, maupun penegakan hukum udara.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+
+        <!-- VARIANT 1: SAR COORDINATOR (blue) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-blue-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-blue-400">DOMAIN B — OMSP / SAR</div>
+              <div class="text-sm font-semibold text-white">SAR Coordinator</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 mb-3 italic">Skenario: CENDRAWASIH RESCUE — ATR-72 lost contact, Banda Sea</div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="text-blue-400 font-mono mb-1">R — ROLE</div>
+              <div class="text-white/70">SAR coordinator TNI AU yang bekerja dengan Basarnas, pengalaman 10 tahun maritime SAR di wilayah timur Indonesia.</div>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono mb-1">I — INPUT</div>
+              <div class="text-white/70">Last known position 4.2°S 129.8°E (0230L), weather BMKG, sea current drift, 68 pax manifest, asset availability TNI AU/AL.</div>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono mb-1">S — STEPS</div>
+              <div class="text-white/70">1) Hitung drift area 6 jam. 2) Prioritize search sector. 3) Assign aset (CN-235, C-212, heli). 4) Draft SITREP Basarnas.</div>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono mb-1">E — EXPECTED OUTPUT</div>
+              <div class="text-white/70">Search area prioritization matrix + resource allocation table + SITREP 1 halaman untuk Basarnas.</div>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono mb-1">N — NARROWING</div>
+              <div class="text-white/70">Fokus 0600–1200L window, cuaca visibility &lt;2 km, tone humanitarian (bukan combat).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT 2: STAFF PEMBINAAN (purple) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-purple-400">DOMAIN C — PEMBINAAN</div>
+              <div class="text-sm font-semibold text-white">Staff Pembinaan Satuan</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 mb-3 italic">Skenario: Readiness Assessment Koopsud II menjelang ADEX 90 hari</div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="text-purple-400 font-mono mb-1">R — ROLE</div>
+              <div class="text-white/70">Staff pembinaan satuan di Koopsudnas, fokus readiness assessment, analytical tone (non-adversarial).</div>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono mb-1">I — INPUT</div>
+              <div class="text-white/70">Serviceability rate 3 skadron, flight hours crew, ammo stock, maintenance backlog, training gap matrix.</div>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono mb-1">S — STEPS</div>
+              <div class="text-white/70">1) Gap analysis per skadron. 2) Identifikasi critical shortfall. 3) Bandingkan dengan ADEX requirement. 4) Usulkan remediation.</div>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono mb-1">E — EXPECTED OUTPUT</div>
+              <div class="text-white/70">Readiness brief + remediation roadmap 90 hari + resource request memo ke Pangkoopsudnas.</div>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono mb-1">N — NARROWING</div>
+              <div class="text-white/70">Hanya untuk Koopsud II, horizon 90 hari, tidak bahas combat outcome, fokus ke input readiness.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT 3: DOCTRINE OFFICER (amber) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-amber-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-amber-400">DOMAIN D — DOKTRIN</div>
+              <div class="text-sm font-semibold text-white">Doctrine Officer</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 mb-3 italic">Skenario: IADS Doctrine Review — update posture era UAV &amp; long-range precision</div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="text-amber-400 font-mono mb-1">R — ROLE</div>
+              <div class="text-white/70">Doctrine officer Sopsau dengan pengalaman reviewer doktrin IADS, familiar dengan best practice NATO &amp; regional.</div>
+            </div>
+            <div>
+              <div class="text-amber-400 font-mono mb-1">I — INPUT</div>
+              <div class="text-white/70">Doktrin IADS TNI AU existing, NATO STANAG references, doktrin Singapore/Australia, 3 policy paper, lessons learned exercise.</div>
+            </div>
+            <div>
+              <div class="text-amber-400 font-mono mb-1">S — STEPS</div>
+              <div class="text-white/70">1) Bandingkan doktrin existing vs best practice. 2) Identify gap (UAV, long-range strike). 3) Rumuskan update posture. 4) Siapkan stakeholder brief.</div>
+            </div>
+            <div>
+              <div class="text-amber-400 font-mono mb-1">E — EXPECTED OUTPUT</div>
+              <div class="text-white/70">Doctrine gap analysis + recommended posture update + 5-slide stakeholder brief untuk Kasau.</div>
+            </div>
+            <div>
+              <div class="text-amber-400 font-mono mb-1">N — NARROWING</div>
+              <div class="text-white/70">Hanya aspek IADS (bukan offensive doctrine), scope regional Indo-Pasifik, horizon 5 tahun.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-8 glass p-6 rounded-2xl text-center max-w-4xl mx-auto">
+        <p class="text-white/70 text-sm">
+          <strong class="text-white">Insight kunci:</strong> Struktur RISEN <span class="text-accent">tidak berubah</span> lintas domain.
+          Yang berubah hanya <strong class="text-accent">isi</strong> tiap komponen — Role berganti, Input berganti, Expected Output berganti.
+          Pamen yang sudah fasih RISEN di intel akan bisa langsung translate ke SAR, pembinaan, doktrin, maupun gakkum udara.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 13: QUIZ & SUMMARY ==================== -->
+  <section class="slide-section" id="slide-13">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">
+          <span class="text-accent">QUIZ SINGKAT</span><br>
+          & KEY TAKEAWAYS
+        </h2>
+      </div>
+      
+      <!-- Quiz -->
+      <div class="glass-lit p-8 rounded-2xl mb-8" x-data="{ 
+        answer: null, 
+        submitted: false,
+        correct: false
+      }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Komponen RISEN mana yang berfungsi untuk memberikan <strong class="text-white">"lensa" atau perspektif expertise</strong> kepada AI?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'a' && !submitted,
+                 'correct': submitted && 'a' === 'a'
+               }"
+               @click="if(!submitted) answer = 'a'">
+            <div class="flex items-center gap-3">
+              <div class="risen-letter bg-accent/20 text-accent" style="width: 40px; height: 40px; font-size: 1.25rem;">R</div>
+              <span>Role</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'b' && !submitted,
+                 'incorrect': answer === 'b' && submitted 
+               }"
+               @click="if(!submitted) answer = 'b'">
+            <div class="flex items-center gap-3">
+              <div class="risen-letter bg-blue-500/20 text-blue-400" style="width: 40px; height: 40px; font-size: 1.25rem;">I</div>
+              <span>Instructions</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'c' && !submitted,
+                 'incorrect': answer === 'c' && submitted 
+               }"
+               @click="if(!submitted) answer = 'c'">
+            <div class="flex items-center gap-3">
+              <div class="risen-letter bg-amber-500/20 text-amber-400" style="width: 40px; height: 40px; font-size: 1.25rem;">E</div>
+              <span>End Goal</span>
+            </div>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl" 
+               :class="{ 
+                 'selected': answer === 'd' && !submitted,
+                 'incorrect': answer === 'd' && submitted 
+               }"
+               @click="if(!submitted) answer = 'd'">
+            <div class="flex items-center gap-3">
+              <div class="risen-letter bg-green-500/20 text-green-400" style="width: 40px; height: 40px; font-size: 1.25rem;">N</div>
+              <span>Narrowing</span>
+            </div>
+          </div>
+        </div>
+        
+        <button 
+          class="w-full py-3 rounded-xl font-semibold transition-all"
+          :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'"
+          :disabled="!answer"
+          @click="submitted = true; correct = (answer === 'a')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: Role (R).</strong> 
+            Role memberikan konteks expertise dan perspektif kepada AI, seperti "analis intelijen senior" 
+            yang akan menganalisis dengan fokus pada ancaman dan pola.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Key Takeaways -->
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold">Key Takeaways Sesi 1.2</h3>
+        </div>
+        
+        <div class="grid sm:grid-cols-2 gap-4 mb-8">
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">1</span>
+            <span class="text-white/70"><strong class="text-white">RISEN</strong> = Role, Instructions, Steps, End Goal, Narrowing</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">2</span>
+            <span class="text-white/70"><strong class="text-white">Role</strong> memberikan "lensa" analisis yang tepat</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">3</span>
+            <span class="text-white/70"><strong class="text-white">Steps</strong> memastikan AI berpikir sistematis</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">4</span>
+            <span class="text-white/70"><strong class="text-white">Narrowing</strong> membuat output actionable dan fokus</span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">5</span>
+            <span class="text-white/70">Prompt yang baik bisa di-<strong class="text-white">iterate dan improve</strong></span>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+            <span class="text-accent font-bold text-lg">6</span>
+            <span class="text-white/70"><strong class="text-white">Verifikasi</strong> output AI sebelum digunakan</span>
+          </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="sesi-01-01-demistifikasi-ai.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+            ← Sesi 1.1: Demistifikasi AI
+          </a>
+          <a href="sesi-01-03-hands-on-prompt.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+            Lanjut ke Sesi 1.3: Hands-On →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RISEN di Gemini — 3 Cara Apply -->
+  <section class="relative py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI IMPLEMENTATION • 3 WAYS</div>
+              <h3 class="text-lg font-semibold">Apply RISEN di Gemini — Consumer, Gems, atau AI Studio</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-4">
+          <p class="text-sm text-white/70">
+            Framework RISEN adalah <em>prompt engineering universal</em> — struktur tetap 5 komponen. Yang berbeda adalah <strong class="text-white">di mana</strong> Anda menaruh tiap komponen dalam Gemini. Berikut tiga jalur:
+          </p>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+              <div class="text-xs font-mono text-indigo-400 mb-2">1. gemini.google.com (CONSUMER)</div>
+              <div class="text-xs text-white/70 leading-relaxed">
+                Paste <strong class="text-white">semua 5 komponen</strong> sekaligus dalam satu chat bubble. Cocok untuk ad-hoc analisis — 1 sesi, 1 task. Tidak ada pemisahan role vs instruksi.
+              </div>
+            </div>
+            <div class="p-4 bg-violet-500/10 rounded-xl border border-violet-500/20">
+              <div class="text-xs font-mono text-violet-400 mb-2">2. GEMS (CUSTOM GEM)</div>
+              <div class="text-xs text-white/70 leading-relaxed">
+                Simpan <strong class="text-white">Role + Steps + Expectation + Narrowing</strong> sebagai Gem persona ("Analis Koopsudnas Senior"). User tinggal paste Input. Reusable lintas tugas — hemat waktu di Kogasudgab.
+              </div>
+            </div>
+            <div class="p-4 bg-rose-500/10 rounded-xl border border-rose-500/20">
+              <div class="text-xs font-mono text-rose-400 mb-2">3. AI STUDIO (ADVANCED)</div>
+              <div class="text-xs text-white/70 leading-relaxed">
+                <strong class="text-white">System Instruction field</strong> untuk Role + Narrowing. User turn untuk Input + Steps + Expectation. Cleanest separation — ideal untuk batch processing laporan Satrad.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">🎯 Gemini-Specific Advantages</div>
+            <ul class="text-sm text-white/70 space-y-2">
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Thinking mode (Gemini 2.5 Pro)</strong> otomatis untuk prompt kompleks — RISEN "Steps" bekerja tanpa perlu trigger "think step by step".</li>
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Search grounding</strong> bisa di-toggle → RISEN "Narrowing" dapat spesifik "2025-2026 only" dan grounding akan respect scope itu (misal: cari artikel Angkasa Yudha 2025, bukan yang lama).</li>
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Google Workspace integration</strong> (Gmail, Drive, Docs) — "Input" RISEN bisa reference file langsung: "Analisis laporan Satrad 201 di Drive saya".</li>
+              <li class="flex items-start gap-2"><span class="text-indigo-400">•</span> <strong class="text-white">Multimodal native</strong> — paste foto radar/chart ke "Input", Gemini baca langsung tanpa OCR terpisah.</li>
+            </ul>
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <a href="sesi-06-01-gemini-ecosystem.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Lihat Sesi 6.1 — Gemini Ecosystem untuk deep dive ekosistem →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

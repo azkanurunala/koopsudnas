@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.9 | Multi-Tool Workflow Integration (Capstone)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#a78bfa',
+            'accent-light': '#c4b5fd',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #a78bfa; --accent-glow: rgba(167,139,250,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(167,139,250,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(167,139,250,0.03) 50%, transparent 100%); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #c4b5fd); z-index: 100; transition: width 0.3s ease; }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+
+    .phase-card { position: relative; transition: all 0.3s ease; }
+    .phase-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--phase-color); border-radius: 4px 0 0 4px; }
+    .phase-card:hover { transform: translateX(4px); }
+
+    .flow-arrow { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3); border-radius: 50%; font-size: 20px; color: var(--accent); flex-shrink: 0; }
+
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(167,139,250,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .prompt-block .label { color: #c4b5fd; font-weight: 600; }
+
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(167,139,250,0.2); border: 1px solid rgba(167,139,250,0.4); color: #c4b5fd; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(167,139,250,0.35); }
+    .copy-btn.copied { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); color: #10b981; }
+
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 2000px; }
+
+    .step-badge { width: 36px; height: 36px; border-radius: 50%; background: rgba(167,139,250,0.2); border: 2px solid rgba(167,139,250,0.4); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #a78bfa; flex-shrink: 0; }
+
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{
+  currentSlide: 0,
+  totalSlides: 12,
+  progress: 0,
+  copied: null,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' });
+  },
+  copyText(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    navigator.clipboard.writeText(el.innerText).then(() => {
+      this.copied = id;
+      setTimeout(() => { if (this.copied === id) this.copied = null; }, 2000);
+    });
+  }
+}">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.9</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CAPSTONE</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.8</a>
+        <span class="text-white/20">|</span>
+        <a href="index.html" class="text-xs text-white/40 hover:text-white/60">Home →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 9 • CAPSTONE</span>
+      </div>
+
+      <h1 class="slide-title mb-6">
+        MULTI-TOOL<br>
+        <span class="text-accent">WORKFLOW</span>
+      </h1>
+
+      <p class="text-xl text-white/60 max-w-3xl mx-auto mb-12">
+        End-to-end pipeline: <strong class="text-white">NotebookLM</strong> ingest sumber → <strong class="text-white">Gemini 2.5 Pro</strong> strategic reasoning → <strong class="text-white">Gemini Visual</strong> Imagen/Canvas → final intel package untuk komandan.
+      </p>
+
+      <div class="glass-lit p-6 rounded-2xl max-w-4xl mx-auto mb-8">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-xl bg-violet-500/20 flex items-center justify-center mx-auto mb-2"><span class="text-2xl">📚</span></div>
+            <div class="text-xs text-violet-400 font-mono">NOTEBOOKLM</div>
+            <div class="text-xs text-white/50 mt-1">Ingest & ground</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-2"><span class="text-2xl">🧠</span></div>
+            <div class="text-xs text-purple-400 font-mono">CLAUDE</div>
+            <div class="text-xs text-white/50 mt-1">Reasoning</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center mx-auto mb-2"><span class="text-2xl">🔍</span></div>
+            <div class="text-xs text-indigo-400 font-mono">GEMINI</div>
+            <div class="text-xs text-white/50 mt-1">Search & visual</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-2"><span class="text-2xl">📦</span></div>
+            <div class="text-xs text-accent font-mono">OUTPUT</div>
+            <div class="text-xs text-white/50 mt-1">Intel package</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass p-5 rounded-xl max-w-2xl mx-auto">
+        <div class="text-accent font-mono text-xs mb-3">SESI INI MENCAKUP</div>
+        <div class="grid sm:grid-cols-2 gap-2 text-sm text-white/70 text-left">
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> 4-Phase pipeline end-to-end</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Context handoff templates</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Gemini Deep Research walkthrough</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Handoff discipline & anti-patterns</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Capstone exercise 90 menit</div>
+          <div class="flex items-center gap-2"><span class="text-accent">›</span> Knowledge check quiz</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1B: SCENARIO MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">SCENARIO MATRIX</div>
+        <h2 class="slide-title">1 WORKFLOW, <span class="text-accent">3 MISI</span></h2>
+        <p class="text-white/60 mt-4 max-w-3xl mx-auto">Pipeline <strong class="text-accent">NotebookLM → Gemini 2.5 Pro → Imagen/Canvas → Package</strong> tidak terbatas ke threat brief. Workflow sama bisa menghasilkan deliverable untuk SAR coordination dan doctrine synthesis. Yang berubah hanya input data dan stakeholder output.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <!-- Threat Brief (Red) -->
+        <div class="glass-lit p-6 rounded-2xl border border-red-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span class="text-red-400 font-bold">A</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-red-400">DEFAULT / EXISTING</div>
+              <div class="font-semibold text-sm">THREAT BRIEF</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">UAV swarm threat assessment & intercept recommendation.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-red-400 font-mono">N→</span><span class="text-white/70">Literature UAV doktrin & case studies</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">C→</span><span class="text-white/70">Reasoning COA intercept + risk</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">G→</span><span class="text-white/70">Visual SITREP + threat map</span></div>
+            <div class="flex gap-2"><span class="text-red-400 font-mono">P→</span><span class="text-white/70">Decision brief Pangkoopsudnas</span></div>
+          </div>
+        </div>
+
+        <!-- SAR (Blue) -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">B1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">OMSP / SAR</div>
+              <div class="font-semibold text-sm">SAR COORDINATION</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">CENDRAWASIH RESCUE — ATR-72 missing Banda Sea.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">N→</span><span class="text-white/70">SOP Basarnas, drift model, weather ARA</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">C→</span><span class="text-white/70">Search strategy + asset allocation</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">G→</span><span class="text-white/70">Search area map + SITREP multi-agency</span></div>
+            <div class="flex gap-2"><span class="text-blue-400 font-mono">P→</span><span class="text-white/70">Coordination package untuk Basarnas</span></div>
+          </div>
+        </div>
+
+        <!-- Doctrine (Amber) -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">D1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">DOKTRIN</div>
+              <div class="font-semibold text-sm">DOCTRINE SYNTHESIS</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">IADS doctrine review — posture era UAV & long-range strike.</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">N→</span><span class="text-white/70">NATO/regional doctrine literature synthesis</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">C→</span><span class="text-white/70">Gap analysis + COA rollout</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">G→</span><span class="text-white/70">Comparative matrix + posture infografik</span></div>
+            <div class="flex gap-2"><span class="text-amber-400 font-mono">P→</span><span class="text-white/70">Doctrine note brief Kasau</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-lit p-6 rounded-2xl border border-indigo-500/30">
+        <div class="font-mono text-xs text-indigo-400 mb-2">4 PRINSIP UNIVERSAL (apapun domainnya)</div>
+        <div class="grid md:grid-cols-4 gap-4 text-xs">
+          <div><span class="text-indigo-400 font-semibold">1. Ground</span><span class="text-white/60"> — sumber terverifikasi (NotebookLM)</span></div>
+          <div><span class="text-indigo-400 font-semibold">2. Reason</span><span class="text-white/60"> — structured thinking (Gemini 2.5 Pro + Thinking Mode)</span></div>
+          <div><span class="text-indigo-400 font-semibold">3. Visualize</span><span class="text-white/60"> — stakeholder-ready visual (Gemini)</span></div>
+          <div><span class="text-indigo-400 font-semibold">4. Human gate</span><span class="text-white/60"> — validasi perwira sebelum release</span></div>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-white/50 italic mt-6">Scenario primary sesi ini (UAV threat) tetap jadi walk-through utama. Dua skenario alternatif di atas adalah transfer exercise untuk peserta yang fokus OMSP atau doktrin.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: KENAPA MULTI-TOOL -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WHY MULTI-TOOL</div>
+        <h2 class="slide-title">NO SINGLE <span class="text-accent">TOOL WINS</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl">
+        <p class="text-white/70 mb-6">
+          Operator yang matang tidak loyal ke 1 tool. Mereka routing tiap task ke tool yang paling cocok, handoff context dengan disiplin, dan tahu kapan <em>tidak</em> pakai AI sama sekali. Modul 06 adalah tentang membangun <strong class="text-accent">tool-switching discipline</strong>.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <div class="p-4 bg-violet-500/10 rounded-xl border border-violet-500/20">
+            <div class="font-semibold text-violet-400 mb-2">📚 NotebookLM</div>
+            <div class="text-xs text-white/60 mb-2">Sourced synthesis, zero hallucination, audio brief</div>
+            <div class="text-xs text-white/40 italic">Best for: ingest 20+ docs, citation wajib</div>
+            <div class="mt-3 space-y-1 text-xs text-white/50">
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Source-grounded, citable</div>
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Audio overview</div>
+              <div class="flex items-center gap-1"><span class="text-red-400">✗</span> No live search</div>
+              <div class="flex items-center gap-1"><span class="text-red-400">✗</span> No image generation</div>
+            </div>
+          </div>
+          <div class="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <div class="font-semibold text-purple-400 mb-2">🧠 Gemini 2.5 Pro + Thinking Mode</div>
+            <div class="text-xs text-white/60 mb-2">COA analysis, strategic reasoning, explicit audit trail</div>
+            <div class="text-xs text-white/40 italic">Best for: COA analysis, commander brief draft</div>
+            <div class="mt-3 space-y-1 text-xs text-white/50">
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Thinking Mode — reasoning trace bisa di-audit</div>
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> 2M token context — paste semua dokumen</div>
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Search Grounding untuk verifikasi klaim</div>
+            </div>
+          </div>
+          <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+            <div class="font-semibold text-indigo-400 mb-2">🎨 Gemini Visual (Imagen/Canvas/Veo)</div>
+            <div class="text-xs text-white/60 mb-2">Image generation, interactive dashboard, video brief</div>
+            <div class="text-xs text-white/40 italic">Best for: sitrep infografis, visual package komandan</div>
+            <div class="mt-3 space-y-1 text-xs text-white/50">
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Imagen 4 — generate sitrep imagery</div>
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Canvas — interactive HTML dashboard</div>
+              <div class="flex items-center gap-1"><span class="text-green-400">✓</span> Veo — video brief 60 detik</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+          <div class="font-semibold text-accent mb-2">🎯 Prinsip Dasar Workflow</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-accent">1.</span> <strong class="text-white">Ground first.</strong> NotebookLM atau Gemini search → kumpulkan fakta dengan citation sebelum reasoning.</li>
+            <li class="flex items-start gap-2"><span class="text-accent">2.</span> <strong class="text-white">Reason second.</strong> Gemini 2.5 Pro + Thinking Mode untuk analisa strategis & COA dengan audit trail.</li>
+            <li class="flex items-start gap-2"><span class="text-accent">3.</span> <strong class="text-white">Visualize last.</strong> Gemini Imagen/Canvas untuk output visual.</li>
+            <li class="flex items-start gap-2"><span class="text-accent">4.</span> <strong class="text-white">Human gate always.</strong> Komandan = final approver, bukan AI.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: CAPSTONE SCENARIO -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CAPSTONE SCENARIO</div>
+        <h2 class="slide-title">SKENARIO <span class="text-accent">OPERASIONAL</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <div class="flex items-start gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0 text-2xl">🎯</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Tasking</h3>
+            <p class="text-sm text-white/70">
+              Anda adalah Pamen di Pusintelsudnas. Komandan Koopsudnas meminta <strong class="text-white">"briefing package lengkap 30 menit"</strong> tentang perkembangan kapabilitas UAV regional dalam 6 bulan terakhir — mencakup threat indicators, implications untuk postur pertahanan udara, dan rekomendasi COA.
+            </p>
+            <p class="text-sm text-white/70 mt-3">
+              <strong class="text-accent">Waktu persiapan: 90 menit.</strong> Output harus terdiri dari: (a) executive summary tertulis, (b) 1-2 visual slide, (c) audio brief 10 menit untuk didengar komandan di kendaraan, (d) appendix dengan sumber.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="font-semibold text-accent mb-2">⚠ Constraint</div>
+            <ul class="text-sm text-white/70 space-y-1">
+              <li>• Hanya gunakan sumber <strong class="text-white">OSINT publicly available</strong> (no classified)</li>
+              <li>• Semua klaim harus <strong class="text-white">traceable ke sumber</strong></li>
+              <li>• Visual harus <strong class="text-white">generic</strong>, lulus 5 OPSEC checks (Sesi 6.3)</li>
+              <li>• Audio brief <strong class="text-white">tone profesional militer</strong>, bukan enthusiast</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-white mb-2">📦 Deliverable</div>
+            <ul class="text-sm text-white/70 space-y-1">
+              <li>• <strong class="text-white">Executive summary</strong> — 2 halaman, formal TNI</li>
+              <li>• <strong class="text-white">1-2 visual</strong> — Imagen atau Canvas</li>
+              <li>• <strong class="text-white">Audio brief 10 menit</strong> — NotebookLM</li>
+              <li>• <strong class="text-white">Appendix citations</strong> — semua sumber</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="font-mono text-xs text-accent mb-2">TIMELINE ALLOCATION</div>
+          <div class="flex gap-3 flex-wrap">
+            <div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded bg-violet-500 flex-shrink-0"></span><span class="text-white/70">Phase 1 NotebookLM: 30 min</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded bg-purple-500 flex-shrink-0"></span><span class="text-white/70">Phase 2 Gemini 2.5 Pro: 25 min</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded bg-indigo-500 flex-shrink-0"></span><span class="text-white/70">Phase 3 Gemini: 20 min</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded bg-accent flex-shrink-0"></span><span class="text-white/70">Phase 4 Package: 15 min</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: WORKFLOW PHASES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">4-PHASE PIPELINE</div>
+        <h2 class="slide-title">WORKFLOW <span class="text-accent">END-TO-END</span></h2>
+      </div>
+
+      <div class="space-y-6">
+        <!-- PHASE 1 -->
+        <div class="phase-card glass-lit p-6 rounded-2xl" style="--phase-color: #8b5cf6;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-violet-400">P1</span>
+              </div>
+              <div>
+                <div class="text-xs text-violet-400 font-mono">PHASE 1 • 30 MENIT • NOTEBOOKLM</div>
+                <h3 class="text-xl font-semibold">Ingest & Ground</h3>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-violet-500/20 rounded-full text-violet-400 text-xs font-mono">INTEL FUSION</span>
+          </div>
+
+          <div class="space-y-3 text-sm text-white/70">
+            <div class="flex items-start gap-3">
+              <span class="text-violet-400 font-bold">1.</span>
+              <div><strong class="text-white">Create notebook</strong> "UAV_REGIONAL_Q4_2025-Q1_2026". Upload 15-25 sources: Jane's, IISS, Defense News, CSIS reports, regional military analysis blogs.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-violet-400 font-bold">2.</span>
+              <div><strong class="text-white">RISEN query</strong> terstruktur: "Extract UAV capability developments by country, categorized by: acquisition, doctrinal shift, operational deployment, incident/near-incident."</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-violet-400 font-bold">3.</span>
+              <div><strong class="text-white">Generate briefing doc</strong> di Studio panel. Review, spot-check 3-5 citations.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-violet-400 font-bold">4.</span>
+              <div><strong class="text-white">Export output</strong> — copy briefing doc ke clipboard / markdown file untuk hand-off ke Phase 2 menggunakan Template H-01.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-violet-500/10 rounded-lg text-xs text-white/60">
+            <strong class="text-violet-400">🎯 Deliverable Phase 1:</strong> Markdown briefing doc dengan fact claims + inline citations. Ini adalah <em>raw intel baseline</em>, belum ada analisis strategis.
+          </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div class="phase-card glass-lit p-6 rounded-2xl" style="--phase-color: #a855f7;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-purple-400">P2</span>
+              </div>
+              <div>
+                <div class="text-xs text-purple-400 font-mono">PHASE 2 • 25 MENIT • CLAUDE</div>
+                <h3 class="text-xl font-semibold">Strategic Reasoning & COA</h3>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-purple-500/20 rounded-full text-purple-400 text-xs font-mono">ANALYSIS</span>
+          </div>
+
+          <div class="space-y-3 text-sm text-white/70">
+            <div class="flex items-start gap-3">
+              <span class="text-purple-400 font-bold">1.</span>
+              <div><strong class="text-white">Paste H-01 handoff</strong> (Template dari slide berikutnya) ke Gemini 2.5 Pro. Set role: "Senior intelligence analyst Koopsudnas". Aktifkan Thinking Mode.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-purple-400 font-bold">2.</span>
+              <div><strong class="text-white">Deep thinking prompt</strong>: "Think step-by-step: what are the 3 most significant threat indicators? What baseline deviations matter? What are the implications for Indonesian air defense posture?"</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-purple-400 font-bold">3.</span>
+              <div><strong class="text-white">COA analysis</strong>: "Generate 3 COAs untuk respond ke threat: conservative, balanced, aggressive. Include pros/cons/resource requirements untuk tiap COA."</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-purple-400 font-bold">4.</span>
+              <div><strong class="text-white">Draft executive summary</strong> — Gemini 2.5 Pro tulis versi awal commander's brief dalam bahasa formal TNI, max 2 halaman. Export menggunakan Template H-02.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-purple-500/10 rounded-lg text-xs text-white/60">
+            <strong class="text-purple-400">🎯 Deliverable Phase 2:</strong> Executive summary draft + 3 COA analysis. Reasoning sudah ada, tinggal validasi dan enhance.
+          </div>
+        </div>
+
+        <!-- PHASE 3 -->
+        <div class="phase-card glass-lit p-6 rounded-2xl" style="--phase-color: #6366f1;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-indigo-400">P3</span>
+              </div>
+              <div>
+                <div class="text-xs text-indigo-400 font-mono">PHASE 3 • 20 MENIT • GEMINI</div>
+                <h3 class="text-xl font-semibold">Search Grounding & Visual</h3>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-indigo-500/20 rounded-full text-indigo-400 text-xs font-mono">GROUNDING + VISUAL</span>
+          </div>
+
+          <div class="space-y-3 text-sm text-white/70">
+            <div class="flex items-start gap-3">
+              <span class="text-indigo-400 font-bold">1.</span>
+              <div><strong class="text-white">Fact check via search grounding.</strong> Buka Gemini, enable "Grounding with Google Search". Paste 3-5 claim paling kritikal dari Phase 2, minta: "verify this claim against latest public reporting, cite sources".</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-indigo-400 font-bold">2.</span>
+              <div><strong class="text-white">Fill last-mile gaps</strong> — kalau ada update 48 jam terakhir yang NotebookLM missed (karena source upload), Gemini akan catch via live search.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-indigo-400 font-bold">3.</span>
+              <div><strong class="text-white">Generate sitrep visual</strong> via Imagen. Prompt 4-komponen (Sesi 6.3). OPSEC: generic, no country names. Sebagai ilustrasi slide briefing.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-indigo-400 font-bold">4.</span>
+              <div><strong class="text-white">Build dashboard</strong> via Canvas (optional). Kalau punya CSV data indicators, minta Gemini Canvas build interactive viz untuk komandan klik-klik. Export menggunakan Template H-03.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-indigo-500/10 rounded-lg text-xs text-white/60">
+            <strong class="text-indigo-400">🎯 Deliverable Phase 3:</strong> Verified claims + 1-2 visual slide (Imagen) + dashboard opsional (Canvas). Ini adalah <em>presentation assets</em>.
+          </div>
+        </div>
+
+        <!-- PHASE 4 -->
+        <div class="phase-card glass-lit p-6 rounded-2xl" style="--phase-color: #a78bfa;">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-accent/20 flex items-center justify-center">
+                <span class="font-display text-2xl text-accent">P4</span>
+              </div>
+              <div>
+                <div class="text-xs text-accent font-mono">PHASE 4 • 15 MENIT • NOTEBOOKLM</div>
+                <h3 class="text-xl font-semibold">Package & Audio Brief</h3>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-accent/20 rounded-full text-accent text-xs font-mono">FINAL PACKAGE</span>
+          </div>
+
+          <div class="space-y-3 text-sm text-white/70">
+            <div class="flex items-start gap-3">
+              <span class="text-accent font-bold">1.</span>
+              <div><strong class="text-white">Kembali ke NotebookLM.</strong> Add executive summary (Phase 2) dan verified claims (Phase 3) sebagai sources baru di notebook.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-accent font-bold">2.</span>
+              <div><strong class="text-white">Generate Audio Overview</strong> dengan custom instruction profesional: "Professional military tone, Indonesian language, focus on operational implications, 10 minutes."</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-accent font-bold">3.</span>
+              <div><strong class="text-white">QA sebelum share</strong> — dengar 2 menit pertama, pastikan tone tepat, tidak sensasional, akurat. Jika tidak oke, regenerate dengan instruction yang lebih spesifik.</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-accent font-bold">4.</span>
+              <div><strong class="text-white">Assemble package:</strong> (a) PDF executive summary, (b) slide visual, (c) MP3 audio brief, (d) appendix citations. Tag file: "UAV_REGIONAL_BRIEF_2026-04-13_v1".</div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg text-xs text-white/60">
+            <strong class="text-accent">🎯 Deliverable Phase 4:</strong> Complete intel package — executive summary + visual + audio + appendix. Ready untuk komandan.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: CONTEXT HANDOFF TEMPLATES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDOFF TEMPLATES</div>
+        <h2 class="slide-title">CONTEXT <span class="text-accent">TRANSFER TEMPLATES</span></h2>
+        <p class="text-white/50 mt-3 text-sm">Tiga template siap pakai untuk transisi antar tool — copy, fill bracketed fields, paste</p>
+      </div>
+
+      <div class="space-y-6" x-data="{ open: null }">
+
+        <!-- Template H-01: NotebookLM → Gemini 2.5 Pro -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'h01' ? null : 'h01'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">H-01</div>
+              <div class="text-left">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-violet-400 font-mono">NOTEBOOKLM</span>
+                  <span class="text-white/30">→</span>
+                  <span class="text-xs text-purple-400 font-mono">GEMINI 2.5 PRO</span>
+                </div>
+                <div class="font-semibold mt-0.5">Phase 1 → 2: Intel Baseline Handoff</div>
+                <div class="text-xs text-white/40 mt-0.5">Transfer raw intel facts + citations ke Gemini 2.5 Pro untuk strategic analysis</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'h01' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'h01' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="tmpl-h01">
+                <button class="copy-btn" :class="copied === 'tmpl-h01' ? 'copied' : ''" @click="copyText('tmpl-h01')">
+                  <span x-text="copied === 'tmpl-h01' ? '✓ copied' : 'copy'"></span>
+                </button>
+# INTEL BASELINE HANDOFF — Phase 1 → Phase 2
+## Context
+- Topik: [TOPIK BRIEF]
+- Sumber: NotebookLM notebook "[NAMA NOTEBOOK]"
+- Periode: [PERIODE DATA]
+- Jumlah sumber: [N] dokumen
+
+## Your Role
+Act as Senior Intelligence Analyst Koopsudnas. You are receiving a grounded intel baseline from NotebookLM. Your task is strategic analysis and COA development — do NOT hallucinate beyond what is in this baseline.
+
+## Key Facts (with citations)
+[PASTE NOTEBOOKLM OUTPUT HERE — include all [Source X, p.Y] citations inline]
+
+## Analysis Request
+1. Identify top 3 threat indicators with significance rating (HIGH/MEDIUM/LOW)
+2. Identify baseline deviations (what changed vs historical norm)
+3. Implications for Indonesian air defense posture
+4. Generate 3 COAs: conservative, balanced, aggressive
+5. Draft executive summary (formal TNI format, 2 pages max)
+
+## Constraints
+- Preserve all citations from the baseline above
+- Flag any claim you are uncertain about with [VERIFY]
+- Language: Bahasa Indonesia (formal)
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">FILL: TOPIK, NAMA NOTEBOOK, PERIODE, N (jumlah sumber), lalu paste NotebookLM output di bagian Key Facts</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template H-02: Gemini 2.5 Pro → Gemini Search Verification -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'h02' ? null : 'h02'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">H-02</div>
+              <div class="text-left">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-purple-400 font-mono">GEMINI 2.5 PRO</span>
+                  <span class="text-white/30">→</span>
+                  <span class="text-xs text-indigo-400 font-mono">GEMINI SEARCH</span>
+                </div>
+                <div class="font-semibold mt-0.5">Phase 2 → 3: Analysis Verification Handoff</div>
+                <div class="text-xs text-white/40 mt-0.5">Kirim klaim kritis ke Gemini untuk live search verification</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'h02' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'h02' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="tmpl-h02">
+                <button class="copy-btn" :class="copied === 'tmpl-h02' ? 'copied' : ''" @click="copyText('tmpl-h02')">
+                  <span x-text="copied === 'tmpl-h02' ? '✓ copied' : 'copy'"></span>
+                </button>
+# VERIFICATION REQUEST — Phase 2 → Phase 3
+## Context
+This is an intelligence analysis verification request. I have analysis from an AI assistant and need live-search grounding to verify recency and accuracy.
+
+## Enable
+Please enable "Grounding with Google Search" before responding.
+
+## Claims to Verify
+[CLAIM 1 from Gemini 2.5 Pro analysis, with original citation if available]
+[CLAIM 2 from Gemini 2.5 Pro analysis]
+[CLAIM 3 from Gemini 2.5 Pro analysis — max 5 claims per request]
+
+## Instructions
+For each claim:
+1. Confirm, qualify, or contradict based on current public reporting
+2. Cite specific source URLs
+3. Note recency — is this still current as of today?
+4. Flag if there are major developments Gemini's initial analysis may have missed
+
+## Additional Request
+After verification, also search for: "[SPECIFIC RECENT DEVELOPMENT OR GAP YOU NOTICED]"
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">FILL: pilih 3-5 klaim yang paling kritikal dari analisis Gemini 2.5 Pro — prioritaskan klaim yang akan jadi basis rekomendasi COA</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template H-03: All → NotebookLM -->
+        <div class="glass-lit rounded-2xl overflow-hidden">
+          <button @click="open = open === 'h03' ? null : 'h03'" class="w-full px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="font-mono text-xs text-accent bg-accent/20 px-3 py-1 rounded-full">H-03</div>
+              <div class="text-left">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-indigo-400 font-mono">GEMINI</span>
+                  <span class="text-white/30">→</span>
+                  <span class="text-xs text-violet-400 font-mono">NOTEBOOKLM</span>
+                </div>
+                <div class="font-semibold mt-0.5">Phase 3 → 4: Audio Brief Instruction</div>
+                <div class="text-xs text-white/40 mt-0.5">Custom instruction untuk NotebookLM audio overview generation</div>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-white/40 transition-transform flex-shrink-0" :class="open === 'h03' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open === 'h03' ? 'open' : ''">
+            <div class="px-6 pb-6 pt-2 border-t border-white/5">
+              <div class="prompt-block relative" id="tmpl-h03">
+                <button class="copy-btn" :class="copied === 'tmpl-h03' ? 'copied' : ''" @click="copyText('tmpl-h03')">
+                  <span x-text="copied === 'tmpl-h03' ? '✓ copied' : 'copy'"></span>
+                </button>
+Generate an audio overview briefing with the following specific requirements:
+
+AUDIENCE: Komandan Koopsudnas (senior military officer, familiar with doctrine, time-constrained)
+
+TONE: Professional Indonesian military language (Bahasa Indonesia formal). Not enthusiast, not academic — operational and direct. Equivalent to how a trusted staff officer would brief a commander.
+
+STRUCTURE (follow exactly):
+1. Situasi Umum (2 menit) — what is happening, factual, no editorializing
+2. Perkembangan Kritis (3 menit) — 3 most significant changes since last brief
+3. Implikasi Operasional (3 menit) — what this means for our posture
+4. Opsi Tindak Lanjut (2 menit) — COA options, not recommendations
+
+LENGTH: Exactly 10 minutes (approximately 1,400-1,600 Indonesian words spoken at briefing pace)
+
+AVOID:
+- Speculative language ("might", "could", "perhaps")
+- Sensationalist framing
+- Overly technical jargon without explanation
+- Opinions not grounded in the source documents
+              </div>
+              <div class="mt-3 text-xs text-white/40 font-mono">Paste ini ke NotebookLM → Audio Overview → Customize → kolom "Custom Instructions"</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: GEMINI DEEP RESEARCH WALKTHROUGH -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DEEP DIVE: GEMINI PHASE 3</div>
+        <h2 class="slide-title">DEEP RESEARCH <span class="text-accent">WALKTHROUGH</span></h2>
+        <p class="text-white/50 mt-3 text-sm">Satu-satunya tool yang bisa do live multi-source research dalam 10 menit — tapi ada cara benar dan salah menggunakannya</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <!-- When to use Deep Research -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Kapan Pakai Gemini Deep Research</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <span class="text-green-400 text-lg flex-shrink-0">✓</span>
+              <div>
+                <div class="text-sm font-semibold text-white">Gap-filling setelah NotebookLM</div>
+                <div class="text-xs text-white/60">NotebookLM hanya punya data sampai kapan sumber diupload. Deep Research tangkap 24-48 jam terakhir.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <span class="text-green-400 text-lg flex-shrink-0">✓</span>
+              <div>
+                <div class="text-sm font-semibold text-white">Cross-verify klaim kritis</div>
+                <div class="text-xs text-white/60">Sebelum COA masuk ke brief komandan, pastikan factual foundation kuat via live search.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <span class="text-green-400 text-lg flex-shrink-0">✓</span>
+              <div>
+                <div class="text-sm font-semibold text-white">Broad landscape scan awal</div>
+                <div class="text-xs text-white/60">Kalau tidak punya 15-25 sumber untuk NotebookLM, Deep Research bisa jadi Phase 1 alternatif — tapi output tidak ada source guarantee.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+              <span class="text-red-400 text-lg flex-shrink-0">✗</span>
+              <div>
+                <div class="text-sm font-semibold text-white">Jangan sebagai pengganti NotebookLM</div>
+                <div class="text-xs text-white/60">Deep Research tidak bisa ingest dokumen internal. Untuk source-grounded citation dari dokumen spesifik → tetap NotebookLM.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step-by-step -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Step-by-Step: Jalankan Deep Research</h3>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="step-badge text-sm">1</div>
+              <div>
+                <div class="text-sm font-semibold mb-1">Aktifkan Deep Research Mode</div>
+                <div class="text-xs text-white/60">Di gemini.google.com → klik ikon search/earth di toolbar bawah → pilih "Deep Research". <span class="text-amber-400">Hanya tersedia di Gemini Advanced.</span></div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="step-badge text-sm">2</div>
+              <div>
+                <div class="text-sm font-semibold mb-1">Tulis Research Query</div>
+                <div class="text-xs text-white/60">Query harus spesifik dengan timeframe dan scope. Lihat template di bawah. Gemini akan tanya konfirmasi research plan sebelum mulai.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="step-badge text-sm">3</div>
+              <div>
+                <div class="text-sm font-semibold mb-1">Review Research Plan</div>
+                <div class="text-xs text-white/60">Gemini presentasi rencana penelitian (berapa sources, angle apa). <strong class="text-white">Adjust scope</strong> kalau terlalu luas atau terlalu sempit sebelum approve.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="step-badge text-sm">4</div>
+              <div>
+                <div class="text-sm font-semibold mb-1">Wait & Monitor</div>
+                <div class="text-xs text-white/60">Deep Research mengambil 3-10 menit. Jangan interrupt. Hasil hadir sebagai structured report dengan source links.</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="step-badge text-sm">5</div>
+              <div>
+                <div class="text-sm font-semibold mb-1">Verify Top Sources</div>
+                <div class="text-xs text-white/60">Click 2-3 source links di report — pastikan bukan agregasi blog yang unreliable. Prioritaskan Jane's, IISS, reputable defense media.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Query template -->
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-3">Template Query Deep Research (untuk Phase 3)</h3>
+        <div class="prompt-block relative" id="deep-research-query">
+          <button class="copy-btn" :class="copied === 'deep-research-query' ? 'copied' : ''" @click="copyText('deep-research-query')">
+            <span x-text="copied === 'deep-research-query' ? '✓ copied' : 'copy'"></span>
+          </button>
+Conduct deep research on: [TOPIK SPESIFIK — contoh: "UAV acquisition and operational deployment in Southeast Asia, October 2025 - March 2026"]
+
+Focus areas:
+1. Confirmed acquisitions, deliveries, or procurement contracts (with dates and source citations)
+2. Doctrinal or deployment changes (new units, new roles, new operational areas)
+3. Incidents or near-incidents involving UAV assets in the region
+4. Statements by defense officials regarding UAV capability development
+
+Sources to prioritize: Jane's Defence, IISS Military Balance, Defense News, Reuters Defense, AP, official government defense ministry statements
+
+Exclude: blogs, aggregators, social media unless corroborated by primary source
+
+Output format: structured report with inline citations, organized by country/actor, with a "Key Developments Summary" at the top
+        </div>
+        <div class="mt-4 grid sm:grid-cols-3 gap-3">
+          <div class="p-3 bg-white/5 rounded-lg text-xs">
+            <div class="text-accent font-mono mb-1">SCOPE TIP</div>
+            <div class="text-white/60">Lebih spesifik = hasil lebih actionable. "UAV Southeast Asia 2026" terlalu luas — add: country subset, capability type, timeframe.</div>
+          </div>
+          <div class="p-3 bg-white/5 rounded-lg text-xs">
+            <div class="text-accent font-mono mb-1">QUALITY CHECK</div>
+            <div class="text-white/60">Setelah hasil keluar, cek: apakah sources yang di-cite bisa di-verify? Klik 2-3 link random untuk konfirmasi bukan AI-generated content.</div>
+          </div>
+          <div class="p-3 bg-white/5 rounded-lg text-xs">
+            <div class="text-accent font-mono mb-1">FALLBACK</div>
+            <div class="text-white/60">Kalau Deep Research tidak tersedia (kuota habis) → gunakan Gemini standard dengan Search Grounding enable + multi-turn manual search.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: HANDOFF DISCIPLINE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDOFF DISCIPLINE</div>
+        <h2 class="slide-title">AVOID <span class="text-red-400">CONTEXT LOSS</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Bahaya utama multi-tool: context bocor, fact drift, dan fatigue. Mitigate dengan disiplin handoff.</p>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl space-y-4">
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">1️⃣</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Always use structured export</div>
+              <div class="text-sm text-white/60">Handoff antar tool harus dalam format terstruktur (Markdown, JSON) — bukan copy-paste percakapan. Markdown dengan heading jelas = konteks transfer clean. Gunakan Templates H-01, H-02, H-03.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">2️⃣</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Preserve citation chain</div>
+              <div class="text-sm text-white/60">Setiap klaim yang di-forward dari Phase 1 → Phase 2 → Phase 4 harus tetap punya citation. Kalau hilang di tengah jalan = claim tidak bisa defend di hadapan komandan.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">3️⃣</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Version everything</div>
+              <div class="text-sm text-white/60">v1 draft NotebookLM, v2 Gemini 2.5 Pro analysis, v3 Gemini visual enhanced, v4 final. Jangan overwrite — kalau ada bug di v3, masih bisa rollback ke v2.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">4️⃣</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Human gate at every phase boundary</div>
+              <div class="text-sm text-white/60">Jangan rantai AI ke AI tanpa human review. Setelah tiap Phase, operator harus spot-check output sebelum masuk ke tool berikutnya. Otherwise, errors compound.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/5 rounded-xl">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">5️⃣</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Track time-to-retreat</div>
+              <div class="text-sm text-white/60">Kalau total workflow sudah lewat 2x estimated time dan belum selesai — itu red flag. Mungkin scope terlalu besar atau tool salah routing. <strong class="text-white">Retreat, re-plan, bukan push through.</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: FAILURE MODES -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">ANTI-PATTERNS</div>
+        <h2 class="slide-title">COMMON <span class="text-red-400">FAILURE MODES</span></h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 Tool overload</h3>
+          <p class="text-xs text-white/60 mb-2">Pamen pakai 3 tools untuk task yang sebenarnya cukup 1 tool. Hasil: lelah, tidak konsisten, tidak lebih baik.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> mulai dari 1 tool, tambahin hanya kalau gap jelas.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 Citation amnesia</h3>
+          <p class="text-xs text-white/60 mb-2">Klaim di Phase 1 punya citation, tapi pas ter-copy ke Gemini 2.5 Pro di Phase 2, citation hilang. Di Phase 4, tidak ada source-nya lagi.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> always handoff in markdown dengan footnote preserved. Gunakan Template H-01.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 Fact drift</h3>
+          <p class="text-xs text-white/60 mb-2">Setiap tool "slightly improve" claim — sampai di Phase 4, claim sudah berbeda dari fact aslinya.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> validate di Phase 3 dengan Gemini search grounding; lock facts di Phase 2 onwards.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 Tool religion</h3>
+          <p class="text-xs text-white/60 mb-2">"Saya cuma percaya Gemini" atau "NotebookLM tidak bisa dipercaya" — bias pribadi bocor ke routing.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> routing berdasarkan task properties, bukan favoritism.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 OPSEC erosion</h3>
+          <p class="text-xs text-white/60 mb-2">Data sensitif ter-upload ke akun personal "karena buru-buru". Multi-tool = multi surface area, risiko leak bertambah.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> gunakan akun institusional di semua tools, audit retention policy.</p>
+        </div>
+
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <h3 class="font-semibold text-white mb-2">🔥 Human gate skip</h3>
+          <p class="text-xs text-white/60 mb-2">AI ke AI langsung, operator jadi "AI orchestrator" yang tidak baca output. Kalau salah, tidak ada yang catch.</p>
+          <p class="text-xs text-green-400"><strong>Fix:</strong> minimal 30 detik spot-check tiap phase boundary.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: CAPSTONE EXERCISE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CAPSTONE EXERCISE</div>
+        <h2 class="slide-title">FULL PIPELINE <span class="text-accent">90 MENIT</span></h2>
+        <p class="text-white/50 mt-3 text-sm">Produksi intel package lengkap menggunakan 4-phase workflow — dari raw sources sampai siap brief komandan</p>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">📋 Tasking Brief</div>
+          <p class="text-sm text-white/70">
+            Komandan meminta <strong class="text-white">intel package "Perkembangan Kapabilitas UAV Regional Q1 2026"</strong>. Waktu persiapan: 90 menit. Output: (a) executive summary 2 halaman, (b) 1 sitrep visual, (c) audio brief 10 menit, (d) appendix sumber. Semua konten OSINT only, lolos OPSEC.
+          </p>
+        </div>
+
+        <div class="space-y-5">
+
+          <!-- Phase 1 exercise block -->
+          <div class="border border-violet-500/30 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 bg-violet-500/10">
+              <div class="w-8 h-8 rounded-full bg-violet-500/30 flex items-center justify-center text-violet-400 font-bold text-sm flex-shrink-0">P1</div>
+              <div>
+                <div class="font-semibold text-white">NotebookLM — Ingest & Ground (30 min)</div>
+                <div class="text-xs text-violet-400 font-mono">00:00 – 30:00</div>
+              </div>
+            </div>
+            <div class="p-4 space-y-2 text-sm text-white/70">
+              <div class="flex items-start gap-2"><span class="text-violet-400 font-bold flex-shrink-0">a.</span> Buka NotebookLM → buat notebook "EXERCISE_UAV_REGIONAL_2026"</div>
+              <div class="flex items-start gap-2"><span class="text-violet-400 font-bold flex-shrink-0">b.</span> Upload minimal 5 sumber publik (bisa URL langsung): Jane's, Defense News, IISS, CSIS, atau equivalent. Jika tidak ada akses, gunakan Wikipedia defense articles sebagai proxy untuk exercise.</div>
+              <div class="flex items-start gap-2"><span class="text-violet-400 font-bold flex-shrink-0">c.</span> Query: "Ringkas perkembangan UAV regional 6 bulan terakhir, kelompokkan berdasarkan negara, sertakan sumber untuk setiap klaim"</div>
+              <div class="flex items-start gap-2"><span class="text-violet-400 font-bold flex-shrink-0">d.</span> Generate briefing doc. Review, spot-check 3 citations.</div>
+              <div class="flex items-start gap-2"><span class="text-violet-400 font-bold flex-shrink-0">e.</span> <strong class="text-white">Export:</strong> Salin output ke text file "v1_notebooklm.md". Format pakai Template H-01.</div>
+            </div>
+          </div>
+
+          <!-- Phase 2 exercise block -->
+          <div class="border border-purple-500/30 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 bg-purple-500/10">
+              <div class="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">P2</div>
+              <div>
+                <div class="font-semibold text-white">Gemini 2.5 Pro — Strategic Analysis (25 min)</div>
+                <div class="text-xs text-purple-400 font-mono">30:00 – 55:00</div>
+              </div>
+            </div>
+            <div class="p-4 space-y-2 text-sm text-white/70">
+              <div class="flex items-start gap-2"><span class="text-purple-400 font-bold flex-shrink-0">a.</span> Buka Gemini 2.5 Pro. Aktifkan Thinking Mode. Paste Template H-01 yang sudah diisi + output NotebookLM.</div>
+              <div class="flex items-start gap-2"><span class="text-purple-400 font-bold flex-shrink-0">b.</span> Minta: top 3 threat indicators + COA analysis (conservative/balanced/aggressive) + executive summary.</div>
+              <div class="flex items-start gap-2"><span class="text-purple-400 font-bold flex-shrink-0">c.</span> Review output: apakah citations dari Phase 1 masih terjaga? Apakah ada klaim baru yang tidak ada sumbernya (flag dengan [VERIFY])?</div>
+              <div class="flex items-start gap-2"><span class="text-purple-400 font-bold flex-shrink-0">d.</span> <strong class="text-white">Export:</strong> Salin ke "v2_gemini_analysis.md". Pilih 3 klaim kritis untuk di-verify di Phase 3.</div>
+            </div>
+          </div>
+
+          <!-- Phase 3 exercise block -->
+          <div class="border border-indigo-500/30 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 bg-indigo-500/10">
+              <div class="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm flex-shrink-0">P3</div>
+              <div>
+                <div class="font-semibold text-white">Gemini — Verify & Visualize (20 min)</div>
+                <div class="text-xs text-indigo-400 font-mono">55:00 – 75:00</div>
+              </div>
+            </div>
+            <div class="p-4 space-y-2 text-sm text-white/70">
+              <div class="flex items-start gap-2"><span class="text-indigo-400 font-bold flex-shrink-0">a.</span> Buka Gemini. Paste Template H-02 dengan 3 klaim kritis dari Phase 2. Enable "Grounding with Google Search".</div>
+              <div class="flex items-start gap-2"><span class="text-indigo-400 font-bold flex-shrink-0">b.</span> Review hasil verifikasi — catat klaim mana yang terkonfirmasi, perlu diqualify, atau perlu dihapus.</div>
+              <div class="flex items-start gap-2"><span class="text-indigo-400 font-bold flex-shrink-0">c.</span> Generate sitrep visual via Imagen menggunakan Template I-01 dari Sesi 6.3. OPSEC check sebelum save.</div>
+              <div class="flex items-start gap-2"><span class="text-indigo-400 font-bold flex-shrink-0">d.</span> <strong class="text-white">Export:</strong> Update "v2_claude_analysis.md" dengan verified claims → save sebagai "v3_verified.md".</div>
+            </div>
+          </div>
+
+          <!-- Phase 4 exercise block -->
+          <div class="border border-accent/30 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 bg-accent/10">
+              <div class="w-8 h-8 rounded-full bg-accent/30 flex items-center justify-center text-accent font-bold text-sm flex-shrink-0">P4</div>
+              <div>
+                <div class="font-semibold text-white">NotebookLM — Package & Audio (15 min)</div>
+                <div class="text-xs text-accent font-mono">75:00 – 90:00</div>
+              </div>
+            </div>
+            <div class="p-4 space-y-2 text-sm text-white/70">
+              <div class="flex items-start gap-2"><span class="text-accent font-bold flex-shrink-0">a.</span> Kembali ke notebook NotebookLM. Add "v3_verified.md" sebagai source baru.</div>
+              <div class="flex items-start gap-2"><span class="text-accent font-bold flex-shrink-0">b.</span> Generate Audio Overview menggunakan Template H-03 di Custom Instructions. Generate + dengar 2 menit pertama untuk QA tone.</div>
+              <div class="flex items-start gap-2"><span class="text-accent font-bold flex-shrink-0">c.</span> Assemble package akhir: <strong class="text-white">executive summary PDF + visual Imagen + audio MP3 + appendix citations</strong>.</div>
+              <div class="flex items-start gap-2"><span class="text-accent font-bold flex-shrink-0">d.</span> <strong class="text-white">Reflection:</strong> Apa yang berjalan lancar? Di mana phase paling time-consuming? Tool mana yang memberikan leverage terbesar untuk kasus ini?</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-mono text-xs mb-1">SUCCESS CRITERIA</div>
+        <div class="text-sm text-white/70">Package yang dihasilkan: semua klaim traceable, tidak ada citation amnesia, visual lolos OPSEC, audio tone profesional</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      const keys = { q1: 'c', q2: 'b', q3: 'a', q4: 'd' };
+      for (const [q, a] of Object.entries(keys)) {
+        if (this.answers[q] === a) this.score++;
+      }
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.9</span></h2>
+        <p class="text-white/50 mt-3 text-sm">4 pertanyaan • Pilih jawaban terbaik</p>
+      </div>
+
+      <div class="space-y-6">
+
+        <!-- Q1 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 1 / 4</div>
+          <p class="font-semibold mb-4">Dalam 4-phase multi-tool pipeline, mengapa NotebookLM digunakan di Phase 1 sebelum Gemini 2.5 Pro?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Karena NotebookLM lebih cepat dari Gemini untuk semua jenis tugas' },
+              { id: 'b', text: 'Karena Gemini tidak bisa menganalisis lebih dari 5 dokumen sekaligus' },
+              { id: 'c', text: 'Karena NotebookLM memberikan fact foundation yang grounded dan traceable ke sumber — reasoning Gemini 2.5 Pro di Phase 2 harus dibangun di atas fakta, bukan asumsi' },
+              { id: 'd', text: 'Karena NotebookLM lebih murah biayanya dibanding Gemini' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'c',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q1 === opt.id && opt.id !== 'c',
+                  'bg-white/5': submitted && answers.q1 !== opt.id && opt.id !== 'c'
+                }">
+                <input type="radio" name="q1" :value="opt.id" x-model="answers.q1" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Ground first = kumpulkan fakta dengan citation. Gemini 2.5 Pro reasoning di Phase 2 sebaiknya berbasis fact, bukan generate dari knowledge internal-nya saja.</p>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 2 / 4</div>
+          <p class="font-semibold mb-4">"Citation amnesia" dalam multi-tool workflow adalah ketika...</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'NotebookLM lupa menampilkan source dokumen ketika diminta' },
+              { id: 'b', text: 'Citation yang ada di output Phase 1 hilang ketika context di-transfer ke tool berikutnya, sehingga di phase akhir klaim tidak bisa di-trace ke sumber' },
+              { id: 'c', text: 'Operator lupa di mana menyimpan file output dari tiap phase' },
+              { id: 'd', text: 'Gemini tidak menemukan sumber yang tepat saat melakukan search grounding' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'b',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q2 === opt.id && opt.id !== 'b',
+                  'bg-white/5': submitted && answers.q2 !== opt.id && opt.id !== 'b'
+                }">
+                <input type="radio" name="q2" :value="opt.id" x-model="answers.q2" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Citation amnesia = citations hilang di tengah pipeline. Mitigasi: selalu handoff dalam markdown dengan citations dipreserve, gunakan Template H-01.</p>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 3 / 4</div>
+          <p class="font-semibold mb-4">Apa keunggulan utama Gemini (dengan Search Grounding) dibanding NotebookLM untuk Phase 3 verification?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Gemini bisa search real-time dan tangkap perkembangan 24-48 jam terakhir yang tidak ada di sumber NotebookLM yang diupload sebelumnya' },
+              { id: 'b', text: 'Gemini lebih akurat untuk analisis dokumen yang panjang' },
+              { id: 'c', text: 'Gemini punya database militer classified yang lebih lengkap' },
+              { id: 'd', text: 'Gemini tidak menghasilkan hallucination sama sekali' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'a',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q3 === opt.id && opt.id !== 'a',
+                  'bg-white/5': submitted && answers.q3 !== opt.id && opt.id !== 'a'
+                }">
+                <input type="radio" name="q3" :value="opt.id" x-model="answers.q3" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ NotebookLM hanya bisa access dokumen yang diupload. Gemini + Search Grounding bisa fill gap dengan live web search — critical untuk intel currency.</p>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-accent mb-3">SOAL 4 / 4</div>
+          <p class="font-semibold mb-4">Apa format terbaik untuk context handoff antar tool dalam multi-tool pipeline?</p>
+          <div class="space-y-3">
+            <template x-for="opt in [
+              { id: 'a', text: 'Screenshot dari output tool sebelumnya — paling cepat dan tidak ada informasi yang hilang' },
+              { id: 'b', text: 'Copy-paste seluruh percakapan termasuk chat history agar konteks penuh tersedia' },
+              { id: 'c', text: 'Ringkasan lisan yang diketik ulang oleh operator — lebih clean dari raw output' },
+              { id: 'd', text: 'Structured markdown dengan heading jelas, bullet key findings, dan inline citations dipreserve' }
+            ]" :key="opt.id">
+              <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                :class="{
+                  'bg-white/5 hover:bg-white/10': !submitted,
+                  'bg-green-500/20 border border-green-500/40': submitted && opt.id === 'd',
+                  'bg-red-500/20 border border-red-500/40': submitted && answers.q4 === opt.id && opt.id !== 'd',
+                  'bg-white/5': submitted && answers.q4 !== opt.id && opt.id !== 'd'
+                }">
+                <input type="radio" name="q4" :value="opt.id" x-model="answers.q4" :disabled="submitted" class="mt-0.5">
+                <span class="text-sm" x-text="opt.text"></span>
+              </label>
+            </template>
+            <p x-show="submitted" class="text-xs text-green-400 mt-2">✓ Structured markdown = konteks transfer clean. Screenshot tidak bisa di-parse AI. Chat history penuh = noise. Ringkasan lisan = menghilangkan nuance dan citations.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Submit / Score -->
+      <div class="mt-8 text-center">
+        <button x-show="!submitted" @click="submit()"
+          :disabled="Object.keys(answers).length < 4"
+          class="px-8 py-3 bg-accent rounded-xl font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-accent-light transition-colors">
+          Submit Jawaban
+        </button>
+        <div x-show="submitted" class="glass-lit p-6 rounded-2xl inline-block min-w-[280px]">
+          <div class="text-4xl font-display mb-2" :class="score >= 3 ? 'text-green-400' : score === 2 ? 'text-amber-400' : 'text-red-400'" x-text="score + ' / 4'"></div>
+          <div class="text-white/70 text-sm" x-text="score === 4 ? '🎖 Sempurna — Multi-Tool Operator ready!' : score === 3 ? '✅ Bagus — satu konsep perlu diperdalam' : score === 2 ? '📚 Review ulang materi pipeline dan handoff discipline' : '🔄 Review ulang sesi ini sebelum melakukan capstone exercise'"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: GRADUATION -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">GRADUATION</div>
+        <h2 class="slide-title">MODUL 06 <span class="text-accent">COMPLETE</span></h2>
+      </div>
+
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="text-center mb-6">
+          <div class="text-6xl mb-4">🎖️</div>
+          <h3 class="text-2xl font-semibold mb-2">Multi-Tool Operator Certified</h3>
+          <p class="text-white/60">Anda telah menyelesaikan 4 sesi deep dive Gemini + NotebookLM. Berikut yang seharusnya Anda kuasai:</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Model Selection</div>
+              <div class="text-sm text-white/60">Gemini 2.5 Pro/Flash/Flash-Lite — routing berdasarkan speed/quality/cost</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">NotebookLM Mastery</div>
+              <div class="text-sm text-white/60">Source-grounded synthesis, audio overview, briefing doc, OPSEC-aware</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Visual Generation</div>
+              <div class="text-sm text-white/60">Imagen + Canvas + Veo — prompting framework, 5 OPSEC checks, iterative refinement</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Multi-Tool Pipeline</div>
+              <div class="text-sm text-white/60">4-phase workflow: Ingest → Reason → Visualize → Package</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Handoff Discipline</div>
+              <div class="text-sm text-white/60">Structured export, citation preservation, human gates, version control, Templates H-01/02/03</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent text-xl">✓</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Anti-Patterns Avoidance</div>
+              <div class="text-sm text-white/60">Tool overload, citation amnesia, fact drift, tool religion, OPSEC erosion</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 bg-accent/20 border border-accent/30 rounded-xl">
+          <div class="text-center">
+            <div class="text-accent font-semibold text-lg mb-2">🎯 Next Step</div>
+            <p class="text-white/70 mb-4">
+              Terapkan workflow ini ke ops harian Anda. Mulai dari 1 skenario kecil, lalu scale. Setiap 2 minggu, reflect: tool mana yang paling sering Anda default ke? Apa yang bisa di-optimize?
+            </p>
+            <p class="text-sm text-white/50">
+              Cross-reference: <a href="modul-05-capstone.html" class="text-accent hover:underline">Modul 05 Capstone</a> juga bisa di-redo dengan full multi-tool approach — gabungkan NotebookLM + Gemini 2.5 Pro + Imagen untuk pipeline yang lebih kuat.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-08-notebooklm-deep-dive.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 6.8: NotebookLM Deep Dive
+        </a>
+        <a href="index.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Kembali ke Landing →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas • Modul 06 Capstone</p>
+    </div>
+  </footer>
+
+</body>
+</html>

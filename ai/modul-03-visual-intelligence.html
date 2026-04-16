@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 03 | Visual Intelligence & Command Briefing</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+              blue: '#3b82f6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-bg-2: #0a0f1a;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-surface-hover: rgba(255, 255, 255, 0.06);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-bright: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(20px);
+      --module-color: #3b82f6;
+      --color-text: rgba(255, 255, 255, 0.92);
+      --color-muted: rgba(255, 255, 255, 0.55);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 700px; height: 700px; 
+      top: -250px; left: -150px; 
+      background: var(--module-color); 
+      opacity: 0.1; 
+    }
+    .blob-2 { 
+      width: 500px; height: 500px; 
+      bottom: -150px; right: -100px; 
+      background: #1d4ed8; 
+      opacity: 0.08; 
+      animation-delay: -3s; 
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      top: 40%; right: 20%;
+      background: #60a5fa;
+      opacity: 0.05;
+      animation-delay: -5s;
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(40px, -30px) scale(1.08); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .glass:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-bright);
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 32px 64px -16px rgba(0,0,0,0.6);
+    }
+    
+    .module-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3b82f6;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 24px rgba(59, 130, 246, 0.3);
+      text-decoration: none;
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+    }
+    
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-bright);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-smooth);
+      text-decoration: none;
+    }
+    
+    .cta-secondary:hover {
+      background: var(--color-surface);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    /* Prompt Template Styling */
+    .prompt-template {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(29, 78, 216, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .prompt-header {
+      background: rgba(59, 130, 246, 0.15);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .prompt-content {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      white-space: pre-wrap;
+    }
+    
+    .prompt-var {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    /* Visual Type Cards */
+    .visual-type-card {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .visual-type-card:hover {
+      transform: translateY(-4px);
+    }
+    
+    .visual-type-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-color, #3b82f6);
+    }
+    
+    /* Dashboard Preview */
+    .dashboard-preview {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .dashboard-header {
+      background: rgba(59, 130, 246, 0.1);
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .dashboard-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    /* Mini Chart Bars */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 40px;
+    }
+    
+    .mini-bar {
+      width: 8px;
+      background: rgba(59, 130, 246, 0.6);
+      border-radius: 2px;
+      transition: height 0.3s ease;
+    }
+    
+    /* Session Card */
+    .session-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .session-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--session-color, #3b82f6);
+    }
+    
+    /* Timeline */
+    .session-timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .session-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: linear-gradient(180deg, #3b82f6 0%, rgba(59, 130, 246, 0.2) 100%);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 3px solid var(--session-color, #3b82f6);
+    }
+    
+    /* Accordion */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+    }
+    
+    .accordion-content.open {
+      max-height: 3000px;
+    }
+    
+    /* Visual Element Labels */
+    .visual-element {
+      position: relative;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px dashed rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      font-size: 11px;
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+    
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+  </style>
+</head>
+<body x-data="{ activeSession: 1, copiedPrompt: null }">
+  
+  <!-- Scene Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Kembali</span>
+        </a>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="module-badge">
+          <span class="status-dot"></span>
+          MODUL 03
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#sessions" class="text-sm text-white/60 hover:text-white transition-colors">Sesi</a>
+        <a href="#templates" class="text-sm text-white/60 hover:text-white transition-colors">Templates</a>
+        <a href="#exercises" class="text-sm text-white/60 hover:text-white transition-colors">Latihan</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex items-center pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-start">
+        <div class="lg:col-span-3">
+          <div class="flex items-center gap-4 mb-6" data-reveal>
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+              <span class="font-display text-3xl text-white">03</span>
+            </div>
+            <div>
+              <div class="text-sm text-blue-400 font-mono">VISUALIZATION • 3 JAM</div>
+              <div class="text-white/40 text-sm">Sesi 3 dari 5 Modul</div>
+            </div>
+          </div>
+          
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl tracking-wide leading-none mb-6" data-reveal>
+            VISUAL INTELLIGENCE<br>
+            <span class="text-blue-400">& COMMAND</span><br>
+            BRIEFING
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-2xl mb-8 leading-relaxed" data-reveal>
+            AI Canvas untuk pembuatan dashboard situational awareness dan visualisasi data operasional.
+            Transformasi data kompleks menjadi <strong class="text-white">visual yang mudah dipahami</strong>
+            untuk briefing komandan yang efektif &mdash; <strong class="text-blue-400">untuk SITREP, dashboard, dan command briefing</strong>,
+            baik konteks <span class="text-red-400">threat</span> maupun <span class="text-blue-300">OMSP/SAR</span>, <span class="text-purple-400">pembinaan satuan</span>, dan <span class="text-amber-400">doktrin</span>.
+          </p>
+          
+          <div class="flex flex-wrap gap-4" data-reveal>
+            <a href="#sessions" class="cta-primary">
+              Mulai Pembelajaran
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#templates" class="cta-secondary">
+              Lihat Visual Templates
+            </a>
+          </div>
+        </div>
+        
+        <!-- Dashboard Preview Card -->
+        <div class="lg:col-span-2" data-reveal>
+          <div class="glass-lit p-4 rounded-2xl">
+            <!-- Mini Dashboard -->
+            <div class="dashboard-preview mb-4">
+              <div class="dashboard-header">
+                <div class="dashboard-dot bg-red-500"></div>
+                <div class="dashboard-dot bg-yellow-500"></div>
+                <div class="dashboard-dot bg-green-500"></div>
+                <span class="text-xs text-white/40 ml-2 font-mono">SITREP_DASHBOARD.ai</span>
+              </div>
+              <div class="p-4 space-y-3">
+                <div class="flex gap-3">
+                  <div class="flex-1 p-3 bg-blue-500/10 rounded-lg">
+                    <div class="text-xs text-blue-400 font-mono mb-1">THREAT LEVEL</div>
+                    <div class="text-lg font-bold text-blue-400">MEDIUM</div>
+                  </div>
+                  <div class="flex-1 p-3 bg-green-500/10 rounded-lg">
+                    <div class="text-xs text-green-400 font-mono mb-1">ASSETS</div>
+                    <div class="text-lg font-bold text-green-400">247</div>
+                  </div>
+                </div>
+                <div class="p-3 bg-white/5 rounded-lg">
+                  <div class="text-xs text-white/40 mb-2">Activity Timeline</div>
+                  <div class="mini-chart">
+                    <div class="mini-bar" style="height: 60%;"></div>
+                    <div class="mini-bar" style="height: 40%;"></div>
+                    <div class="mini-bar" style="height: 80%;"></div>
+                    <div class="mini-bar" style="height: 30%;"></div>
+                    <div class="mini-bar" style="height: 90%;"></div>
+                    <div class="mini-bar" style="height: 50%;"></div>
+                    <div class="mini-bar" style="height: 70%;"></div>
+                    <div class="mini-bar bg-amber-500/60" style="height: 100%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-white/10">
+                <span class="text-white/60 text-sm">Durasi Total</span>
+                <span class="font-semibold">3 Jam</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-white/10">
+                <span class="text-white/60 text-sm">Visual Templates</span>
+                <span class="font-semibold text-blue-400">6 Templates</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-white/10">
+                <span class="text-white/60 text-sm">Dashboard Types</span>
+                <span class="font-semibold text-blue-400">4 Types</span>
+              </div>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-white/60 text-sm">Output</span>
+                <span class="font-semibold text-tactical-green">Command Briefing Package</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Visual Types Overview -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          JENIS VISUALISASI
+        </div>
+        <h2 class="section-title">
+          4 TIPE VISUAL<br>
+          <span class="text-blue-400">UNTUK COMMAND BRIEFING</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="visual-type-card glass-lit p-6 rounded-2xl" style="--card-color: #3b82f6;" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Dashboard</h3>
+          <p class="text-white/50 text-sm mb-4">Real-time monitoring dengan KPIs, charts, dan status indicators</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-blue-500/10 rounded text-blue-400 text-xs">KPIs</span>
+            <span class="px-2 py-1 bg-blue-500/10 rounded text-blue-400 text-xs">Charts</span>
+          </div>
+        </div>
+        
+        <div class="visual-type-card glass-lit p-6 rounded-2xl" style="--card-color: #10b981;" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Threat Map</h3>
+          <p class="text-white/50 text-sm mb-4">Visualisasi geografis untuk threat locations dan asset positioning</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-green-500/10 rounded text-green-400 text-xs">Geographic</span>
+            <span class="px-2 py-1 bg-green-500/10 rounded text-green-400 text-xs">Spatial</span>
+          </div>
+        </div>
+        
+        <div class="visual-type-card glass-lit p-6 rounded-2xl" style="--card-color: #f59e0b;" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Timeline</h3>
+          <p class="text-white/50 text-sm mb-4">Kronologi events dan projected timeline untuk operasi</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-amber-500/10 rounded text-amber-400 text-xs">Temporal</span>
+            <span class="px-2 py-1 bg-amber-500/10 rounded text-amber-400 text-xs">Sequence</span>
+          </div>
+        </div>
+        
+        <div class="visual-type-card glass-lit p-6 rounded-2xl" style="--card-color: #a855f7;" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">Infografis</h3>
+          <p class="text-white/50 text-sm mb-4">Summary visual untuk key findings dan recommendations</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-purple-500/10 rounded text-purple-400 text-xs">Summary</span>
+            <span class="px-2 py-1 bg-purple-500/10 rounded text-purple-400 text-xs">Key Points</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Why Visual Matters -->
+      <div class="mt-12 glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="text-4xl font-display text-blue-400 mb-2">65%</div>
+            <div class="text-sm text-white/60">Manusia adalah visual learners — informasi visual diproses 60,000x lebih cepat dari teks</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-display text-tactical-green mb-2">3x</div>
+            <div class="text-sm text-white/60">Lebih cepat dalam decision-making ketika data disajikan secara visual</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-display text-tactical-amber mb-2">50%</div>
+            <div class="text-sm text-white/60">Reduksi waktu briefing dengan visual yang well-designed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Sessions Section -->
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          BREAKDOWN SESI
+        </div>
+        <h2 class="section-title">
+          4 SESI PEMBELAJARAN<br>
+          <span class="text-blue-400">180 MENIT TOTAL</span>
+        </h2>
+      </div>
+      
+      <div class="session-timeline space-y-8">
+        <!-- Session 3.1 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #3b82f6; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #3b82f6;"
+               x-data="{ open: true }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <span class="font-display text-blue-400 text-xl">3.1</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-blue-400 mb-1">SESI 1 • 30 MENIT</div>
+                  <h3 class="text-xl font-semibold">AI Canvas: Prinsip Visual Communication</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-03-01-visual-principles.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-blue-500/15 rounded-full text-blue-400 text-xs font-mono">KONSEP</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Prinsip Visual Hierarchy</h4>
+                    <div class="space-y-3">
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                          <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-mono text-sm">1</div>
+                          <span class="font-medium">Most Important First</span>
+                        </div>
+                        <p class="text-sm text-white/50 pl-11">Threat level, critical alerts di posisi paling prominent</p>
+                      </div>
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                          <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-mono text-sm">2</div>
+                          <span class="font-medium">Color = Meaning</span>
+                        </div>
+                        <p class="text-sm text-white/50 pl-11">Red = danger, Amber = warning, Green = safe — konsisten</p>
+                      </div>
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                          <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-mono text-sm">3</div>
+                          <span class="font-medium">Reduce Cognitive Load</span>
+                        </div>
+                        <p class="text-sm text-white/50 pl-11">Max 5-7 elements per view, no clutter</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">AI Canvas Capabilities</h4>
+                    <div class="glass p-4 rounded-xl">
+                      <ul class="space-y-2 text-sm text-white/70">
+                        <li class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Generate charts dari data description
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Create flowcharts dan diagrams
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Build dashboard layouts
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Design infographics
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Generate maps dengan annotations
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                      <div class="text-xs text-blue-400 font-mono mb-1">TOOLS YANG DIGUNAKAN</div>
+                      <div class="flex flex-wrap gap-2 mt-2">
+                        <span class="px-2 py-1 bg-white/5 rounded text-white/70 text-xs">Gemini Canvas</span>
+                        <span class="px-2 py-1 bg-white/5 rounded text-white/70 text-xs">Gemini Imagen 4</span>
+                        <span class="px-2 py-1 bg-white/5 rounded text-white/70 text-xs">NotebookLM</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 3.2 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #10b981; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #10b981;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <span class="font-display text-green-400 text-xl">3.2</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-green-400 mb-1">SESI 2 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">SITREP Visual & Threat Map Creation</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-03-02-sitrep-visual.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-green-500/15 rounded-full text-green-400 text-xs font-mono">TEKNIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">SITREP Visual Components</h4>
+                    <div class="glass p-4 rounded-xl mb-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div class="visual-element">Header/DTG</div>
+                        <div class="visual-element">Threat Level Indicator</div>
+                        <div class="visual-element">Enemy Status Card</div>
+                        <div class="visual-element">Friendly Status Card</div>
+                        <div class="visual-element">Key Events Timeline</div>
+                        <div class="visual-element">Action Items</div>
+                      </div>
+                    </div>
+                    
+                    <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                      <div class="text-xs text-green-400 font-mono mb-2">SITREP FORMAT</div>
+                      <div class="font-mono text-xs text-white/60 space-y-1">
+                        <div>1. SITUATION (Enemy/Friendly/Environment)</div>
+                        <div>2. ASSESSMENT (Overall evaluation)</div>
+                        <div>3. ACTIONS (Taken + Required)</div>
+                        <div>4. NEXT UPDATE (Scheduled time)</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Threat Map Elements</h4>
+                    <div class="glass p-4 rounded-xl space-y-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div>
+                        <span class="text-sm">Hostile positions (red markers)</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <span class="text-sm">Friendly positions (blue markers)</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 rounded-full bg-amber-500"></div>
+                        <span class="text-sm">Areas of interest (amber zones)</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 rounded-full border-2 border-dashed border-white/40"></div>
+                        <span class="text-sm">Movement corridors (dashed lines)</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 bg-gradient-to-r from-green-500/50 to-red-500/50 rounded"></div>
+                        <span class="text-sm">Threat gradient (heat map)</span>
+                      </div>
+                    </div>
+                    
+                    <div class="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                      <div class="flex items-center gap-2 text-amber-400 text-sm font-medium mb-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Key Principle
+                      </div>
+                      <p class="text-sm text-white/60">Map harus bisa dibaca dalam <strong class="text-white">3 detik</strong> — threat level harus immediately obvious.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 3.3 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f59e0b; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f59e0b;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <span class="font-display text-amber-400 text-xl">3.3</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-amber-400 mb-1">SESI 3 • 60 MENIT</div>
+                  <h3 class="text-xl font-semibold">Hands-On: Dashboard & Infografis Creation</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-03-03-dashboard-infografis.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-amber-500/15 rounded-full text-amber-400 text-xs font-mono">PRAKTIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-sm">1</span>
+                      Dashboard Creation (30 min)
+                    </h4>
+                    <div class="glass p-4 rounded-xl space-y-3">
+                      <p class="text-sm text-white/60">Build situational awareness dashboard dengan komponen:</p>
+                      <ul class="space-y-2 text-sm text-white/70">
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          Header dengan DTG dan threat level
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          3 KPI cards (assets, threats, status)
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          Activity timeline chart
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          Action items panel
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-sm">2</span>
+                      Infografis Creation (30 min)
+                    </h4>
+                    <div class="glass p-4 rounded-xl border border-amber-500/20">
+                      <div class="text-sm font-semibold mb-2 text-amber-400">Exercise: Intel Summary Infografis</div>
+                      <p class="text-sm text-white/60 mb-3">
+                        Transform intelligence brief menjadi single-page visual summary untuk command review.
+                      </p>
+                      <div class="text-xs text-white/40">
+                        Elements: Key finding icons, threat matrix, recommendation bullets, confidence meter
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-blue-400 text-sm font-medium mb-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Pro Tip: Iterative Design
+                  </div>
+                  <p class="text-sm text-white/60">Start simple, then ask AI to "add more detail to the threat section" atau "make the timeline more prominent". Build incrementally.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 3.4 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #a855f7; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #a855f7;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <span class="font-display text-purple-400 text-xl">3.4</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-purple-400 mb-1">SESI 4 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Complete Command Briefing Package</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-03-04-command-briefing.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-purple-500/15 rounded-full text-purple-400 text-xs font-mono">CAPSTONE</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <p class="text-white/60 mb-6">
+                  Sesi puncak: mengintegrasikan semua visual types menjadi complete briefing package 
+                  yang siap dipresentasikan ke komandan.
+                </p>
+                
+                <div class="glass p-6 rounded-xl mb-6">
+                  <h4 class="font-semibold mb-4 text-purple-400">Briefing Package Components</h4>
+                  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">📊</div>
+                      <div class="font-medium text-sm">Slide 1</div>
+                      <div class="text-xs text-white/50">Executive Dashboard</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">🗺️</div>
+                      <div class="font-medium text-sm">Slide 2</div>
+                      <div class="text-xs text-white/50">Threat Map</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">📈</div>
+                      <div class="font-medium text-sm">Slide 3</div>
+                      <div class="text-xs text-white/50">Trend Analysis</div>
+                    </div>
+                    <div class="p-4 bg-purple-500/10 rounded-lg text-center">
+                      <div class="text-2xl mb-2">✅</div>
+                      <div class="font-medium text-sm">Slide 4</div>
+                      <div class="text-xs text-white/50">Recommendations</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                    <div class="text-sm font-semibold text-green-400 mb-2">✓ Success Criteria</div>
+                    <ul class="space-y-1 text-sm text-white/60">
+                      <li>• Complete package dalam 45 menit</li>
+                      <li>• All 4 visual types represented</li>
+                      <li>• Consistent visual language</li>
+                      <li>• Actionable recommendations clear</li>
+                    </ul>
+                  </div>
+                  <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                    <div class="text-sm font-semibold text-amber-400 mb-2">⚡ Evaluation Points</div>
+                    <ul class="space-y-1 text-sm text-white/60">
+                      <li>• Visual hierarchy (most important visible)</li>
+                      <li>• Color coding consistency</li>
+                      <li>• Information density (not cluttered)</li>
+                      <li>• 3-second rule per slide</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Templates Section -->
+  <section id="templates" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          PROMPT TEMPLATES
+        </div>
+        <h2 class="section-title">
+          VISUAL CREATION<br>
+          <span class="text-blue-400">PROMPT LIBRARY</span>
+        </h2>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Template 1: Dashboard -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-blue-400">TEMPLATE 01</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Situational Dashboard</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template1')" 
+                    :class="copiedPrompt === 'template1' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template1'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template1' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template1">Buatkan dashboard situational awareness dengan data berikut:
+
+DATA INPUT:
+<span class="prompt-var">[PASTE: threat level, asset count, key metrics]</span>
+
+KOMPONEN YANG DIBUTUHKAN:
+1. HEADER: DTG dan overall threat level (color-coded)
+2. KPI CARDS (3-4 cards):
+   - Total assets monitored
+   - Active threats
+   - Operational status percentage
+3. ACTIVITY CHART: Timeline 24 jam terakhir
+4. ALERT PANEL: Top 3 priority items
+
+STYLE REQUIREMENTS:
+- Dark theme (navy background)
+- Color coding: Red=critical, Amber=warning, Green=normal
+- Font: Clean, readable, military-style
+- Layout: Grid-based, responsive
+
+OUTPUT: Single-page dashboard layout dengan semua komponen di atas.</div>
+        </div>
+        
+        <!-- Template 2: Threat Map -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-blue-400">TEMPLATE 02</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Threat Map</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template2')"
+                    :class="copiedPrompt === 'template2' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template2'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template2' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template2">Buatkan threat map visualization untuk area operasi:
+
+AREA: <span class="prompt-var">[REGION/SECTOR NAME]</span>
+
+ELEMENTS TO PLOT:
+HOSTILE POSITIONS (Red markers):
+<span class="prompt-var">[LIST: location, type, threat level]</span>
+
+FRIENDLY ASSETS (Blue markers):
+<span class="prompt-var">[LIST: location, type, status]</span>
+
+AREAS OF INTEREST (Amber zones):
+<span class="prompt-var">[LIST: area name, reason for interest]</span>
+
+MAP REQUIREMENTS:
+- Clear legend with all marker types
+- Scale indicator
+- North arrow
+- Sector boundaries
+- Movement corridors (if applicable)
+- Heat map overlay for threat density
+
+OUTPUT: Tactical map ready for command briefing.</div>
+        </div>
+        
+        <!-- Template 3: SITREP Visual -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-blue-400">TEMPLATE 03</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">SITREP Visual</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template3')"
+                    :class="copiedPrompt === 'template3' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template3'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template3' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template3">Transform SITREP teks berikut menjadi visual summary:
+
+SITREP DATA:
+<span class="prompt-var">[PASTE SITREP TEXT]</span>
+
+VISUAL FORMAT:
+1. HEADER SECTION
+   - DTG (prominent)
+   - Overall threat level indicator (large, color-coded)
+   - Reporting unit
+
+2. STATUS CARDS (side-by-side)
+   - ENEMY: Key activities, strength, disposition
+   - FRIENDLY: Status, casualties, readiness
+   - ENVIRONMENT: Weather, terrain factors
+
+3. KEY EVENTS TIMELINE
+   - Chronological list with timestamps
+   - Icons for event types
+
+4. ACTION ITEMS
+   - Completed actions (checked)
+   - Required actions (highlighted)
+   - Recommendations
+
+DESIGN: Professional military briefing style, scannable in under 10 seconds.</div>
+        </div>
+        
+        <!-- Template 4: Infographic Summary -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-blue-400">TEMPLATE 04</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Intel Summary Infographic</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template4')"
+                    :class="copiedPrompt === 'template4' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template4'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template4' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template4">Buatkan infografis satu halaman untuk intelligence summary:
+
+INTELLIGENCE BRIEF:
+<span class="prompt-var">[PASTE INTEL SUMMARY]</span>
+
+INFOGRAPHIC SECTIONS:
+
+1. HEADLINE (Top)
+   - Main finding in 1 sentence
+   - Threat level badge
+
+2. KEY FINDINGS (Icons + Short text)
+   - Finding 1: [icon] + 10 words max
+   - Finding 2: [icon] + 10 words max
+   - Finding 3: [icon] + 10 words max
+
+3. THREAT MATRIX (2x2 grid)
+   - Capability vs Intent visualization
+   - Position of threat actor marked
+
+4. CONFIDENCE METER
+   - Overall confidence: HIGH/MEDIUM/LOW
+   - Visual indicator (gauge or bar)
+
+5. RECOMMENDATIONS (Bottom, highlighted)
+   - 3 bullet points max
+   - Priority indicated
+
+STYLE: Clean, professional, high-contrast for projection.</div>
+        </div>
+      </div>
+      
+      <!-- Quick Reference -->
+      <div class="mt-12 glass-lit p-8 rounded-2xl" data-reveal>
+        <h3 class="text-xl font-semibold mb-6 text-center">Visual Design Quick Reference</h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="w-12 h-12 rounded-full mx-auto mb-3 bg-red-500 flex items-center justify-center text-white font-bold">!</div>
+            <div class="font-medium mb-1">Critical / Hostile</div>
+            <div class="text-xs text-white/50">#EF4444 (Red)</div>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 rounded-full mx-auto mb-3 bg-amber-500 flex items-center justify-center text-white font-bold">⚠</div>
+            <div class="font-medium mb-1">Warning / Caution</div>
+            <div class="text-xs text-white/50">#F59E0B (Amber)</div>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 rounded-full mx-auto mb-3 bg-green-500 flex items-center justify-center text-white font-bold">✓</div>
+            <div class="font-medium mb-1">Safe / Friendly</div>
+            <div class="text-xs text-white/50">#10B981 (Green)</div>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 rounded-full mx-auto mb-3 bg-blue-500 flex items-center justify-center text-white font-bold">ℹ</div>
+            <div class="font-medium mb-1">Information / Neutral</div>
+            <div class="text-xs text-white/50">#3B82F6 (Blue)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Exercises Section -->
+  <section id="exercises" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          HANDS-ON EXERCISES
+        </div>
+        <h2 class="section-title">
+          3 LATIHAN PRAKTIK<br>
+          <span class="text-blue-400">BUILD REAL VISUALS</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Exercise 1 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="font-display text-blue-400">E1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">EXERCISE 01</div>
+              <div class="text-xs text-white/40">Difficulty: Beginner</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Simple SITREP Visual</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan SITREP teks standard. Transform menjadi single-slide visual summary.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 20 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: 1 visual slide</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-blue-500/10 rounded text-blue-400 text-xs">SITREP</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/50 text-xs">Single Slide</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 2 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="font-display text-green-400">E2</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-green-400">EXERCISE 02</div>
+              <div class="text-xs text-white/40">Difficulty: Intermediate</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Threat Map + Dashboard</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan data posisi dan metrics. Create combined threat map dan monitoring dashboard.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 30 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: 2 visual slides</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-green-500/10 rounded text-green-400 text-xs">Map</span>
+            <span class="px-2 py-1 bg-blue-500/10 rounded text-blue-400 text-xs">Dashboard</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 3 -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="font-display text-purple-400">E3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">EXERCISE 03</div>
+              <div class="text-xs text-white/40">Difficulty: Advanced</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Complete Briefing Package</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Full scenario data. Create 4-slide command briefing package dengan semua visual types.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 45 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: 4-slide briefing deck</span>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+            <div class="text-xs text-purple-400 font-medium">Includes:</div>
+            <div class="text-xs text-white/50 mt-1">Dashboard + Map + Timeline + Recommendations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Assessment Criteria -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="text-center mb-8">
+          <div class="module-badge inline-flex mb-4">
+            <span class="status-dot"></span>
+            KRITERIA PENILAIAN
+          </div>
+          <h3 class="section-title">
+            RUBRIK ASSESSMENT<br>
+            <span class="text-blue-400">MODUL 03</span>
+          </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Kriteria</th>
+                <th class="text-center py-3 px-4 text-white/60 font-medium">Bobot</th>
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Indikator Sukses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Visual Hierarchy</td>
+                <td class="py-4 px-4 text-center text-blue-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Most important info immediately visible</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Color & Consistency</td>
+                <td class="py-4 px-4 text-center text-blue-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Correct color coding, consistent throughout</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Information Clarity</td>
+                <td class="py-4 px-4 text-center text-blue-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">3-second rule: key info scannable instantly</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium">Completeness</td>
+                <td class="py-4 px-4 text-center text-blue-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">All required components present and functional</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 text-center">
+          <div class="text-sm text-white/40 mb-2">Passing Score</div>
+          <div class="text-4xl font-display text-blue-400">70%</div>
+          <div class="text-xs text-white/30 mt-2">Focus on visual communication effectiveness</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Navigation -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <a href="modul-02-intelligence-analysis.html" class="cta-secondary">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Modul 02: Intelligence Analysis
+        </a>
+        
+        <div class="text-center">
+          <div class="text-sm text-white/40">Modul Selanjutnya</div>
+          <div class="font-semibold text-amber-400">Strategic Reasoning & Decision Support</div>
+        </div>
+        
+        <a href="#" class="cta-primary">
+          Modul 04
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    function copyPrompt(id) {
+      const element = document.getElementById(id);
+      const text = element.innerText;
+      navigator.clipboard.writeText(text);
+    }
+    
+    gsap.utils.toArray('[data-reveal]').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

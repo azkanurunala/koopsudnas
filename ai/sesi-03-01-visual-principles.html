@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.1 | AI Canvas: Prinsip Visual Communication</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#3b82f6',
+            'accent-light': '#60a5fa',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #1d4ed8; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #60a5fa); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .principle-card { transition: all 0.3s ease; }
+    .principle-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(59,130,246,0.2); }
+    
+    .color-swatch { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+    
+    .visual-example { border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 20px; transition: all 0.3s ease; }
+    .visual-example:hover { border-color: var(--accent); }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(59,130,246,0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 10, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-visual-intelligence.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 3.1</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">30 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">KONSEP</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-02-04-multi-source-fusion.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 2.4</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-03-02-sitrep-visual.html" class="text-xs text-white/40 hover:text-white/60">Sesi 3.2 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 03 • SESI 1</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        AI CANVAS:<br>
+        <span class="text-accent">PRINSIP VISUAL COMMUNICATION</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Fondasi untuk membuat <strong class="text-white">visual intelligence products</strong> 
+        yang efektif — dari dashboard hingga command briefing slides.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">30</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">5</div>
+          <div class="text-xs text-white/50">PRINSIP</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">∞</div>
+          <div class="text-xs text-white/50">APLIKASI</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHY VISUAL MATTERS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">MENGAPA VISUAL?</div>
+        <h2 class="slide-title">
+          VISUAL =<br>
+          <span class="text-accent">FASTER DECISIONS</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="glass-lit p-6 rounded-2xl text-center principle-card">
+          <div class="text-5xl font-display text-accent mb-2">65%</div>
+          <div class="text-sm text-white/70">Manusia adalah <strong class="text-white">visual learners</strong></div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl text-center principle-card">
+          <div class="text-5xl font-display text-green-400 mb-2">60K×</div>
+          <div class="text-sm text-white/70">Visual diproses <strong class="text-white">lebih cepat</strong> dari teks</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl text-center principle-card">
+          <div class="text-5xl font-display text-amber-400 mb-2">3×</div>
+          <div class="text-sm text-white/70">Faster <strong class="text-white">decision-making</strong> dengan visual</div>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="text-red-400 font-semibold mb-3">❌ Text-Heavy Briefing</div>
+            <div class="font-mono text-xs text-white/50 leading-relaxed">
+              "Pada tanggal 11 April 2026, terdeteksi peningkatan aktivitas di sektor NE-7 sebanyak 300% dari baseline normal. Terdapat 4 kali observasi dengan total 62 kontak tidak teridentifikasi pada ketinggian 8,000-15,000 kaki..."
+            </div>
+            <div class="mt-3 text-xs text-red-400">⏱️ Waktu baca: 30+ detik</div>
+          </div>
+          <div class="p-4 bg-green-500/10 rounded-xl">
+            <div class="text-green-400 font-semibold mb-3">✓ Visual Dashboard</div>
+            <div class="flex items-center gap-4">
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs text-white/50">Threat Level</span>
+                  <span class="px-2 py-0.5 bg-red-500 text-white text-xs rounded font-bold">HIGH</span>
+                </div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div class="h-full w-3/4 bg-gradient-to-r from-amber-500 to-red-500 rounded-full"></div>
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-display text-red-400">+300%</div>
+                <div class="text-xs text-white/40">vs baseline</div>
+              </div>
+            </div>
+            <div class="mt-3 text-xs text-green-400">⏱️ Waktu baca: 3 detik</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 5 PRINCIPLES OVERVIEW -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">FRAMEWORK</div>
+        <h2 class="slide-title">
+          5 PRINSIP<br>
+          <span class="text-accent">VISUAL COMMUNICATION</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="glass-lit p-5 rounded-2xl text-center principle-card">
+          <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-xl font-display text-accent">1</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Hierarchy</div>
+          <div class="text-xs text-white/50">Most important first</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center principle-card">
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-xl font-display text-red-400">2</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Color = Meaning</div>
+          <div class="text-xs text-white/50">Consistent coding</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center principle-card">
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-xl font-display text-green-400">3</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Simplicity</div>
+          <div class="text-xs text-white/50">Reduce cognitive load</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center principle-card">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-xl font-display text-amber-400">4</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">3-Second Rule</div>
+          <div class="text-xs text-white/50">Instant understanding</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center principle-card">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-xl font-display text-purple-400">5</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Actionable</div>
+          <div class="text-xs text-white/50">Clear next steps</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: PRINCIPLE 1 - HIERARCHY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+          <span class="text-2xl font-display text-accent">1</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm">PRINSIP 1</div>
+          <h2 class="slide-subtitle">VISUAL HIERARCHY</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Aturan Hierarchy</h3>
+          <div class="space-y-4">
+            <div class="p-4 bg-white/5 rounded-xl">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl">👁️</span>
+                <span class="font-semibold">Most Important = Paling Besar/Prominent</span>
+              </div>
+              <p class="text-sm text-white/60 pl-10">Threat level, critical alerts harus di posisi teratas dan ukuran terbesar</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl">📐</span>
+                <span class="font-semibold">Size = Importance</span>
+              </div>
+              <p class="text-sm text-white/60 pl-10">Elemen lebih besar = lebih penting. Jangan buat semua sama besar.</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl">↘️</span>
+                <span class="font-semibold">Z-Pattern Reading</span>
+              </div>
+              <p class="text-sm text-white/60 pl-10">Mata membaca: kiri atas → kanan atas → kiri bawah → kanan bawah</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Contoh Visual</h3>
+          <div class="visual-example">
+            <div class="text-center mb-4">
+              <div class="text-4xl font-display text-red-400 mb-1">THREAT: HIGH</div>
+              <div class="text-xs text-white/40">← Paling besar, paling atas</div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="p-3 bg-white/5 rounded-lg text-center">
+                <div class="text-lg font-display text-amber-400">62</div>
+                <div class="text-xs text-white/40">Contacts</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg text-center">
+                <div class="text-lg font-display text-cyan-400">NE-7</div>
+                <div class="text-xs text-white/40">Sector</div>
+              </div>
+            </div>
+            <div class="text-xs text-white/40 text-center">← Supporting data, lebih kecil</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: PRINCIPLE 2 - COLOR CODING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center">
+          <span class="text-2xl font-display text-red-400">2</span>
+        </div>
+        <div>
+          <div class="text-red-400 font-mono text-sm">PRINSIP 2</div>
+          <h2 class="slide-subtitle">COLOR = MEANING</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Standard Color Codes</h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-4 p-3 bg-red-500/10 rounded-xl">
+              <div class="color-swatch bg-red-500 text-white">!</div>
+              <div>
+                <div class="font-semibold text-red-400">RED = Danger / Hostile</div>
+                <div class="text-xs text-white/50">Enemy positions, high threat, critical alerts</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-amber-500/10 rounded-xl">
+              <div class="color-swatch bg-amber-500 text-white">⚠</div>
+              <div>
+                <div class="font-semibold text-amber-400">AMBER = Warning / Caution</div>
+                <div class="text-xs text-white/50">Medium threat, attention needed, potential issues</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-green-500/10 rounded-xl">
+              <div class="color-swatch bg-green-500 text-white">✓</div>
+              <div>
+                <div class="font-semibold text-green-400">GREEN = Safe / Good</div>
+                <div class="text-xs text-white/50">Normal operations, low threat, positive status</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-blue-500/10 rounded-xl">
+              <div class="color-swatch bg-blue-500 text-white">★</div>
+              <div>
+                <div class="font-semibold text-blue-400">BLUE = Friendly</div>
+                <div class="text-xs text-white/50">Our forces, friendly positions, own assets</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-white/10">
+            <div class="text-xs font-mono text-white/50 mb-3">SKEMA NON-COMBAT (OMSP / PEMBINAAN / LOGISTIK)</div>
+            <div class="grid grid-cols-1 gap-2">
+              <div class="flex items-center gap-3 p-2 bg-green-500/10 rounded-lg">
+                <div class="w-6 h-6 rounded bg-green-500"></div>
+                <div class="text-xs text-white/70"><strong class="text-green-400">HIJAU</strong> = SAR progress / target tercapai</div>
+              </div>
+              <div class="flex items-center gap-3 p-2 bg-blue-500/10 rounded-lg">
+                <div class="w-6 h-6 rounded bg-blue-500"></div>
+                <div class="text-xs text-white/70"><strong class="text-blue-400">BIRU</strong> = Logistik / supply chain</div>
+              </div>
+              <div class="flex items-center gap-3 p-2 bg-yellow-500/10 rounded-lg">
+                <div class="w-6 h-6 rounded bg-yellow-500"></div>
+                <div class="text-xs text-white/70"><strong class="text-yellow-400">KUNING</strong> = Pending clearance / menunggu approval</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">⚠️ Common Mistakes</h3>
+          <div class="space-y-4">
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div class="text-red-400 font-semibold text-sm mb-2">❌ Inconsistent Colors</div>
+              <p class="text-xs text-white/60">
+                Menggunakan merah untuk "highlight" padahal bukan threat — membingungkan pembaca
+              </p>
+            </div>
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div class="text-red-400 font-semibold text-sm mb-2">❌ Too Many Colors</div>
+              <p class="text-xs text-white/60">
+                Lebih dari 5 warna dalam satu visual membuat susah diproses
+              </p>
+            </div>
+            <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div class="text-green-400 font-semibold text-sm mb-2">✓ Best Practice</div>
+              <p class="text-xs text-white/60">
+                Stick to 3-4 warna utama. Jika perlu lebih, gunakan shade dari warna yang sama.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: PRINCIPLE 3 - SIMPLICITY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center">
+          <span class="text-2xl font-display text-green-400">3</span>
+        </div>
+        <div>
+          <div class="text-green-400 font-mono text-sm">PRINSIP 3</div>
+          <h2 class="slide-subtitle">SIMPLICITY & COGNITIVE LOAD</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-green-400 mb-4">Miller's Law: 7 ± 2</h3>
+          <p class="text-white/70 mb-4">
+            Otak manusia hanya bisa memproses <strong class="text-white">5-9 item</strong> secara bersamaan. 
+            Lebih dari itu → cognitive overload → decision paralysis.
+          </p>
+          
+          <div class="space-y-3">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="text-sm">Max elements per view</span>
+                <span class="text-green-400 font-mono font-bold">5-7</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="text-sm">Max bullets per slide</span>
+                <span class="text-green-400 font-mono font-bold">5</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="text-sm">Max colors</span>
+                <span class="text-green-400 font-mono font-bold">3-4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-green-400 mb-4">Simplification Techniques</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 rounded-lg flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Group Related Items</div>
+                <div class="text-xs text-white/50">5 items dalam 1 group = 1 mental unit</div>
+              </div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Use Progressive Disclosure</div>
+                <div class="text-xs text-white/50">Show summary first, details on demand</div>
+              </div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Remove Non-Essential</div>
+                <div class="text-xs text-white/50">"If it doesn't help decision, remove it"</div>
+              </div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <div>
+                <div class="font-semibold text-sm">Whitespace is Your Friend</div>
+                <div class="text-xs text-white/50">Empty space helps focus attention</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PRINCIPLE 4 - 3-SECOND RULE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+          <span class="text-2xl font-display text-amber-400">4</span>
+        </div>
+        <div>
+          <div class="text-amber-400 font-mono text-sm">PRINSIP 4</div>
+          <h2 class="slide-subtitle">THE 3-SECOND RULE</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl text-center mb-8">
+        <div class="text-6xl font-display text-amber-400 mb-4">3</div>
+        <div class="text-xl font-display mb-2">DETIK</div>
+        <p class="text-white/70 max-w-xl mx-auto">
+          Dalam <strong class="text-white">3 detik pertama</strong>, pembaca harus bisa memahami 
+          <strong class="text-amber-400">WHAT</strong> (apa yang terjadi) dan 
+          <strong class="text-amber-400">SO WHAT</strong> (mengapa penting).
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass p-6 rounded-2xl">
+          <div class="text-amber-400 font-semibold mb-4">Test Your Visual:</div>
+          <ol class="space-y-3 text-sm">
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 flex-shrink-0">1</span>
+              <span class="text-white/70">Tunjukkan visual ke orang baru selama <strong class="text-white">3 detik</strong></span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 flex-shrink-0">2</span>
+              <span class="text-white/70">Tutup visual, tanyakan: <strong class="text-white">"Apa pesan utamanya?"</strong></span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 flex-shrink-0">3</span>
+              <span class="text-white/70">Jika tidak bisa jawab → <strong class="text-red-400">redesign needed</strong></span>
+            </li>
+          </ol>
+        </div>
+        
+        <div class="glass p-6 rounded-2xl">
+          <div class="text-amber-400 font-semibold mb-4">Checklist 3-Second Rule:</div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+              <span class="text-amber-400">□</span>
+              <span class="text-sm text-white/70">Threat level visible immediately?</span>
+            </div>
+            <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+              <span class="text-amber-400">□</span>
+              <span class="text-sm text-white/70">Title describes the situation?</span>
+            </div>
+            <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+              <span class="text-amber-400">□</span>
+              <span class="text-sm text-white/70">Key number/metric prominent?</span>
+            </div>
+            <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+              <span class="text-amber-400">□</span>
+              <span class="text-sm text-white/70">Color coding meaningful?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: PRINCIPLE 5 - ACTIONABLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+          <span class="text-2xl font-display text-purple-400">5</span>
+        </div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm">PRINSIP 5</div>
+          <h2 class="slide-subtitle">ACTIONABLE OUTPUT</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 mb-4">Visual Tanpa Action = Useless</h3>
+          <p class="text-white/70 mb-4">
+            Setiap visual harus menjawab: <strong class="text-white">"So what should I do?"</strong>
+          </p>
+          
+          <div class="space-y-4">
+            <div class="p-4 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl">
+              <div class="text-red-400 font-semibold text-sm mb-1">❌ Informational Only</div>
+              <div class="text-xs text-white/60">"Activity increased 300% in NE-7"</div>
+            </div>
+            <div class="p-4 bg-green-500/10 border-l-4 border-green-500 rounded-r-xl">
+              <div class="text-green-400 font-semibold text-sm mb-1">✓ Actionable</div>
+              <div class="text-xs text-white/60">"Activity +300% in NE-7 → RECOMMEND: Deploy CAP immediately"</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 mb-4">Action Elements</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm text-purple-400 mb-1">BLUF Section</div>
+              <div class="text-xs text-white/50">Bottom Line Up Front — conclusion first, details later</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm text-purple-400 mb-1">Recommendation Box</div>
+              <div class="text-xs text-white/50">Clearly marked area with specific recommended actions</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm text-purple-400 mb-1">Decision Points</div>
+              <div class="text-xs text-white/50">If X then Y — clear decision criteria</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="font-semibold text-sm text-purple-400 mb-1">Next Update</div>
+              <div class="text-xs text-white/50">When will new information be available?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Gallery: Prinsip dalam Praktik -->
+      <div class="mt-12">
+        <div class="text-center mb-6">
+          <div class="text-sm font-mono text-accent mb-2">PRINSIP DALAM PRAKTIK</div>
+          <h3 class="text-xl font-semibold">4 Domain Dashboard Koopsudnas</h3>
+          <p class="text-sm text-white/50 mt-2">Prinsip visual yang sama — konteks berbeda</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="glass-lit p-5 rounded-2xl border-t-4 border-red-500">
+            <div class="h-24 bg-gradient-to-br from-red-500/20 to-red-500/5 rounded-lg mb-3 flex items-center justify-center">
+              <span class="text-3xl">🛡️</span>
+            </div>
+            <div class="text-xs font-mono text-red-400 mb-1">HANUD</div>
+            <div class="font-semibold text-sm mb-1">Dashboard Threat</div>
+            <p class="text-xs text-white/50">Merah/amber/hijau — threat level kontak udara</p>
+          </div>
+          <div class="glass-lit p-5 rounded-2xl border-t-4 border-green-500">
+            <div class="h-24 bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-lg mb-3 flex items-center justify-center">
+              <span class="text-3xl">🚁</span>
+            </div>
+            <div class="text-xs font-mono text-green-400 mb-1">OMSP / SAR</div>
+            <div class="font-semibold text-sm mb-1">Dashboard SAR Progress</div>
+            <p class="text-xs text-white/50">Hijau progress — area tercover vs remaining</p>
+          </div>
+          <div class="glass-lit p-5 rounded-2xl border-t-4 border-blue-500">
+            <div class="h-24 bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-lg mb-3 flex items-center justify-center">
+              <span class="text-3xl">📊</span>
+            </div>
+            <div class="text-xs font-mono text-blue-400 mb-1">PEMBINAAN</div>
+            <div class="font-semibold text-sm mb-1">Dashboard Readiness Satuan</div>
+            <p class="text-xs text-white/50">Biru/kuning — status MC aircraft &amp; crew</p>
+          </div>
+          <div class="glass-lit p-5 rounded-2xl border-t-4 border-purple-500">
+            <div class="h-24 bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg mb-3 flex items-center justify-center">
+              <span class="text-3xl">📖</span>
+            </div>
+            <div class="text-xs font-mono text-purple-400 mb-1">DOKTRIN</div>
+            <div class="font-semibold text-sm mb-1">Dashboard Doctrine Compliance</div>
+            <p class="text-xs text-white/50">Gap analysis — current vs target doctrine</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false, correct: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Menurut Miller's Law, berapa <strong class="text-white">maksimal elemen</strong> yang bisa diproses otak secara bersamaan?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. 3-4 item</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. 5-9 item (7 ± 2)</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. 10-12 item</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. Unlimited</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true; correct = (answer === 'b')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B (5-9 item atau 7 ± 2).</strong> 
+            Ini adalah Miller's Law — working memory manusia terbatas. Itulah mengapa kita harus membatasi elemen visual per view.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 3.1
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Hierarchy First</div>
+              <div class="text-sm text-white/60">Most important = biggest & top position</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Color = Meaning</div>
+              <div class="text-sm text-white/60">Red/Amber/Green/Blue — consistent always</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Keep It Simple</div>
+              <div class="text-sm text-white/60">Max 5-7 elements per view (Miller's Law)</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">3-Second Test</div>
+              <div class="text-sm text-white/60">If not understood in 3 sec → redesign</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-accent/10 rounded-xl text-center">
+          <p class="text-white/70">
+            <strong class="text-accent">Remember:</strong> Visual yang bagus bukan yang cantik — 
+            tapi yang <strong class="text-white">membantu decision-maker memutuskan dengan cepat</strong>.
+          </p>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="modul-03-visual-intelligence.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Kembali ke Modul 03
+        </a>
+        <a href="sesi-03-02-sitrep-visual.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 3.2 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOW — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOW • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Create Image untuk Visual Intelligence Basics</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Prinsip visual yang Anda pelajari di sesi ini (hierarchy, contrast, alignment, repetition) harus diaplikasikan ketika Anda generate visual menggunakan AI. <strong class="text-indigo-300">Create Image</strong> (Imagen 4) adalah tool Gemini untuk image generation — bagaimana menulis prompt yang menghasilkan visual yang mengikuti prinsip-prinsip tersebut.</p>
+      </div>
+
+      <!-- EMBED: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group" open>
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Applied Visual Principles — Dari Teori ke Generated Image</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK VISUAL INTELLIGENCE</div>
+            <p class="text-sm text-white/70">Saat Anda perlu generate <strong class="text-white">ilustrasi, sketsa konsep, atau visual aid</strong> untuk dokumen intel yang tidak mungkin difoto (skenario hipotetik, doktrin abstrak, terrain generic). Create Image melalui Imagen 4 bisa produksi visual kualitas tinggi, tapi <strong class="text-white">prinsip visual dari sesi ini wajib diterapkan di prompt</strong> — AI tidak otomatis tahu apa yang "profesional" untuk konteks militer.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Apply Visual Principles di Prompt</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Definisikan visual hierarchy dulu</strong> — apa focal point, apa supporting, apa background. Tulis di prompt dengan kata eksplisit: "focal point", "foreground", "background".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Sebutkan contrast ratio</strong> — "high contrast between foreground subject and background" atau "subtle low-contrast monochromatic tones". AI ikuti arahan kontras ini.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Komposisi eksplisit</strong> — "rule of thirds with subject at right-third", "centered composition", "symmetric layout". Ini affect alignment di output.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Gaya visual konsisten</strong> — untuk set of images dalam 1 briefing, gunakan gaya visual yang sama ("cinematic photorealistic", "technical illustration style", "infographic flat design"). Repetition = consistency.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Iterate, jangan terima hasil pertama</strong> — generate 3-4 variasi, bandingkan dengan prinsip visual di sesi ini, pilih yang paling ikut prinsip (bukan yang paling "cantik").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">OPSEC check setiap output</strong> — jangan masukkan nama satuan, callsign, insignia, atau wajah personel real. Semua visual harus generic untuk training/briefing internal.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Visual Principle-Driven Image</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">[Contoh: Generate ilustrasi untuk konsep "Layered Air Defense"]
+
+A technical illustration showing a layered air defense concept.
+
+VISUAL HIERARCHY:
+- Focal point: central terrain cross-section view (archipelago coastline)
+- Foreground: three concentric defense layers (short/medium/long range) shown as subtle arcs
+- Background: sky gradient, dawn lighting
+
+CONTRAST:
+- High contrast between defense layer arcs (bright indigo/cyan) and muted terrain
+- Labels dark against light background areas
+
+COMPOSITION:
+- Horizontal rule of thirds — terrain fills bottom third, sky upper two thirds
+- Symmetric layering — defense arcs radiate from central point
+
+STYLE:
+- Clean technical infographic illustration style
+- No photorealism — flat vector-style with subtle gradient
+- Military briefing aesthetic — professional, authoritative
+- Color palette: navy blue, indigo, muted teal, white labels
+- NO specific unit insignia, NO national flags, NO identifiable locations
+
+TEXT OVERLAY (hints for where labels go, AI will approximate):
+- "Layer 1: Outer" in top-right area
+- "Layer 2: Middle" in middle area
+- "Layer 3: Inner" in bottom-center area
+
+Output aspect ratio: 16:9 (for briefing slide)
+Quality: high detail, suitable for projection</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Visual Principles di Imagen</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Text rendering masih lemah</strong> — AI image generator belum reliable render teks. Label text sebaiknya ditambahkan manual di Google Slides setelah generate, bukan dari prompt.</li>
+              <li>• <strong class="text-white">Consistency via repetition</strong> — untuk briefing dengan 5 visual, gunakan gaya persis sama ("technical illustration, flat vector, indigo palette") di semua prompt. Consistency = professional.</li>
+              <li>• <strong class="text-white">Hindari "military" kata langsung</strong> — Imagen content filter sensitif terhadap kata militer spesifik. Gunakan "defense concept", "aerial surveillance", "coastal patrol" daripada "military operation".</li>
+              <li>• <strong class="text-white">Prinsip visual trumps aesthetics</strong> — sering hasil yang "cantik" secara artistik tidak mengikuti hierarchy yang Anda butuhkan. Pilih yang paling ikut prinsip.</li>
+              <li>• <strong class="text-white">OPSEC non-negotiable</strong> — semua generated image = training purpose, harus generic. Jangan pernah input real unit name atau callsign ke prompt.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 05 | Capstone: 3 Pathway (Hanud / SAR / Doktrin)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+              blue: '#3b82f6',
+              orange: '#f97316',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-bg-2: #0a0f1a;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-surface-hover: rgba(255, 255, 255, 0.06);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-bright: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(20px);
+      --module-color: #f97316;
+      --color-text: rgba(255, 255, 255, 0.92);
+      --color-muted: rgba(255, 255, 255, 0.55);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 700px; height: 700px; 
+      top: -250px; left: -150px; 
+      background: var(--module-color); 
+      opacity: 0.12; 
+    }
+    .blob-2 { 
+      width: 500px; height: 500px; 
+      bottom: -150px; right: -100px; 
+      background: #ea580c; 
+      opacity: 0.1; 
+      animation-delay: -3s; 
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      top: 50%; left: 20%;
+      background: #fb923c;
+      opacity: 0.05;
+      animation-delay: -5s;
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(40px, -30px) scale(1.08); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .glass:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-bright);
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 32px 64px -16px rgba(0,0,0,0.6);
+    }
+    
+    .module-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #f97316;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 24px rgba(249, 115, 22, 0.3);
+      text-decoration: none;
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(249, 115, 22, 0.4);
+    }
+    
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-bright);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-smooth);
+      text-decoration: none;
+    }
+    
+    .cta-secondary:hover {
+      background: var(--color-surface);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    /* Integration Flow */
+    .integration-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .flow-module {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      border: 2px solid;
+    }
+    
+    .flow-arrow {
+      font-size: 20px;
+      color: rgba(255,255,255,0.3);
+    }
+    
+    /* Scenario Card */
+    .scenario-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .scenario-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f97316, #ea580c, #f97316);
+    }
+    
+    /* Phase Indicator */
+    .phase-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .phase-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid;
+    }
+    
+    .phase-line {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--phase-color) 0%, rgba(255,255,255,0.1) 100%);
+    }
+    
+    /* Certificate Preview */
+    .certificate-preview {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%);
+      border: 2px solid rgba(249, 115, 22, 0.3);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .certificate-preview::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 50%);
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .certificate-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Session Card */
+    .session-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .session-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--session-color, #f97316);
+    }
+    
+    /* Timeline */
+    .session-timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .session-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: linear-gradient(180deg, #f97316 0%, rgba(249, 115, 22, 0.2) 100%);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 3px solid var(--session-color, #f97316);
+    }
+    
+    /* Accordion */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+    }
+    
+    .accordion-content.open {
+      max-height: 5000px;
+    }
+    
+    /* Deliverable Card */
+    .deliverable-card {
+      position: relative;
+      padding-left: 16px;
+    }
+    
+    .deliverable-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--deliverable-color, #f97316);
+      border-radius: 2px;
+    }
+    
+    /* Competency Badge */
+    .competency-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .competency-achieved {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(249, 115, 22, 0.5); }
+    
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    /* Confetti Animation for Certificate */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body x-data="{ activeSession: 1, copiedPrompt: null }">
+  
+  <!-- Scene Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Kembali</span>
+        </a>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="module-badge">
+          <span class="status-dot"></span>
+          MODUL 05 • CAPSTONE
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#integration" class="text-sm text-white/60 hover:text-white transition-colors">Integrasi</a>
+        <a href="#scenario" class="text-sm text-white/60 hover:text-white transition-colors">Scenario</a>
+        <a href="#deliverables" class="text-sm text-white/60 hover:text-white transition-colors">Deliverables</a>
+        <a href="#certification" class="text-sm text-white/60 hover:text-white transition-colors">Sertifikasi</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex items-center pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-start">
+        <div class="lg:col-span-3">
+          <div class="flex items-center gap-4 mb-6" data-reveal>
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
+              <span class="font-display text-3xl text-white">05</span>
+            </div>
+            <div>
+              <div class="text-sm text-orange-400 font-mono">CAPSTONE • 3 JAM</div>
+              <div class="text-white/40 text-sm">Modul Final — Integrasi Semua Skills</div>
+            </div>
+          </div>
+          
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl tracking-wide leading-none mb-6" data-reveal>
+            INTEGRATED<br>
+            <span class="text-orange-400">AI OPERATIONS</span><br>
+            CAPSTONE
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-2xl mb-8 leading-relaxed" data-reveal>
+            Ujian akhir yang mengintegrasikan semua competency: Intelligence Analysis, Visual Communication, 
+            dan Strategic Decision Support. Selesaikan <strong class="text-white">full mission scenario</strong> 
+            dan dapatkan sertifikasi.
+          </p>
+          
+          <div class="flex flex-wrap gap-4" data-reveal>
+            <a href="#scenario" class="cta-primary">
+              Mulai Capstone
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#certification" class="cta-secondary">
+              Lihat Sertifikasi
+            </a>
+          </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="lg:col-span-2" data-reveal>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+              </svg>
+              Capstone Overview
+            </h3>
+            
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Durasi Total</span>
+                <span class="font-semibold">3 Jam</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Format</span>
+                <span class="font-semibold text-orange-400">Full Mission Simulation</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Deliverables</span>
+                <span class="font-semibold text-orange-400">5 Documents</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Passing Score</span>
+                <span class="font-semibold">80%</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-white/60">Prerequisite</span>
+                <span class="font-semibold">Modul 01-04</span>
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/10">
+              <div class="text-sm text-white/40 mb-3">Outcome:</div>
+              <div class="p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-orange-500/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-orange-400">Sertifikat Kompetensi</div>
+                    <div class="text-xs text-white/50">AI Operasional Level 1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Skills Integration -->
+  <section id="integration" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          INTEGRASI KOMPETENSI
+        </div>
+        <h2 class="section-title">
+          SEMUA SKILLS<br>
+          <span class="text-orange-400">DALAM SATU OPERASI</span>
+        </h2>
+      </div>
+      
+      <!-- Integration Flow -->
+      <div class="glass-lit p-8 rounded-2xl mb-12" data-reveal>
+        <h3 class="text-center font-semibold mb-8">AI-Enabled Operations Flow</h3>
+        <div class="integration-flow">
+          <div class="flow-module bg-purple-500/20 border-purple-500 text-purple-400">
+            <div class="text-xs font-mono mb-1">M01</div>
+            <div>AI Fundamentals</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-module bg-teal-500/20 border-teal-500 text-teal-400">
+            <div class="text-xs font-mono mb-1">M02</div>
+            <div>Intel Analysis</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-module bg-blue-500/20 border-blue-500 text-blue-400">
+            <div class="text-xs font-mono mb-1">M03</div>
+            <div>Visual Intel</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-module bg-amber-500/20 border-amber-500 text-amber-400">
+            <div class="text-xs font-mono mb-1">M04</div>
+            <div>Strategic Decision</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-module bg-orange-500/20 border-orange-500 text-orange-400">
+            <div class="text-xs font-mono mb-1">M05</div>
+            <div>INTEGRATION</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Skills Map -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <span class="font-display text-purple-400 text-xl">01</span>
+          </div>
+          <h3 class="font-semibold mb-2 text-purple-400">Prompting Mastery</h3>
+          <p class="text-white/50 text-sm mb-4">Framework RISEN, iterative prompting, context management</p>
+          <div class="competency-badge competency-achieved">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Applied in Capstone
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center mb-4">
+            <span class="font-display text-teal-400 text-xl">02</span>
+          </div>
+          <h3 class="font-semibold mb-2 text-teal-400">Intelligence Fusion</h3>
+          <p class="text-white/50 text-sm mb-4">Multi-source analysis, pattern recognition, threat assessment</p>
+          <div class="competency-badge competency-achieved">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Applied in Capstone
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <span class="font-display text-blue-400 text-xl">03</span>
+          </div>
+          <h3 class="font-semibold mb-2 text-blue-400">Visual Communication</h3>
+          <p class="text-white/50 text-sm mb-4">Dashboard, threat maps, SITREP visual, infographics</p>
+          <div class="competency-badge competency-achieved">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Applied in Capstone
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+            <span class="font-display text-amber-400 text-xl">04</span>
+          </div>
+          <h3 class="font-semibold mb-2 text-amber-400">Strategic Reasoning</h3>
+          <p class="text-white/50 text-sm mb-4">COA analysis, risk assessment, wargaming, decision support</p>
+          <div class="competency-badge competency-achieved">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Applied in Capstone
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Mission Scenario -->
+  <section id="scenario" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-orange-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          MISSION SCENARIO
+        </div>
+        <h2 class="section-title">
+          PILIH PATHWAY<br>
+          <span class="text-orange-400">CAPSTONE ANDA</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4">
+          Capstone tersedia dalam <strong class="text-white">3 pathway</strong> yang merepresentasikan
+          tugas pokok Koopsudnas yang berbeda. Framework 4-phase (Fusion → Visual → COA → Decision Brief)
+          sama untuk ketiganya — pilih pathway yang paling relevan dengan tugas Anda atau yang ingin Anda latih.
+        </p>
+      </div>
+
+      <!-- PATHWAY SELECTOR (3 cards) -->
+      <div class="grid md:grid-cols-3 gap-5 mb-16" data-reveal>
+        <!-- Pathway A -->
+        <div class="glass-lit p-6 rounded-2xl border border-red-500/30 hover:border-red-500/60 transition-all">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl">🎯</div>
+            <div>
+              <div class="font-mono text-xs text-red-400">PATHWAY A</div>
+              <div class="font-semibold">Operasi Pertahanan Udara</div>
+            </div>
+          </div>
+          <div class="text-sm font-semibold mb-2">Operation GARUDA SHIELD</div>
+          <p class="text-xs text-white/60 mb-3">
+            Reconnaissance threat di sektor NE-7/8/9. SIGINT surge + 47 unidentified contacts +
+            racetrack patterns. Tasking: threat assessment → deterrence COA.
+          </p>
+          <div class="text-xs text-white/40 space-y-1">
+            <div>• <strong class="text-white/60">Tone:</strong> combat, ROE-strict</div>
+            <div>• <strong class="text-white/60">Stakeholder:</strong> Panglima, Pusatkodal</div>
+            <div>• <strong class="text-white/60">Output:</strong> Threat deterrence package</div>
+          </div>
+          <div class="mt-4 px-3 py-1 bg-red-500/10 rounded-full text-center text-xs text-red-400 font-mono">DEFAULT • EXISTING</div>
+        </div>
+
+        <!-- Pathway B -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30 hover:border-blue-500/60 transition-all">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-2xl">🆘</div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">PATHWAY B</div>
+              <div class="font-semibold">OMSP / SAR</div>
+            </div>
+          </div>
+          <div class="text-sm font-semibold mb-2">CENDRAWASIH RESCUE</div>
+          <p class="text-xs text-white/60 mb-3">
+            Gempa M7.2 Banda Sea. ATR-72 hilang kontak (68 pax). Weather buruk, multi-agency
+            (Basarnas/TNI AL/BMKG). Tasking: SAR priority + resource allocation.
+          </p>
+          <div class="text-xs text-white/40 space-y-1">
+            <div>• <strong class="text-white/60">Tone:</strong> humanitarian, time-critical</div>
+            <div>• <strong class="text-white/60">Stakeholder:</strong> Basarnas, Kemenhub, keluarga</div>
+            <div>• <strong class="text-white/60">Output:</strong> SAR coordination package</div>
+          </div>
+          <div class="mt-4 px-3 py-1 bg-blue-500/10 rounded-full text-center text-xs text-blue-400 font-mono">NEW • OMSP</div>
+        </div>
+
+        <!-- Pathway C -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30 hover:border-purple-500/60 transition-all">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl">📚</div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">PATHWAY C</div>
+              <div class="font-semibold">Pengembangan Doktrin</div>
+            </div>
+          </div>
+          <div class="text-sm font-semibold mb-2">IADS Doctrine Review</div>
+          <p class="text-xs text-white/60 mb-3">
+            Review posture Integrated Air Defense System Koopsudnas terhadap ancaman UAV swarm
+            & long-range precision strike. Sintesis doktrin regional/NATO. Tasking: gap analysis + update posture.
+          </p>
+          <div class="text-xs text-white/40 space-y-1">
+            <div>• <strong class="text-white/60">Tone:</strong> analitis, long-horizon</div>
+            <div>• <strong class="text-white/60">Stakeholder:</strong> Kasau, Lemhannas</div>
+            <div>• <strong class="text-white/60">Output:</strong> Doctrine policy briefing</div>
+          </div>
+          <div class="mt-4 px-3 py-1 bg-purple-500/10 rounded-full text-center text-xs text-purple-400 font-mono">NEW • DOKTRIN</div>
+        </div>
+      </div>
+
+      <div class="text-center mb-12" data-reveal>
+        <h3 class="text-xl font-semibold mb-2">Contoh Detail Pathway A — <span class="text-red-400">GARUDA SHIELD</span></h3>
+        <p class="text-white/50 text-sm max-w-2xl mx-auto">
+          Pathway B (CENDRAWASIH) dan C (IADS Doctrine) menggunakan framework fase identik —
+          hanya data input, tone, dan deliverable akhir yang berbeda. Student bebas adopt framework
+          Pathway A di bawah untuk mengerjakan B atau C.
+        </p>
+      </div>
+
+      <!-- Scenario Brief (Pathway A Default) -->
+      <div class="scenario-card glass-lit p-8 rounded-2xl mb-12" data-reveal>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-mono text-xs text-red-400 mb-1">CLASSIFIED SCENARIO BRIEF</div>
+            <h3 class="text-xl font-semibold">Operation GARUDA SHIELD</h3>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <h4 class="font-semibold mb-4 text-orange-400">Situation</h4>
+            <div class="space-y-3 text-sm text-white/70">
+              <p>
+                Dalam 72 jam terakhir, multiple intelligence sources melaporkan increased activity 
+                di sektor operasional utara. SIGINT mendeteksi anomalous communication patterns, 
+                radar tracking menunjukkan unidentified aircraft movements, dan HUMINT reports 
+                mengkonfirmasi unusual ground activities.
+              </p>
+              <p>
+                Anda ditugaskan sebagai staff officer untuk memberikan <strong class="text-white">complete 
+                intelligence assessment dan decision support package</strong> kepada Panglima dalam waktu 3 jam.
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold mb-4 text-orange-400">Available Intelligence</h4>
+            <div class="space-y-2">
+              <div class="flex items-center gap-3 p-3 bg-cyan-500/10 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                <span class="text-sm">SIGINT Report (3 halaman) — Communication intercepts</span>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-teal-500/10 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                <span class="text-sm">Radar Data (100 data points) — 48 jam tracking</span>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-amber-500/10 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-sm">HUMINT Reports (2 reports) — Field observations</span>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-purple-500/10 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span class="text-sm">OSINT Collection — Regional news + social media</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+          <div class="flex items-center gap-2 text-orange-400 font-semibold mb-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Mission Objective
+          </div>
+          <p class="text-white/70">
+            Produce complete operational package: Intelligence Assessment → Threat Visualization → 
+            COA Analysis → Risk Assessment → Commander's Decision Brief
+          </p>
+        </div>
+      </div>
+      
+      <!-- Phase Timeline -->
+      <div class="grid md:grid-cols-4 gap-4 mb-12">
+        <div class="glass p-4 rounded-xl text-center" data-reveal>
+          <div class="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center mx-auto mb-3 border-2 border-teal-500">
+            <span class="text-teal-400 font-bold">1</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Phase 1</div>
+          <div class="text-xs text-white/50">Intel Fusion</div>
+          <div class="text-xs text-teal-400 mt-2">45 min</div>
+        </div>
+        
+        <div class="glass p-4 rounded-xl text-center" data-reveal>
+          <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-3 border-2 border-blue-500">
+            <span class="text-blue-400 font-bold">2</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Phase 2</div>
+          <div class="text-xs text-white/50">Visualization</div>
+          <div class="text-xs text-blue-400 mt-2">45 min</div>
+        </div>
+        
+        <div class="glass p-4 rounded-xl text-center" data-reveal>
+          <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3 border-2 border-amber-500">
+            <span class="text-amber-400 font-bold">3</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Phase 3</div>
+          <div class="text-xs text-white/50">COA & Wargame</div>
+          <div class="text-xs text-amber-400 mt-2">60 min</div>
+        </div>
+        
+        <div class="glass p-4 rounded-xl text-center" data-reveal>
+          <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-3 border-2 border-orange-500">
+            <span class="text-orange-400 font-bold">4</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Phase 4</div>
+          <div class="text-xs text-white/50">Decision Brief</div>
+          <div class="text-xs text-orange-400 mt-2">30 min</div>
+        </div>
+      </div>
+      
+      <!-- Detailed Phases -->
+      <div class="session-timeline space-y-8">
+        <!-- Phase 1 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #14b8a6; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #14b8a6;"
+               x-data="{ open: true }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                  <span class="font-display text-teal-400 text-xl">P1</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-teal-400 mb-1">PHASE 1 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Intelligence Fusion & Assessment</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-05-01-intel-fusion.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-teal-500/15 rounded-full text-teal-400 text-xs font-mono">MODUL 02</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Tasks</h4>
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-3 bg-teal-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-teal-500/30 flex items-center justify-center text-teal-400 text-xs font-bold">1</span>
+                        <div>
+                          <div class="font-medium text-sm">Analyze all 4 intelligence sources</div>
+                          <div class="text-xs text-white/50">Extract key findings per source</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-teal-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-teal-500/30 flex items-center justify-center text-teal-400 text-xs font-bold">2</span>
+                        <div>
+                          <div class="font-medium text-sm">Identify patterns & correlations</div>
+                          <div class="text-xs text-white/50">Cross-reference across sources</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-teal-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-teal-500/30 flex items-center justify-center text-teal-400 text-xs font-bold">3</span>
+                        <div>
+                          <div class="font-medium text-sm">Produce unified threat assessment</div>
+                          <div class="text-xs text-white/50">With confidence levels</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Deliverable</h4>
+                    <div class="deliverable-card glass p-4 rounded-xl" style="--deliverable-color: #14b8a6;">
+                      <div class="font-semibold text-sm text-teal-400 mb-2">📄 Intelligence Assessment Report</div>
+                      <ul class="space-y-1 text-xs text-white/60">
+                        <li>• Executive Summary (100 words)</li>
+                        <li>• Source-by-source analysis</li>
+                        <li>• Pattern identification</li>
+                        <li>• Unified threat picture</li>
+                        <li>• Confidence assessment</li>
+                        <li>• Intelligence gaps</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Phase 2 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #3b82f6; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #3b82f6;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <span class="font-display text-blue-400 text-xl">P2</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-blue-400 mb-1">PHASE 2 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Visual Intelligence Package</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-05-02-visual-package.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-blue-500/15 rounded-full text-blue-400 text-xs font-mono">MODUL 03</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Tasks</h4>
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-3 bg-blue-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold">1</span>
+                        <div>
+                          <div class="font-medium text-sm">Create situational dashboard</div>
+                          <div class="text-xs text-white/50">KPIs, threat level, status</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-blue-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold">2</span>
+                        <div>
+                          <div class="font-medium text-sm">Design threat map</div>
+                          <div class="text-xs text-white/50">Geographic visualization</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-blue-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold">3</span>
+                        <div>
+                          <div class="font-medium text-sm">Build SITREP visual</div>
+                          <div class="text-xs text-white/50">Single-slide summary</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Deliverables</h4>
+                    <div class="space-y-3">
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #3b82f6;">
+                        <div class="font-semibold text-sm text-blue-400">📊 Situational Dashboard</div>
+                      </div>
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #10b981;">
+                        <div class="font-semibold text-sm text-green-400">🗺️ Threat Map</div>
+                      </div>
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #a855f7;">
+                        <div class="font-semibold text-sm text-purple-400">📋 SITREP Visual</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Phase 3 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f59e0b; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f59e0b;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <span class="font-display text-amber-400 text-xl">P3</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-amber-400 mb-1">PHASE 3 • 60 MENIT</div>
+                  <h3 class="text-xl font-semibold">COA Development & Wargaming</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-05-03-coa-wargaming.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-amber-500/15 rounded-full text-amber-400 text-xs font-mono">MODUL 04</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Tasks</h4>
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">1</span>
+                        <div>
+                          <div class="font-medium text-sm">Develop 3 distinct COAs</div>
+                          <div class="text-xs text-white/50">Using Deep Thinking methodology</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">2</span>
+                        <div>
+                          <div class="font-medium text-sm">Conduct risk assessment</div>
+                          <div class="text-xs text-white/50">Per COA with mitigations</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">3</span>
+                        <div>
+                          <div class="font-medium text-sm">Run wargaming simulation</div>
+                          <div class="text-xs text-white/50">AI as Red Team</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">4</span>
+                        <div>
+                          <div class="font-medium text-sm">Compare and recommend</div>
+                          <div class="text-xs text-white/50">Decision matrix</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Deliverables</h4>
+                    <div class="space-y-3">
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #f59e0b;">
+                        <div class="font-semibold text-sm text-amber-400">📑 COA Analysis Document</div>
+                        <div class="text-xs text-white/50 mt-1">3 COAs + comparison matrix</div>
+                      </div>
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #ef4444;">
+                        <div class="font-semibold text-sm text-red-400">⚠️ Risk Assessment Matrix</div>
+                        <div class="text-xs text-white/50 mt-1">Risks + mitigations per COA</div>
+                      </div>
+                      <div class="deliverable-card glass p-3 rounded-xl" style="--deliverable-color: #a855f7;">
+                        <div class="font-semibold text-sm text-purple-400">🎮 Wargaming Summary</div>
+                        <div class="text-xs text-white/50 mt-1">Red Team responses</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Phase 4 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f97316; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f97316;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                  <span class="font-display text-orange-400 text-xl">P4</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-orange-400 mb-1">PHASE 4 • 30 MENIT</div>
+                  <h3 class="text-xl font-semibold">Commander's Decision Brief</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-05-04-decision-brief.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-orange-500/15 rounded-full text-orange-400 text-xs font-mono">FINAL</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Tasks</h4>
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-3 bg-orange-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-orange-500/30 flex items-center justify-center text-orange-400 text-xs font-bold">1</span>
+                        <div>
+                          <div class="font-medium text-sm">Compile all deliverables</div>
+                          <div class="text-xs text-white/50">Coherent package</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-orange-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-orange-500/30 flex items-center justify-center text-orange-400 text-xs font-bold">2</span>
+                        <div>
+                          <div class="font-medium text-sm">Write BLUF summary</div>
+                          <div class="text-xs text-white/50">Bottom Line Up Front</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-orange-500/10 rounded-lg">
+                        <span class="w-6 h-6 rounded bg-orange-500/30 flex items-center justify-center text-orange-400 text-xs font-bold">3</span>
+                        <div>
+                          <div class="font-medium text-sm">Format decision brief</div>
+                          <div class="text-xs text-white/50">Ready for commander</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Final Deliverable</h4>
+                    <div class="deliverable-card glass p-4 rounded-xl border-2 border-orange-500/50" style="--deliverable-color: #f97316;">
+                      <div class="font-semibold text-orange-400 mb-3">📋 Commander's Decision Brief</div>
+                      <ul class="space-y-1 text-xs text-white/60">
+                        <li>• BLUF (2 sentences)</li>
+                        <li>• Situation summary</li>
+                        <li>• Options considered</li>
+                        <li>• Recommended COA + justification</li>
+                        <li>• Risk summary</li>
+                        <li>• Decision requested</li>
+                        <li>• Timeline for execution</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Deliverables Summary -->
+  <section id="deliverables" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          COMPLETE PACKAGE
+        </div>
+        <h2 class="section-title">
+          5 DELIVERABLES<br>
+          <span class="text-orange-400">YANG HARUS DIHASILKAN</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="glass-lit p-5 rounded-2xl text-center" data-reveal>
+          <div class="w-14 h-14 rounded-2xl bg-teal-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📄</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Intel Assessment</div>
+          <div class="text-xs text-teal-400">Modul 02</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center" data-reveal>
+          <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📊</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Dashboard + Map</div>
+          <div class="text-xs text-blue-400">Modul 03</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center" data-reveal>
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🎯</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">COA Analysis</div>
+          <div class="text-xs text-amber-400">Modul 04</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center" data-reveal>
+          <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">⚠️</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Risk Matrix</div>
+          <div class="text-xs text-red-400">Modul 04</div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl text-center border-2 border-orange-500/50" data-reveal>
+          <div class="w-14 h-14 rounded-2xl bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📋</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Decision Brief</div>
+          <div class="text-xs text-orange-400">FINAL OUTPUT</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Assessment & Certification -->
+  <section id="certification" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-orange-900/10 to-transparent">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          SERTIFIKASI
+        </div>
+        <h2 class="section-title">
+          ASSESSMENT &<br>
+          <span class="text-orange-400">CERTIFICATION</span>
+        </h2>
+      </div>
+      
+      <!-- Rubric -->
+      <div class="glass-lit p-8 rounded-2xl mb-12" data-reveal>
+        <h3 class="font-semibold text-xl mb-6 text-center">Rubrik Penilaian Capstone</h3>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Komponen</th>
+                <th class="text-center py-3 px-4 text-white/60 font-medium">Bobot</th>
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Kriteria Sukses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium text-teal-400">Intelligence Assessment</td>
+                <td class="py-4 px-4 text-center font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">All sources analyzed, patterns identified, confidence justified</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium text-blue-400">Visual Package</td>
+                <td class="py-4 px-4 text-center font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">Clear hierarchy, correct color coding, 3-second scannable</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium text-amber-400">COA Quality</td>
+                <td class="py-4 px-4 text-center font-semibold">20%</td>
+                <td class="py-4 px-4 text-white/60">3 distinct options, proper comparison, clear reasoning</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium text-red-400">Risk Assessment</td>
+                <td class="py-4 px-4 text-center font-semibold">15%</td>
+                <td class="py-4 px-4 text-white/60">Comprehensive coverage, realistic mitigations</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium text-orange-400">Decision Brief</td>
+                <td class="py-4 px-4 text-center font-semibold">15%</td>
+                <td class="py-4 px-4 text-white/60">BLUF clear, recommendation justified, actionable</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium text-purple-400">Integration & Coherence</td>
+                <td class="py-4 px-4 text-center font-semibold">10%</td>
+                <td class="py-4 px-4 text-white/60">All pieces connect logically, consistent narrative</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-8">
+          <div class="text-center">
+            <div class="text-sm text-white/40 mb-1">Passing Score</div>
+            <div class="text-4xl font-display text-orange-400">80%</div>
+          </div>
+          <div class="h-12 w-px bg-white/10 hidden sm:block"></div>
+          <div class="text-center">
+            <div class="text-sm text-white/40 mb-1">Time Limit</div>
+            <div class="text-4xl font-display text-white">3 JAM</div>
+          </div>
+          <div class="h-12 w-px bg-white/10 hidden sm:block"></div>
+          <div class="text-center">
+            <div class="text-sm text-white/40 mb-1">Deliverables</div>
+            <div class="text-4xl font-display text-white">5</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Certificate Preview -->
+      <div class="certificate-preview" data-reveal>
+        <div class="certificate-content">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+            </svg>
+          </div>
+          
+          <div class="text-sm text-orange-400 font-mono mb-2">CERTIFICATE OF COMPLETION</div>
+          <h3 class="font-display text-3xl sm:text-4xl mb-4">
+            SERTIFIKAT KOMPETENSI<br>
+            <span class="text-orange-400">AI OPERASIONAL LEVEL 1</span>
+          </h3>
+          
+          <p class="text-white/60 max-w-md mx-auto mb-6">
+            Diberikan kepada peserta yang telah berhasil menyelesaikan seluruh modul dan 
+            capstone project dengan nilai minimum 80%.
+          </p>
+          
+          <div class="flex flex-wrap justify-center gap-4">
+            <div class="px-4 py-2 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/40">Diterbitkan oleh</div>
+              <div class="font-semibold">Velo CT</div>
+            </div>
+            <div class="px-4 py-2 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/40">Program</div>
+              <div class="font-semibold">AI-OPINT Koopsudnas</div>
+            </div>
+            <div class="px-4 py-2 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/40">Total Jam</div>
+              <div class="font-semibold">16 Jam</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Post-Training Resources -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="text-center mb-8">
+          <div class="module-badge inline-flex mb-4">
+            <span class="status-dot"></span>
+            NEXT STEPS
+          </div>
+          <h3 class="section-title">
+            SETELAH<br>
+            <span class="text-orange-400">SERTIFIKASI</span>
+          </h3>
+        </div>
+        
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="glass p-5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h4 class="font-semibold mb-2">Template Library Access</h4>
+            <p class="text-sm text-white/60">Akses ke seluruh prompt templates yang digunakan dalam training untuk implementasi di unit masing-masing.</p>
+          </div>
+          
+          <div class="glass p-5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+            <h4 class="font-semibold mb-2">Alumni Network</h4>
+            <p class="text-sm text-white/60">Join komunitas alumni untuk berbagi best practices dan mendapatkan update terbaru.</p>
+          </div>
+          
+          <div class="glass p-5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+            </div>
+            <h4 class="font-semibold mb-2">Level 2 Training</h4>
+            <p class="text-sm text-white/60">Prerequisite terpenuhi untuk AI Operasional Level 2: Advanced Automation & Custom Workflows.</p>
+          </div>
+          
+          <div class="glass p-5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <h4 class="font-semibold mb-2">Ongoing Support</h4>
+            <p class="text-sm text-white/60">30 hari support period untuk pertanyaan implementasi dan troubleshooting.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Navigation -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <a href="modul-04-strategic-reasoning.html" class="cta-secondary">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Modul 04: Strategic Reasoning
+        </a>
+        
+        <div class="text-center">
+          <div class="text-sm text-white/40">Selamat!</div>
+          <div class="font-semibold text-green-400">Anda telah menyelesaikan kurikulum</div>
+        </div>
+        
+        <a href="index.html" class="cta-primary">
+          Kembali ke Landing
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    gsap.utils.toArray('[data-reveal]').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.4 | Deep Research — Autonomous Research Agent</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .prompt-block .label { color: #818cf8; font-weight: 600; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">50 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">DEEP RESEARCH</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-03-canvas.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.3</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-05-create-video.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.5 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 4 • DEEP RESEARCH</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">DEEP RESEARCH</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Autonomous research agent yang <strong class="text-white">browsing puluhan sumber web</strong> secara otomatis, mensintesis hasil, dan menghasilkan laporan komprehensif dengan <strong class="text-accent">full citation</strong> — tanpa Anda harus buka satu pun tab browser.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🤖</div><div class="text-accent font-mono text-xs mb-1">AUTONOMOUS</div><div class="text-sm text-white/70">Jalan sendiri, tanpa supervisi</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📚</div><div class="text-accent font-mono text-xs mb-1">MULTI-SOURCE</div><div class="text-sm text-white/70">10–50+ sumber dalam satu run</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🔗</div><div class="text-accent font-mono text-xs mb-1">CITED</div><div class="text-sm text-white/70">Setiap klaim ada URL-nya</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">⏱️</div><div class="text-accent font-mono text-xs mb-1">3–15 MENIT</div><div class="text-sm text-white/70">Bukan real-time, tapi dalam</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div><div><div class="font-semibold text-white mb-1">Cara Kerja Deep Research</div><div class="text-sm text-white/60">Pahami bagaimana agent merencanakan query, menelusuri web, mengevaluasi sumber, dan menyusun output</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div><div><div class="font-semibold text-white mb-1">Query Design yang Efektif</div><div class="text-sm text-white/60">Teknik menulis prompt riset yang memberi Deep Research scope yang tepat — tidak terlalu luas, tidak terlalu sempit</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div><div><div class="font-semibold text-white mb-1">4 Use Case Koopsudnas</div><div class="text-sm text-white/60">Doctrine review, OSINT background brief, lessons-learned synthesis, dan regulatory landscape untuk gakkum udara</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div><div><div class="font-semibold text-white mb-1">Fact-Check Protocol</div><div class="text-sm text-white/60">Deep Research mengagregasi web — bisa salah. Workflow verifikasi output sebelum jadikan basis keputusan</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div><div><div class="font-semibold text-white mb-1">Deep Research vs NotebookLM</div><div class="text-sm text-white/60">Kapan pakai Deep Research (sumber dari web), kapan pakai NotebookLM (sumber dari dokumen Anda)</div></div></div>
+          <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div><div><div class="font-semibold text-white mb-1">Hands-on + Quiz</div><div class="text-sm text-white/60">Jalankan Deep Research langsung untuk topik doktrin, amati proses agent, evaluasi output</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: CARA KERJA -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HOW IT WORKS</div>
+        <h2 class="slide-title">BAGAIMANA <span class="text-accent">DEEP RESEARCH BEKERJA</span></h2>
+      </div>
+      <div class="relative">
+        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-accent/20 hidden md:block"></div>
+        <div class="space-y-6">
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold z-10">1</div>
+            <div class="glass-lit p-5 rounded-2xl flex-1">
+              <div class="font-semibold text-accent mb-2">Research Plan Generation</div>
+              <p class="text-sm text-white/70">Anda berikan satu prompt. Deep Research otomatis memecah menjadi <strong class="text-white">5-15 sub-query</strong> yang akan dijawab satu per satu. Anda bisa review dan edit plan ini sebelum dijalankan.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold z-10">2</div>
+            <div class="glass-lit p-5 rounded-2xl flex-1">
+              <div class="font-semibold text-accent mb-2">Autonomous Web Browsing</div>
+              <p class="text-sm text-white/70">Agent membuka dan membaca halaman web satu per satu — bukan hanya snippet. Rata-rata 15–50 halaman per research session. Anda melihat progress real-time di sidebar.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold z-10">3</div>
+            <div class="glass-lit p-5 rounded-2xl flex-1">
+              <div class="font-semibold text-accent mb-2">Source Evaluation + Cross-referencing</div>
+              <p class="text-sm text-white/70">Agent mengevaluasi reliabilitas sumber (academic, government, news, blog) dan cross-reference klaim dari sumber berbeda. Klaim yang tidak ter-corroborated diberi flag.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold z-10">4</div>
+            <div class="glass-lit p-5 rounded-2xl flex-1">
+              <div class="font-semibold text-accent mb-2">Synthesis + Report Generation</div>
+              <p class="text-sm text-white/70">Hasil dari semua sumber disintesis menjadi laporan terstruktur — dengan <strong class="text-white">inline citation</strong> untuk setiap klaim dan bibliography di akhir. Biasanya 5-15 halaman.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 text-white font-bold z-10">✓</div>
+            <div class="glass-lit p-5 rounded-2xl flex-1 border-green-500/30">
+              <div class="font-semibold text-green-400 mb-2">Output: Laporan dengan Citations</div>
+              <p class="text-sm text-white/70">Laporan final siap baca, bisa di-export ke Google Docs atau Canvas untuk editing lanjutan. Setiap klaim linked ke URL sumber — bisa diklik untuk verifikasi langsung.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: QUERY DESIGN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK PROMPTING</div>
+        <h2 class="slide-title">QUERY DESIGN <span class="text-accent">EFEKTIF</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <div class="font-mono text-xs text-red-400 mb-3">✗ QUERY YANG BURUK</div>
+            <div class="space-y-3">
+              <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <div class="text-xs font-mono text-red-400 mb-1">TERLALU LUAS</div>
+                <div class="text-sm text-white/60">"Cari informasi tentang drone militer"</div>
+                <div class="text-xs text-red-400 mt-1">→ Agent kebingungan, output tidak fokus</div>
+              </div>
+              <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <div class="text-xs font-mono text-red-400 mb-1">TERLALU SPESIFIK</div>
+                <div class="text-sm text-white/60">"Berapa exact budget defense Thailand 2024 quarter 3?"</div>
+                <div class="text-xs text-red-400 mt-1">→ Mungkin tidak ada di web publik, agent hallucinate</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="font-mono text-xs text-green-400 mb-3">✓ QUERY YANG EFEKTIF</div>
+            <div class="space-y-3">
+              <div class="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <div class="text-xs font-mono text-green-400 mb-1">SCOPE JELAS + TUJUAN</div>
+                <div class="text-sm text-white/60">"Review perkembangan C-UAS (counter-drone) di negara ASEAN 2022–2024: sistem yang diadopsi, vendor utama, dan lessons-learned dari deployment."</div>
+                <div class="text-xs text-green-400 mt-1">→ Jelas scope, timeframe, dan output yang diinginkan</div>
+              </div>
+              <div class="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <div class="text-xs font-mono text-green-400 mb-1">KONTEKS + FORMAT</div>
+                <div class="text-sm text-white/60">"Buat laporan 10 halaman tentang best practice SAR aviation di kawasan Asia-Pasifik: regulasi ICAO, peran militer, koordinasi sipil-militer, dan gap yang masih ada. Fokus pada contoh kasus nyata."</div>
+                <div class="text-xs text-green-400 mt-1">→ Format jelas, konteks ada, focus area spesifik</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-accent/10 rounded-xl">
+          <div class="font-semibold text-accent mb-2">Formula Query Deep Research yang Efektif</div>
+          <div class="font-mono text-sm text-white/70">[TOPIK SPESIFIK] + [SCOPE GEOGRAFIS/TEMPORAL] + [ASPEK YANG DICARI] + [FORMAT OUTPUT] + [TUJUAN/KONTEKS PENGGUNAAN]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: 4 USE CASES -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">USE CASES</div>
+        <h2 class="slide-title">4 USE CASE <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 text-xl">📖</div><div><div class="font-mono text-xs text-purple-400 mb-0.5">DOMAIN D — DOKTRIN</div><h3 class="font-semibold text-white">Doctrine Review</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Background research untuk update doktrin IADS — perkembangan strategi hanud negara-negara NATO, Asia-Pasifik, dan implikasinya untuk postur Koopsudnas.</p>
+          <div class="text-xs font-mono text-purple-400">→ Output: 10–15 halaman, cited, siap jadi lampiran doctrine note</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 text-xl">🛡️</div><div><div class="font-mono text-xs text-red-400 mb-0.5">DOMAIN A — HANUD</div><h3 class="font-semibold text-white">OSINT Background Brief</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Background brief tentang kapabilitas alutsista negara tertentu — apa yang sudah dipublikasikan di media internasional, IISS, Jane's, think tanks — sebelum komandan buat keputusan postur.</p>
+          <div class="text-xs font-mono text-red-400">→ Output: 5–8 halaman, hanya open-source, no classified</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-xl">🚁</div><div><div class="font-mono text-xs text-green-400 mb-0.5">DOMAIN B — OMSP</div><h3 class="font-semibold text-white">SAR Lessons Learned</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Sintesis lessons-learned dari operasi SAR aviation internasional — MH370, Air Asia 8501, dan kasus regional lainnya — untuk update SOP internal Koopsudnas.</p>
+          <div class="text-xs font-mono text-green-400">→ Output: best practice + gap analysis + rekomendasi SOP</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-amber-500">
+          <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 text-xl">⚖️</div><div><div class="font-mono text-xs text-amber-400 mb-0.5">DOMAIN E — GAKKUM UDARA</div><h3 class="font-semibold text-white">Regulatory Landscape</h3></div></div>
+          <p class="text-sm text-white/60 mb-3">Review regulasi internasional terkait penegakan hukum udara — ICAO, hukum internasional, preseden force-down, dan implikasinya untuk ROE Koopsudnas.</p>
+          <div class="text-xs font-mono text-amber-400">→ Output: landscape hukum + preseden + gap untuk legal team</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: PROMPT TEMPLATES -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">TEMPLATE <span class="text-accent">DEEP RESEARCH</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">DR-01</span><span class="font-semibold">Doctrine Review — C-UAS ASEAN</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="dr4-dr01">
+                <button class="copy-btn" @click="copyText('dr4-dr01')" x-text="copied === 'dr4-dr01' ? '✓ Copied!' : 'Copy'"></button>
+                Buat laporan riset mendalam (10–12 halaman) tentang:<br><br>
+                Topik: Perkembangan Counter-UAS (C-UAS) Systems di negara ASEAN dan regional Indo-Pasifik, 2020–2024<br><br>
+                Cakupan:<br>
+                1. Sistem C-UAS apa yang sudah diadopsi/diuji oleh negara ASEAN (Australia, Jepang, S.Korea, Singapura, Thailand, dll)<br>
+                2. Vendor/produsen utama dan spesifikasi teknis yang dipublikasikan<br>
+                3. Lessons learned dari deployment — apa yang berhasil, apa yang tidak<br>
+                4. Trend teknologi: directed energy, kinetic, electronic warfare, AI detection<br>
+                5. Gap capabilities yang belum teratasi di kawasan<br>
+                6. Implikasi untuk postur IADS negara berkembang di kawasan<br><br>
+                Sumber yang diprioritaskan: IISS Military Balance, Jane's, think tanks (CSIS, IISS, RUSI), laporan resmi pemerintah yang dipublikasikan<br>
+                Format: laporan berstruktur dengan inline citation. Bahasa: Inggris, bisa dicampurkan dengan istilah teknis.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">DR-02</span><span class="font-semibold">SAR Lessons Learned — Aviation Accidents Asia-Pacific</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="dr4-dr02">
+                <button class="copy-btn" @click="copyText('dr4-dr02')" x-text="copied === 'dr4-dr02' ? '✓ Copied!' : 'Copy'"></button>
+                Research report: Lessons Learned dari Operasi SAR Aviation Berskala Besar di Asia-Pasifik<br><br>
+                Kasus yang perlu dicakup:<br>
+                - MH370 (Malaysia Airlines, 2014) — koordinasi multi-negara, fase ekstended search<br>
+                - Air Asia QZ8501 (2014) — SAR di perairan dengan kondisi ekstrem<br>
+                - Kasus SAR lain di kawasan yang terdokumentasi dengan baik (2015–2024)<br><br>
+                Aspek yang dianalisis:<br>
+                1. Struktur koordinasi: siapa lead, bagaimana command & control lintas negara<br>
+                2. Peran militer vs sipil: pembagian tugas dan frictionnya<br>
+                3. Komunikasi dan information sharing antar agency<br>
+                4. Resource deployment: jenis aset, efektivitasnya di kondisi berbeda<br>
+                5. What worked — best practice yang terdokumentasi<br>
+                6. Gaps — apa yang masih jadi bottleneck<br>
+                7. Rekomendasi untuk peningkatan kapabilitas SAR regional<br><br>
+                Panjang: 8–10 halaman. Sertakan timeline visual dalam format teks jika memungkinkan.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-mono">DR-03</span><span class="font-semibold">Gakkum Udara — Regulatory Landscape</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="dr4-dr03">
+                <button class="copy-btn" @click="copyText('dr4-dr03')" x-text="copied === 'dr4-dr03' ? '✓ Copied!' : 'Copy'"></button>
+                Research report: Kerangka Hukum Internasional untuk Penegakan Hukum Udara (Air Law Enforcement)<br><br>
+                Topik yang perlu dicakup:<br>
+                1. Konvensi Chicago 1944 — hak negara atas airspace dan batasan penggunaan force<br>
+                2. ICAO Standards and Recommended Practices (SARPs) untuk interception<br>
+                3. Preseden kasus force-down internasional yang terdokumentasi dan implikasinya<br>
+                4. Prosedur warning shots dan force-down yang diterima secara internasional<br>
+                5. Peran koordinasi sipil-militer (ATC + scramble) dalam framework hukum<br>
+                6. Perkembangan regulasi terkait UAS/drone di airspace sovereign<br>
+                7. Best practice dari negara dengan framework gakkum udara yang mature<br><br>
+                Output: landscape hukum komprehensif untuk mendukung review ROE.<br>
+                Catatan: fokus hanya pada sumber hukum publik, tidak perlu akses dokumen classified.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: FACT-CHECK PROTOCOL -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">VERIFIKASI OUTPUT</div>
+        <h2 class="slide-title">FACT-CHECK <span class="text-accent">PROTOCOL</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-6">
+          <div class="flex items-start gap-3"><div class="text-2xl">⚠️</div><div><div class="font-semibold text-amber-400 mb-1">Ingat: Deep Research ≠ Ground Truth</div><div class="text-sm text-white/70">Deep Research mengagregasi konten web publik. Web bisa salah, outdated, atau bias. Wajib verifikasi sebelum jadikan basis kebijakan atau briefing komandan.</div></div></div>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">1</div>
+            <div><div class="font-semibold text-white mb-1">Cek Citation URL</div><div class="text-sm text-white/60">Klik setiap URL citation di laporan. Pastikan sumber yang diklaim ada dan isinya sesuai. Jika URL mati atau konten tidak match → flag sebagai unverified.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">2</div>
+            <div><div class="font-semibold text-white mb-1">Identifikasi Klaim Angka/Tanggal</div><div class="text-sm text-white/60">Angka (budget, jumlah aset, spesifikasi teknis) dan tanggal paling rawan salah. Verifikasi klaim kuantitatif secara terpisah dari sumber primer.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">3</div>
+            <div><div class="font-semibold text-white mb-1">Cari Counterargument</div><div class="text-sm text-white/60">Tanya langsung ke Gemini: "Apa argumen yang berlawanan dengan temuan utama laporan ini?" — ini membantu identify bias dalam agregasi sumber.</div></div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">4</div>
+            <div><div class="font-semibold text-white mb-1">Label Confidence di Output Final</div><div class="text-sm text-white/60">Setiap bagian yang digunakan untuk briefing/kebijakan harus diberi label: VERIFIED / UNVERIFIED / ASSESSMENT (AI synthesis). Transparan kepada pembaca.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: DEEP RESEARCH vs NOTEBOOKLM -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DECISION GUIDE</div>
+        <h2 class="slide-title">DEEP RESEARCH <span class="text-accent">vs NOTEBOOKLM</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl border-accent/30">
+          <div class="text-4xl mb-4">🔎</div>
+          <h3 class="text-xl font-semibold text-accent mb-3">Deep Research</h3>
+          <div class="font-mono text-xs text-white/40 mb-4">GUNAKAN SAAT…</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-accent mt-1">→</span> Anda perlu informasi yang ada di <strong class="text-white">web publik terkini</strong></li>
+            <li class="flex items-start gap-2"><span class="text-accent mt-1">→</span> Research topic baru — <strong class="text-white">Anda tidak punya dokumennya</strong></li>
+            <li class="flex items-start gap-2"><span class="text-accent mt-1">→</span> Butuh <strong class="text-white">banyak perspektif</strong> dari berbagai sumber</li>
+            <li class="flex items-start gap-2"><span class="text-accent mt-1">→</span> Tujuan: <strong class="text-white">background brief atau doctrine review</strong> dari nol</li>
+          </ul>
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg text-xs text-white/60"><strong class="text-accent">Contoh:</strong> "Saya perlu tahu perkembangan C-UAS di ASEAN — saya tidak punya dokumennya, minta Deep Research cari sendiri."</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-violet-500/30">
+          <div class="text-4xl mb-4">📚</div>
+          <h3 class="text-xl font-semibold text-violet-400 mb-3">NotebookLM</h3>
+          <div class="font-mono text-xs text-white/40 mb-4">GUNAKAN SAAT…</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-violet-400 mt-1">→</span> Anda punya <strong class="text-white">dokumen sendiri</strong> (PDF, laporan, SOP)</li>
+            <li class="flex items-start gap-2"><span class="text-violet-400 mt-1">→</span> Butuh <strong class="text-white">zero hallucination</strong> — hanya jawab dari yang di-upload</li>
+            <li class="flex items-start gap-2"><span class="text-violet-400 mt-1">→</span> Perlu <strong class="text-white">cross-reference antar dokumen internal</strong></li>
+            <li class="flex items-start gap-2"><span class="text-violet-400 mt-1">→</span> Tujuan: <strong class="text-white">extract + synthesize dari corpus Anda sendiri</strong></li>
+          </ul>
+          <div class="mt-4 p-3 bg-violet-500/10 rounded-lg text-xs text-white/60"><strong class="text-violet-400">Contoh:</strong> "Saya punya 15 laporan lessons-learned exercise Koopsudnas — minta NotebookLM synthesize pola yang berulang."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: HANDS-ON -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">LIVE</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka gemini.google.com → klik "Deep Research" di sidebar atau Tools. Pastikan model Gemini 2.5 Pro dipilih (Deep Research butuh Pro). Siapkan untuk menunggu 5–15 menit saat agent berjalan.</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div>
+              <div><div class="font-semibold text-white">Gunakan Prompt DR-01 (C-UAS ASEAN)</div><div class="text-xs text-accent font-mono">DOCTRINE REVIEW</div></div>
+            </div>
+            <p class="text-sm text-white/70">Copy prompt DR-01 dari library. Paste ke Deep Research. Amati: agent akan tampilkan research plan terlebih dahulu. <strong class="text-white">Review plan — boleh edit sebelum jalankan.</strong></p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-amber-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 text-amber-400 font-bold">2</div>
+              <div><div class="font-semibold text-white">Amati Proses Browsing</div><div class="text-xs text-amber-400 font-mono">OBSERVE AGENT</div></div>
+            </div>
+            <p class="text-sm text-white/70">Saat agent berjalan, perhatikan: halaman apa yang dibuka, query apa yang dibuat, berapa sumber yang dievaluasi. Ini membantu Anda memahami "bias" pencarian.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">3</div>
+              <div><div class="font-semibold text-white">Evaluasi Output dengan Fact-Check Protocol</div><div class="text-xs text-green-400 font-mono">VERIFY</div></div>
+            </div>
+            <p class="text-sm text-white/70">Saat laporan selesai, pilih 3 klaim yang paling kritis → klik citation URL → cek apakah klaim sesuai. Berapa % yang bisa Anda verifikasi dalam 5 menit?</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">4</div>
+              <div><div class="font-semibold text-white">Export ke Canvas untuk Editing</div><div class="text-xs text-purple-400 font-mono">WORKFLOW</div></div>
+            </div>
+            <p class="text-sm text-white/70">Dari laporan Deep Research, klik "Open in Canvas". Edit executive summary agar sesuai format briefing Koopsudnas. Ini adalah workflow <strong class="text-white">Deep Research → Canvas → Google Docs</strong> yang paling efisien.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'c') this.score++;
+      if (this.answers.q2 === 'b') this.score++;
+      if (this.answers.q3 === 'a') this.score++;
+      if (this.answers.q4 === 'd') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.4</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman Deep Research</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Anda perlu membuat doctrine note update IADS dari nol. Tidak ada dokumen yang dimiliki. Tool yang paling efisien?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">NotebookLM — upload semua dokumen yang tersedia</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas — langsung draft dokumen dari awal</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Deep Research — agent cari dan synthesize dari web publik, lalu export ke Canvas untuk editing</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Gemini Chat biasa — lebih cepat dan hasilnya sama</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Perbedaan paling penting antara Deep Research dan Gemini Search Grounding biasa adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Deep Research lebih cepat dari Search Grounding</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Deep Research autonomous multi-step (membuat research plan + browse puluhan halaman), Search Grounding hanya satu query langsung</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Deep Research menggunakan sumber classified sementara Search Grounding hanya web publik</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Tidak ada perbedaan — Deep Research hanyalah nama lain untuk Search Grounding</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Langkah pertama setelah Deep Research menghasilkan laporan adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Klik dan verifikasi citation URL untuk klaim-klaim kritis sebelum digunakan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Langsung forward ke komandan tanpa pengecekan lebih lanjut</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Jalankan Deep Research ulang untuk topik yang sama untuk konfirmasi</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Upload laporan ke NotebookLM untuk double-check</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Workflow paling efisien untuk mengubah laporan Deep Research menjadi briefing dokumen formal adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Copy-paste isi laporan ke Word, format manual</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Print laporan langsung tanpa perubahan format</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Upload kembali ke NotebookLM untuk re-synthesize</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Deep Research → "Open in Canvas" untuk edit format + section → export ke Google Docs</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Anda paham Deep Research.' : score >= 3 ? 'Baik! Review 1 topik yang missed.' : score >= 2 ? 'Cukup. Ulang slide Cara Kerja dan Fact-Check.' : 'Kembali ke slide 3-4 untuk review konsep.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q1 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'c' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong><span class="text-white/60 ml-2">— Deep Research untuk riset dari nol di web publik, lalu bawa ke Canvas untuk editing</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q2 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'b' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong><span class="text-white/60 ml-2">— Deep Research adalah autonomous multi-step agent, bukan sekadar search</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q3 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'a' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong><span class="text-white/60 ml-2">— Selalu verifikasi citation URL untuk klaim kritis sebelum digunakan</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q4 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'd' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong><span class="text-white/60 ml-2">— Workflow: Deep Research → Canvas → Google Docs adalah pipeline paling efisien</span></div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Autonomous Agent</div><div class="text-sm text-white/60">Deep Research membuat research plan, browse 10–50 halaman, cross-reference, dan synthesize tanpa supervisi Anda.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Bukan Real-Time</div><div class="text-sm text-white/60">3–15 menit per research session. Untuk update berita terkini, pakai Search Grounding bukan Deep Research.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">Fact-Check Wajib</div><div class="text-sm text-white/60">Verifikasi citation URL untuk klaim kritis sebelum jadikan basis briefing atau kebijakan.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Pipeline Efisien</div><div class="text-sm text-white/60">Deep Research → Canvas → Google Docs = cara paling cepat dari riset ke dokumen final.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">Create Video</strong> — buat video brief dengan Veo untuk briefing package visual dan training material satuan</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-03-canvas.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.3: Canvas</a>
+        <a href="sesi-06-05-create-video.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.5: Create Video →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools".</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🖼️</span><div class="font-semibold text-indigo-300">Create Image</div></div><div class="text-xs text-white/60">Generate infografis, sketsa situasional via Imagen 4.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📋</span><div class="font-semibold text-indigo-300">Canvas</div></div><div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen dan briefing.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/40 bg-indigo-500/10"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🔎</span><div class="font-semibold text-indigo-300">Deep Research</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">SESI INI</span></div><div class="text-xs text-white/60">Riset multi-source OSINT otomatis dengan citation grounding.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎬</span><div class="font-semibold text-indigo-300">Create Video</div></div><div class="text-xs text-white/60">Video brief singkat via Veo — animasi skenario exercise.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎵</span><div class="font-semibold text-indigo-300">Create Music</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span></div><div class="text-xs text-white/60">Audio cue / scoring untuk video brief dan presentasi.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📖</span><div class="font-semibold text-indigo-300">Guided Learning</div></div><div class="text-xs text-white/60">Self-paced walkthrough untuk onboarding doktrin dan SOP.</div></div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul 02 | Intelligence Analysis dengan AI</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-bg-2: #0a0f1a;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-surface-hover: rgba(255, 255, 255, 0.06);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-bright: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(20px);
+      --module-color: #14b8a6;
+      --color-text: rgba(255, 255, 255, 0.92);
+      --color-muted: rgba(255, 255, 255, 0.55);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 700px; height: 700px; 
+      top: -250px; left: -150px; 
+      background: var(--module-color); 
+      opacity: 0.1; 
+    }
+    .blob-2 { 
+      width: 500px; height: 500px; 
+      bottom: -150px; right: -100px; 
+      background: #0891b2; 
+      opacity: 0.08; 
+      animation-delay: -3s; 
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      top: 50%; right: 10%;
+      background: #22d3ee;
+      opacity: 0.05;
+      animation-delay: -5s;
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(40px, -30px) scale(1.08); }
+    }
+    
+    /* Radar scan effect */
+    .radar-line {
+      position: absolute;
+      width: 300px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.6), transparent);
+      animation: radar-scan 3s ease-in-out infinite;
+      transform-origin: left center;
+    }
+    
+    @keyframes radar-scan {
+      0% { transform: rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 0; }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(20, 184, 166, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 184, 166, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      transition: all 0.3s var(--ease-smooth);
+    }
+    
+    .glass:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-bright);
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 0 0 rgba(255,255,255,0.08) inset,
+        0 32px 64px -16px rgba(0,0,0,0.6);
+    }
+    
+    .module-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(20, 184, 166, 0.15);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #14b8a6;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 24px rgba(20, 184, 166, 0.3);
+      text-decoration: none;
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(20, 184, 166, 0.4);
+    }
+    
+    .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-bright);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-smooth);
+      text-decoration: none;
+    }
+    
+    .cta-secondary:hover {
+      background: var(--color-surface);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    /* Prompt Template Styling */
+    .prompt-template {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%);
+      border: 1px solid rgba(20, 184, 166, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .prompt-header {
+      background: rgba(20, 184, 166, 0.15);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(20, 184, 166, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .prompt-content {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      white-space: pre-wrap;
+    }
+    
+    .prompt-var {
+      color: #14b8a6;
+      background: rgba(20, 184, 166, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    /* Session Card */
+    .session-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .session-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--session-color, #14b8a6);
+    }
+    
+    /* Data Flow Diagram */
+    .data-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .flow-node {
+      padding: 12px 20px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+    }
+    
+    .flow-arrow {
+      color: var(--module-color);
+      font-size: 20px;
+    }
+    
+    /* Intelligence Source Card */
+    .source-card {
+      position: relative;
+      padding-left: 16px;
+    }
+    
+    .source-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--source-color, #14b8a6);
+      border-radius: 2px;
+    }
+    
+    /* Pattern Indicator */
+    .pattern-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .pattern-high {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .pattern-medium {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    
+    .pattern-low {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Timeline */
+    .session-timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .session-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: linear-gradient(180deg, #14b8a6 0%, rgba(20, 184, 166, 0.2) 100%);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 3px solid var(--session-color, #14b8a6);
+    }
+    
+    /* Accordion */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+    }
+    
+    .accordion-content.open {
+      max-height: 3000px;
+    }
+    
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .data-table th {
+      background: rgba(20, 184, 166, 0.1);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 500;
+      color: #14b8a6;
+      border-bottom: 1px solid rgba(20, 184, 166, 0.2);
+    }
+    
+    .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .data-table tr:hover td {
+      background: rgba(20, 184, 166, 0.05);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.5); }
+    
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+  </style>
+</head>
+<body x-data="{ activeSession: 1, copiedPrompt: null }">
+  
+  <!-- Scene Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Kembali</span>
+        </a>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="module-badge">
+          <span class="status-dot"></span>
+          MODUL 02
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#sessions" class="text-sm text-white/60 hover:text-white transition-colors">Sesi</a>
+        <a href="#deep-research" class="text-sm text-white/60 hover:text-white transition-colors">Deep Research</a>
+        <a href="#exercises" class="text-sm text-white/60 hover:text-white transition-colors">Latihan</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex items-center pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-5 gap-12 items-start">
+        <div class="lg:col-span-3">
+          <div class="flex items-center gap-4 mb-6" data-reveal>
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
+              <span class="font-display text-3xl text-white">02</span>
+            </div>
+            <div>
+              <div class="text-sm text-teal-400 font-mono">CORE SKILL • 4 JAM</div>
+              <div class="text-white/40 text-sm">Sesi 2 dari 5 Modul</div>
+            </div>
+          </div>
+          
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl tracking-wide leading-none mb-6" data-reveal>
+            INTELLIGENCE<br>
+            <span class="text-teal-400">ANALYSIS</span><br>
+            DENGAN AI
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-2xl mb-8 leading-relaxed" data-reveal>
+            Deep Research dan pattern recognition untuk sintesis intelligence dari multiple sources.
+            Ekstraksi insight dari dokumen, laporan, dan <strong class="text-white">data operasional</strong>
+            dengan kecepatan dan akurasi yang tidak mungkin dicapai secara manual.
+            <span class="block mt-3 text-white/50 text-base">Prinsip analisis di modul ini juga berlaku untuk <strong class="text-blue-400">OMSP (fusion data SAR)</strong>, <strong class="text-purple-400">pembinaan satuan (fusion readiness data)</strong>, dan <strong class="text-white">penegakan hukum udara</strong> &mdash; bukan hanya intelijen ancaman.</span>
+          </p>
+          
+          <div class="flex flex-wrap gap-4" data-reveal>
+            <a href="#sessions" class="cta-primary">
+              Mulai Pembelajaran
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#deep-research" class="cta-secondary">
+              Deep Research Framework
+            </a>
+          </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="lg:col-span-2" data-reveal>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Ringkasan Modul
+            </h3>
+            
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Durasi Total</span>
+                <span class="font-semibold">4 Jam</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Jumlah Sesi</span>
+                <span class="font-semibold">4 Sesi</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Hands-on Exercise</span>
+                <span class="font-semibold text-teal-400">4 Latihan</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-white/60">Data Simulasi</span>
+                <span class="font-semibold text-teal-400">3 Dataset</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-white/60">Prerequisite</span>
+                <span class="font-semibold">Modul 01</span>
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/10">
+              <div class="text-sm text-white/40 mb-3">Output Modul:</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1.5 bg-teal-500/15 border border-teal-500/30 rounded-lg text-teal-400 text-sm">Intelligence Brief Package</span>
+                <span class="px-3 py-1.5 bg-teal-500/15 border border-teal-500/30 rounded-lg text-teal-400 text-sm">Pattern Analysis Report</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Intelligence Sources Overview -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          MULTI-SOURCE INTELLIGENCE
+        </div>
+        <h2 class="section-title">
+          SUMBER INTELIJEN<br>
+          <span class="text-teal-400">YANG AKAN DIANALISIS</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="source-card" style="--source-color: #22d3ee;">
+            <div class="text-sm font-mono text-cyan-400 mb-2">SIGINT</div>
+            <h3 class="font-semibold mb-2">Signals Intelligence</h3>
+            <p class="text-white/50 text-sm">Intercept komunikasi, radar emissions, electronic signatures</p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="source-card" style="--source-color: #14b8a6;">
+            <div class="text-sm font-mono text-teal-400 mb-2">IMINT</div>
+            <h3 class="font-semibold mb-2">Imagery Intelligence</h3>
+            <p class="text-white/50 text-sm">Satellite imagery, aerial photography, visual reconnaissance</p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="source-card" style="--source-color: #f59e0b;">
+            <div class="text-sm font-mono text-amber-400 mb-2">HUMINT</div>
+            <h3 class="font-semibold mb-2">Human Intelligence</h3>
+            <p class="text-white/50 text-sm">Field reports, agent intelligence, diplomatic sources</p>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="source-card" style="--source-color: #a855f7;">
+            <div class="text-sm font-mono text-purple-400 mb-2">OSINT</div>
+            <h3 class="font-semibold mb-2">Open Source Intelligence</h3>
+            <p class="text-white/50 text-sm">News, social media, public records, academic papers</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Data Flow Diagram -->
+      <div class="mt-12 glass-lit p-8 rounded-2xl" data-reveal>
+        <h3 class="text-center font-semibold mb-8">Intelligence Fusion Process</h3>
+        <div class="data-flow">
+          <div class="flow-node">
+            <div class="text-teal-400 text-sm font-mono mb-1">INPUT</div>
+            <div class="text-sm">Raw Data Sources</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="text-cyan-400 text-sm font-mono mb-1">PROCESS</div>
+            <div class="text-sm">AI Analysis</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="text-amber-400 text-sm font-mono mb-1">SYNTHESIZE</div>
+            <div class="text-sm">Pattern Recognition</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="text-green-400 text-sm font-mono mb-1">OUTPUT</div>
+            <div class="text-sm">Actionable Intel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Sessions Section -->
+  <section id="sessions" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-teal-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          BREAKDOWN SESI
+        </div>
+        <h2 class="section-title">
+          4 SESI PEMBELAJARAN<br>
+          <span class="text-teal-400">240 MENIT TOTAL</span>
+        </h2>
+      </div>
+      
+      <div class="session-timeline space-y-8">
+        <!-- Session 2.1 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #14b8a6; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #14b8a6;"
+               x-data="{ open: true }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                  <span class="font-display text-teal-400 text-xl">2.1</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-teal-400 mb-1">SESI 1 • 45 MENIT</div>
+                  <h3 class="text-xl font-semibold">Deep Research: Konsep & Metodologi</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-02-01-deep-research.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-teal-500/15 rounded-full text-teal-400 text-xs font-mono">KONSEP</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Apa itu Deep Research?</h4>
+                    <p class="text-white/60 text-sm mb-4">
+                      Deep Research adalah kemampuan AI untuk menganalisis multiple documents, 
+                      mengekstrak informasi kunci, dan menyintesis insights yang koheren — 
+                      semua dalam hitungan menit.
+                    </p>
+                    
+                    <div class="glass p-4 rounded-xl">
+                      <div class="text-sm font-semibold mb-3 text-teal-400">Kapabilitas Deep Research:</div>
+                      <ul class="space-y-2 text-sm text-white/70">
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                          Cross-reference multiple documents
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                          Identify contradictions & gaps
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                          Extract temporal patterns
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                          Generate confidence scores
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Metodologi 4-Step</h4>
+                    <div class="space-y-3">
+                      <div class="glass p-3 rounded-lg flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center text-teal-400 font-mono text-sm">1</div>
+                        <div>
+                          <div class="font-medium text-sm">COLLECT</div>
+                          <div class="text-xs text-white/50">Kumpulkan semua sumber relevan</div>
+                        </div>
+                      </div>
+                      <div class="glass p-3 rounded-lg flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-mono text-sm">2</div>
+                        <div>
+                          <div class="font-medium text-sm">ANALYZE</div>
+                          <div class="text-xs text-white/50">Ekstrak informasi kunci per sumber</div>
+                        </div>
+                      </div>
+                      <div class="glass p-3 rounded-lg flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 font-mono text-sm">3</div>
+                        <div>
+                          <div class="font-medium text-sm">CORRELATE</div>
+                          <div class="text-xs text-white/50">Temukan hubungan antar sumber</div>
+                        </div>
+                      </div>
+                      <div class="glass p-3 rounded-lg flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 font-mono text-sm">4</div>
+                        <div>
+                          <div class="font-medium text-sm">SYNTHESIZE</div>
+                          <div class="text-xs text-white/50">Hasilkan unified intelligence picture</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 2.2 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #22d3ee; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #22d3ee;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                  <span class="font-display text-cyan-400 text-xl">2.2</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-cyan-400 mb-1">SESI 2 • 60 MENIT</div>
+                  <h3 class="text-xl font-semibold">Pattern Recognition dari Data Operasional</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-02-02-pattern-recognition.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-cyan-500/15 rounded-full text-cyan-400 text-xs font-mono">TEKNIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Jenis Pattern yang Dicari</h4>
+                    <div class="space-y-3">
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="font-medium">Temporal Patterns</span>
+                          <span class="pattern-indicator pattern-high">
+                            <span class="w-2 h-2 rounded-full bg-current"></span>
+                            High Value
+                          </span>
+                        </div>
+                        <p class="text-sm text-white/50">Aktivitas yang berulang pada waktu tertentu, perubahan frekuensi, anomali timing</p>
+                      </div>
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="font-medium">Spatial Patterns</span>
+                          <span class="pattern-indicator pattern-high">
+                            <span class="w-2 h-2 rounded-full bg-current"></span>
+                            High Value
+                          </span>
+                        </div>
+                        <p class="text-sm text-white/50">Konsentrasi geografis, rute pergerakan, area of interest</p>
+                      </div>
+                      <div class="glass p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="font-medium">Behavioral Patterns</span>
+                          <span class="pattern-indicator pattern-medium">
+                            <span class="w-2 h-2 rounded-full bg-current"></span>
+                            Medium
+                          </span>
+                        </div>
+                        <p class="text-sm text-white/50">Perubahan taktik, respons terhadap stimulus, standard operating procedures</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 text-white/80">Contoh Data Simulasi</h4>
+                    <div class="glass p-4 rounded-xl overflow-x-auto">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>TIME</th>
+                            <th>SECTOR</th>
+                            <th>TYPE</th>
+                            <th>FREQ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>0600</td>
+                            <td>NE-7</td>
+                            <td>RADAR</td>
+                            <td>12</td>
+                          </tr>
+                          <tr>
+                            <td>0800</td>
+                            <td>NE-7</td>
+                            <td>COMMS</td>
+                            <td>8</td>
+                          </tr>
+                          <tr>
+                            <td>1000</td>
+                            <td>NE-7</td>
+                            <td>RADAR</td>
+                            <td>24</td>
+                          </tr>
+                          <tr style="background: rgba(239, 68, 68, 0.1);">
+                            <td>1200</td>
+                            <td>NE-7</td>
+                            <td>RADAR</td>
+                            <td class="text-red-400 font-semibold">48 ↑</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div class="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <div class="text-xs text-red-400 font-mono">⚠ ANOMALY DETECTED: 4x frequency increase at 1200</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 2.3 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #10b981; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #10b981;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <span class="font-display text-green-400 text-xl">2.3</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-green-400 mb-1">SESI 3 • 75 MENIT</div>
+                  <h3 class="text-xl font-semibold">Hands-On: Threat Assessment dari Data Simulasi</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-02-03-threat-assessment.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-green-500/15 rounded-full text-green-400 text-xs font-mono">PRAKTIK</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h4 class="font-semibold mb-4 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-sm">1</span>
+                      Guided Analysis (35 min)
+                    </h4>
+                    <div class="glass p-4 rounded-xl space-y-3">
+                      <p class="text-sm text-white/60">Instruktur memandu analisis dataset simulasi radar:</p>
+                      <ul class="space-y-2 text-sm text-white/70">
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                          50 data points dari 24 jam monitoring
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                          3 sektor coverage (NE, E, SE)
+                        </li>
+                        <li class="flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                          Mixed signals: routine + anomalies
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 class="font-semibold mb-4 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-sm">2</span>
+                      Independent Exercise (40 min)
+                    </h4>
+                    <div class="glass p-4 rounded-xl border border-green-500/20">
+                      <div class="text-sm font-semibold mb-2 text-green-400">Exercise: Complete Threat Assessment</div>
+                      <p class="text-sm text-white/60 mb-3">
+                        Diberikan dataset baru (100 data points, 48 jam). Identifikasi:
+                      </p>
+                      <ul class="space-y-1 text-sm text-white/70">
+                        <li>• Minimum 3 patterns</li>
+                        <li>• 1 high-priority anomaly</li>
+                        <li>• Threat level assessment</li>
+                        <li>• Recommended response</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <div class="flex items-center gap-2 text-amber-400 text-sm font-medium mb-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tip: Iterative Prompting
+                  </div>
+                  <p class="text-sm text-white/60">Jangan expect perfect output dari satu prompt. Gunakan follow-up questions untuk drill down ke specific patterns.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Session 2.4 -->
+        <div class="relative pl-8" data-reveal>
+          <div class="timeline-marker" style="--session-color: #f59e0b; top: 24px;"></div>
+          <div class="session-card glass-lit p-6 rounded-2xl" style="--session-color: #f59e0b;"
+               x-data="{ open: false }">
+            <div class="flex flex-wrap items-start justify-between gap-4 cursor-pointer" @click="open = !open">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <span class="font-display text-amber-400 text-xl">2.4</span>
+                </div>
+                <div>
+                  <div class="font-mono text-xs text-amber-400 mb-1">SESI 4 • 60 MENIT</div>
+                  <h3 class="text-xl font-semibold">Multi-Source Intelligence Fusion</h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="sesi-02-04-multi-source-fusion.html" @click.stop class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-mono transition-colors">Buka Sesi <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+                <span class="px-3 py-1 bg-amber-500/15 rounded-full text-amber-400 text-xs font-mono">ADVANCED</span>
+                <svg class="w-5 h-5 text-white/40 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="accordion-content" :class="open ? 'open' : ''">
+              <div class="mt-6 pt-6 border-t border-white/10">
+                <p class="text-white/60 mb-6">
+                  Sesi puncak modul: menggabungkan multiple intelligence sources menjadi unified assessment. 
+                  Ini adalah skill yang membedakan analyst pemula dari expert.
+                </p>
+                
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                  <div class="source-card glass p-4 rounded-xl" style="--source-color: #22d3ee;">
+                    <div class="text-xs font-mono text-cyan-400 mb-1">SOURCE A</div>
+                    <div class="font-medium text-sm mb-2">SIGINT Report</div>
+                    <div class="text-xs text-white/50">Increased comm traffic in sector NE</div>
+                  </div>
+                  <div class="source-card glass p-4 rounded-xl" style="--source-color: #14b8a6;">
+                    <div class="text-xs font-mono text-teal-400 mb-1">SOURCE B</div>
+                    <div class="font-medium text-sm mb-2">Radar Data</div>
+                    <div class="text-xs text-white/50">Unusual flight patterns detected</div>
+                  </div>
+                  <div class="source-card glass p-4 rounded-xl" style="--source-color: #f59e0b;">
+                    <div class="text-xs font-mono text-amber-400 mb-1">SOURCE C</div>
+                    <div class="font-medium text-sm mb-2">HUMINT Field Report</div>
+                    <div class="text-xs text-white/50">Local observation of military vehicles</div>
+                  </div>
+                </div>
+                
+                <div class="glass p-4 rounded-xl">
+                  <div class="text-sm font-semibold mb-3 text-amber-400">Fusion Questions to Ask AI:</div>
+                  <ul class="space-y-2 text-sm text-white/70">
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-400">1.</span>
+                      "Apakah ada korelasi waktu antara SIGINT traffic increase dan radar anomaly?"
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-400">2.</span>
+                      "Bagaimana HUMINT report mengkonfirmasi atau kontradiksi technical intelligence?"
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-400">3.</span>
+                      "Apa hypothesis yang paling likely berdasarkan semua sumber?"
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-400">4.</span>
+                      "Apa intelligence gaps yang masih perlu diisi?"
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Deep Research Framework -->
+  <section id="deep-research" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          TEMPLATE & FRAMEWORK
+        </div>
+        <h2 class="section-title">
+          DEEP RESEARCH<br>
+          <span class="text-teal-400">PROMPT TEMPLATES</span>
+        </h2>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Template 1: Multi-Source Analysis -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-teal-400">TEMPLATE 01</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Multi-Source Analysis</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template1')" 
+                    :class="copiedPrompt === 'template1' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template1'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template1' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template1">Kamu adalah <span class="prompt-var">[ROLE: intelligence fusion analyst]</span> dengan expertise dalam multi-source analysis.
+
+TUGAS: Analisis dan sintesis informasi dari multiple sources berikut.
+
+=== SOURCE 1: <span class="prompt-var">[SIGINT/IMINT/HUMINT/OSINT]</span> ===
+<span class="prompt-var">[PASTE DATA SOURCE 1]</span>
+
+=== SOURCE 2: <span class="prompt-var">[TYPE]</span> ===
+<span class="prompt-var">[PASTE DATA SOURCE 2]</span>
+
+=== SOURCE 3: <span class="prompt-var">[TYPE]</span> ===
+<span class="prompt-var">[PASTE DATA SOURCE 3]</span>
+
+ANALISIS YANG DIPERLUKAN:
+1. Per-source key findings
+2. Cross-source correlations
+3. Contradictions or gaps
+4. Unified assessment
+5. Confidence level per finding
+
+OUTPUT FORMAT:
+## Executive Summary (100 kata)
+## Source-by-Source Analysis
+## Correlation Matrix
+## Unified Intelligence Picture
+## Confidence Assessment (HIGH/MEDIUM/LOW per finding)
+## Intelligence Gaps & Collection Requirements</div>
+        </div>
+        
+        <!-- Template 2: Pattern Recognition -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-teal-400">TEMPLATE 02</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Pattern Recognition</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template2')"
+                    :class="copiedPrompt === 'template2' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template2'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template2' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template2">Kamu adalah <span class="prompt-var">[ROLE: pattern analysis specialist]</span>.
+
+TUGAS: Identifikasi patterns dalam dataset operasional berikut.
+
+DATA INPUT:
+<span class="prompt-var">[PASTE: timestamp, location, event_type, value]</span>
+
+JENIS PATTERN YANG DICARI:
+1. TEMPORAL: Recurring events, frequency changes, timing anomalies
+2. SPATIAL: Geographic clustering, movement corridors, hotspots
+3. BEHAVIORAL: Tactic changes, response patterns, SOPs
+4. CORRELATIONAL: Events that co-occur, cause-effect relationships
+
+UNTUK SETIAP PATTERN:
+- Description (what is the pattern?)
+- Evidence (which data points support it?)
+- Significance (why does it matter operationally?)
+- Confidence (how certain are we?)
+
+OUTPUT:
+## Patterns Identified
+### Pattern 1: [Name]
+- Type: [TEMPORAL/SPATIAL/BEHAVIORAL/CORRELATIONAL]
+- Description: ...
+- Supporting Data: [list data points]
+- Operational Significance: ...
+- Confidence: [HIGH/MEDIUM/LOW]
+
+## Anomalies Detected
+## Baseline Comparison
+## Recommended Follow-up Analysis</div>
+        </div>
+        
+        <!-- Template 3: Threat Assessment -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-teal-400">TEMPLATE 03</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Comprehensive Threat Assessment</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template3')"
+                    :class="copiedPrompt === 'template3' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template3'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template3' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template3">Kamu adalah <span class="prompt-var">[ROLE: threat assessment officer]</span> di Koopsudnas.
+
+TUGAS: Lakukan comprehensive threat assessment berdasarkan intelligence berikut.
+
+INTELLIGENCE INPUTS:
+<span class="prompt-var">[PASTE ALL AVAILABLE INTEL]</span>
+
+ASSESSMENT FRAMEWORK:
+
+1. THREAT IDENTIFICATION
+   - Who/What is the threat?
+   - Known capabilities
+   - Historical behavior
+
+2. THREAT ANALYSIS
+   - Current activity indicators
+   - Intent assessment (what do they want to achieve?)
+   - Capability vs Intent matrix
+
+3. VULNERABILITY ASSESSMENT
+   - Our exposed assets
+   - Critical vulnerabilities
+   - Time-sensitivity
+
+4. RISK CALCULATION
+   - Likelihood: [1-5]
+   - Impact: [1-5]
+   - Risk Score: [Likelihood x Impact]
+
+5. RECOMMENDED RESPONSE
+   - Immediate actions
+   - Short-term measures
+   - Long-term posture adjustment
+
+OUTPUT: Formal Threat Assessment Document
+- Classification: <span class="prompt-var">[UNCLASSIFIED/RESTRICTED]</span>
+- DTG: <span class="prompt-var">[Date-Time Group]</span>
+- Valid Until: <span class="prompt-var">[Expiry]</span></div>
+        </div>
+        
+        <!-- Template 4: Quick Intel Query -->
+        <div class="prompt-template" data-reveal>
+          <div class="prompt-header">
+            <div>
+              <span class="font-mono text-sm text-teal-400">TEMPLATE 04</span>
+              <span class="text-white/40 mx-2">•</span>
+              <span class="text-sm text-white/60">Quick Intel Query (Iterative)</span>
+            </div>
+            <button class="copy-btn" onclick="copyPrompt('template4')"
+                    :class="copiedPrompt === 'template4' ? 'bg-green-500/30 text-green-400' : ''"
+                    @click="copiedPrompt = 'template4'; setTimeout(() => copiedPrompt = null, 2000)">
+              <span x-text="copiedPrompt === 'template4' ? '✓ Copied' : 'Copy'"></span>
+            </button>
+          </div>
+          <div class="prompt-content" id="template4">Berdasarkan data yang sudah kita diskusikan:
+
+<span class="prompt-var">[SPECIFIC QUESTION]</span>
+
+Contoh follow-up questions:
+• "Fokus pada sektor NE saja, apa pattern yang terlihat?"
+• "Bandingkan aktivitas hari ini dengan baseline minggu lalu"
+• "Identifikasi 3 anomali paling signifikan"
+• "Apa yang mungkin terjadi dalam 24 jam ke depan?"
+• "Breakdown by time: pagi vs siang vs malam"
+• "Korelasikan dengan cuaca/kondisi visibility"
+
+Tips: Gunakan iterative questioning untuk drill down.
+Jangan ask everything in one prompt.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Exercises Section -->
+  <section id="exercises" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-teal-900/10 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-reveal>
+        <div class="module-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          HANDS-ON EXERCISES
+        </div>
+        <h2 class="section-title">
+          4 LATIHAN PRAKTIK<br>
+          <span class="text-teal-400">DATA SIMULASI REALISTIS</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Exercise 1 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+              <span class="font-display text-teal-400">E1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-teal-400">EXERCISE 01</div>
+              <div class="text-xs text-white/40">Difficulty: Beginner</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Single-Source Deep Dive</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Diberikan 1 dokumen SIGINT report (3 halaman). Ekstrak semua informasi relevan 
+            dan susun structured summary.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 20 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Structured intel summary</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-teal-500/10 rounded text-teal-400 text-xs">SIGINT</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/50 text-xs">Extraction</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 2 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <span class="font-display text-cyan-400">E2</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-cyan-400">EXERCISE 02</div>
+              <div class="text-xs text-white/40">Difficulty: Intermediate</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Pattern Recognition Challenge</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Dataset 100 data points (48 jam radar tracking). Identifikasi minimum 3 patterns 
+            dan 1 critical anomaly.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 30 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Pattern analysis report</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-cyan-500/10 rounded text-cyan-400 text-xs">Radar Data</span>
+            <span class="px-2 py-1 bg-white/5 rounded text-white/50 text-xs">Pattern Analysis</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 3 -->
+        <div class="glass-lit p-6 rounded-2xl" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="font-display text-amber-400">E3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">EXERCISE 03</div>
+              <div class="text-xs text-white/40">Difficulty: Advanced</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Multi-Source Fusion</h3>
+          <p class="text-sm text-white/60 mb-4">
+            3 sumber berbeda (SIGINT + Radar + HUMINT). Sintesis menjadi unified intelligence picture.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 40 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Fused intel assessment</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-1 bg-cyan-500/10 rounded text-cyan-400 text-xs">SIGINT</span>
+            <span class="px-2 py-1 bg-teal-500/10 rounded text-teal-400 text-xs">Radar</span>
+            <span class="px-2 py-1 bg-amber-500/10 rounded text-amber-400 text-xs">HUMINT</span>
+          </div>
+        </div>
+        
+        <!-- Exercise 4 -->
+        <div class="glass-lit p-6 rounded-2xl border border-teal-500/30" data-reveal>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+              <span class="font-display text-teal-400">E4</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-teal-400">EXERCISE 04</div>
+              <div class="text-xs text-white/40">Difficulty: Expert</div>
+            </div>
+          </div>
+          
+          <h3 class="font-semibold mb-3">Complete Intel Brief Package</h3>
+          <p class="text-sm text-white/60 mb-4">
+            Full scenario: 72 jam intelligence. Hasilkan complete brief package siap untuk komandan.
+          </p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Waktu: 50 menit</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/50">Output: Complete Intel Brief Package</span>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-teal-500/10 border border-teal-500/20 rounded-lg">
+            <div class="text-xs text-teal-400 font-medium">Package includes:</div>
+            <div class="text-xs text-white/50 mt-1">Exec Summary + Detailed Analysis + Visual Map + Threat Matrix + Recommendations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Assessment Criteria -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass-lit p-8 rounded-2xl" data-reveal>
+        <div class="text-center mb-8">
+          <div class="module-badge inline-flex mb-4">
+            <span class="status-dot"></span>
+            KRITERIA PENILAIAN
+          </div>
+          <h3 class="section-title">
+            RUBRIK ASSESSMENT<br>
+            <span class="text-teal-400">MODUL 02</span>
+          </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Kriteria</th>
+                <th class="text-center py-3 px-4 text-white/60 font-medium">Bobot</th>
+                <th class="text-left py-3 px-4 text-white/60 font-medium">Indikator Sukses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Multi-Source Integration</td>
+                <td class="py-4 px-4 text-center text-teal-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Semua sumber dianalisis dan dikorelasikan</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Pattern Identification</td>
+                <td class="py-4 px-4 text-center text-teal-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Minimum 3 valid patterns + evidence</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-4 px-4 font-medium">Threat Assessment Accuracy</td>
+                <td class="py-4 px-4 text-center text-teal-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Threat level justified dengan data</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium">Actionable Recommendations</td>
+                <td class="py-4 px-4 text-center text-teal-400 font-semibold">25%</td>
+                <td class="py-4 px-4 text-white/60">Rekomendasi spesifik dan executable</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-white/10 text-center">
+          <div class="text-sm text-white/40 mb-2">Passing Score</div>
+          <div class="text-4xl font-display text-teal-400">75%</div>
+          <div class="text-xs text-white/30 mt-2">Higher than Modul 01 — this is a core skill</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Navigation -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <a href="modul-01-ai-fundamentals.html" class="cta-secondary">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Modul 01: AI Fundamentals
+        </a>
+        
+        <div class="text-center">
+          <div class="text-sm text-white/40">Modul Selanjutnya</div>
+          <div class="font-semibold text-blue-400">Visual Intelligence & Command Briefing</div>
+        </div>
+        
+        <a href="#" class="cta-primary">
+          Modul 03
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    function copyPrompt(id) {
+      const element = document.getElementById(id);
+      const text = element.innerText;
+      navigator.clipboard.writeText(text);
+    }
+    
+    gsap.utils.toArray('[data-reveal]').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

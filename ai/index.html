@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-OPINT | Training AI untuk Pamen Koopsudnas</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'tactical': { amber: '#f59e0b', cyan: '#22d3ee', green: '#10b981', red: '#ef4444', purple: '#a855f7', teal: '#14b8a6', blue: '#3b82f6', orange: '#f97316' }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255,255,255,0.03);
+      --color-border: rgba(255,255,255,0.08);
+      --accent: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -150px; background: var(--accent); opacity: 0.1; }
+    .blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #22d3ee; opacity: 0.07; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; transition: all 0.3s ease; }
+    .glass:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .module-card { position: relative; overflow: hidden; transition: transform 0.3s ease; }
+    .module-card:hover { transform: translateY(-8px); }
+    .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--module-color) 0%, transparent 100%); opacity: 0.8; }
+    
+    .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; font-weight: 600; color: #0a0f1a; transition: all 0.3s ease; box-shadow: 0 4px 24px rgba(245,158,11,0.25); text-decoration: none; }
+    .cta-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(245,158,11,0.35); }
+    
+    .cta-secondary { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; transition: all 0.3s ease; text-decoration: none; }
+    .cta-secondary:hover { background: var(--color-surface); border-color: rgba(255,255,255,0.3); }
+    
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.05em; line-height: 1.1; }
+    
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    .tactical-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    .stat-card { text-align: center; padding: 24px; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; line-height: 1; background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body x-data="{ mobileMenu: false }">
+  
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/90 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-tactical-amber to-amber-600 flex items-center justify-center">
+          <svg class="w-6 h-6 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-display text-xl tracking-wider">AI-OPINT</span>
+          <span class="block text-xs text-white/40 font-mono">KOOPSUDNAS</span>
+        </div>
+      </a>
+      
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#overview" class="text-sm text-white/60 hover:text-white transition-colors">Overview</a>
+        <a href="#modules" class="text-sm text-white/60 hover:text-white transition-colors">Modul</a>
+        <a href="#methodology" class="text-sm text-white/60 hover:text-white transition-colors">Metodologi</a>
+        <a href="#outcomes" class="text-sm text-white/60 hover:text-white transition-colors">Outcomes</a>
+      </div>
+      
+      <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div x-show="mobileMenu" x-transition class="md:hidden bg-navy-800/95 backdrop-blur-xl border-t border-white/5 p-6 space-y-4">
+      <a href="#overview" class="block text-white/70 hover:text-white py-2">Overview</a>
+      <a href="#modules" class="block text-white/70 hover:text-white py-2">Modul</a>
+      <a href="#methodology" class="block text-white/70 hover:text-white py-2">Metodologi</a>
+      <a href="#outcomes" class="block text-white/70 hover:text-white py-2">Outcomes</a>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center pt-24 pb-16 px-6">
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="fade-in">
+          <div class="tactical-badge mb-6">
+            <span class="status-dot"></span>
+            PROGRAM KHUSUS PAMEN TNI AU
+          </div>
+          
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-wide leading-none mb-6">
+            AI-POWERED<br>
+            <span class="text-tactical-amber">INTELLIGENCE</span><br>
+            OPERATIONS
+          </h1>
+          
+          <p class="text-lg text-white/60 max-w-xl mb-4">
+            Program training intensif <strong class="text-white">19 jam</strong> menggunakan <strong class="text-tactical-amber">ekosistem Gemini</strong> (Google AI) untuk
+            <strong class="text-white">analisis intelijen</strong>, <strong class="text-white">pengambilan keputusan strategis</strong>,
+            dan <strong class="text-white">command briefing</strong> &mdash; langsung ter-konteks pada <strong class="text-tactical-amber">tugas pokok Koopsudnas: Hanud, OMSP/SAR, Pembinaan Satuan, Doktrin, dan Gakkum Udara</strong>.
+          </p>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tactical-amber/10 border border-tactical-amber/30 mb-8">
+            <span class="w-1.5 h-1.5 rounded-full bg-tactical-amber"></span>
+            <span class="text-xs font-mono text-tactical-amber uppercase tracking-wider">Gemini-First • Case Koopsudnas • Basic → Advanced</span>
+          </div>
+          
+          <div class="flex flex-wrap gap-4">
+            <a href="#modules" class="cta-primary">
+              Lihat Kurikulum
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+            <a href="#overview" class="cta-secondary">Overview Program</a>
+          </div>
+        </div>
+        
+        <div class="fade-in" style="animation-delay: 0.2s;">
+          <div class="glass-lit p-8 rounded-2xl">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="stat-card">
+                <div class="stat-value">19</div>
+                <div class="text-white/50 text-sm mt-2">Jam Training</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">6</div>
+                <div class="text-white/50 text-sm mt-2">Modul Terintegrasi</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">33</div>
+                <div class="text-white/50 text-sm mt-2">Sesi Interaktif</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">100%</div>
+                <div class="text-white/50 text-sm mt-2">Case Koopsudnas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Overview Section -->
+  <section id="overview" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="tactical-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          PROGRAM OVERVIEW
+        </div>
+        <h2 class="section-title">
+          KENAPA AI UNTUK<br>
+          <span class="text-tactical-amber">OPERASI KOOPSUDNAS?</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-3xl mx-auto">Pasca merger <strong class="text-white">Kohanudnas + Koopsau I/II/III (2022)</strong> dan berdirinya <strong class="text-white">Satuan Antariksa (Jan 2026)</strong>, Koopsudnas mengelola spektrum penuh: deteksi radar <strong class="text-white">GM400α</strong> → intersepsi <strong class="text-white">Rafale / F-16 / Su-30</strong> → pertahanan IKN → kesadaran situasional antariksa. AI (Gemini) mempercepat siklus OODA di setiap layer.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-tactical-cyan/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-tactical-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Kecepatan Analisis</h3>
+          <p class="text-white/60 text-sm">Dari intrusi FIR di atas Natuna sampai laporan Satrad — Gemini merangkum OSINT dan menyusun brief dalam hitungan menit, bukan jam.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-tactical-green/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-tactical-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Pattern Recognition</h3>
+          <p class="text-white/60 text-sm">Deteksi anomali pola penerbangan di Selat Malaka, Laut Natuna Utara, dan Celebes Sea — lebih awal dari baseline manual.</p>
+        </div>
+
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-tactical-amber/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-tactical-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Decision Support</h3>
+          <p class="text-white/60 text-sm">Gemini 2.5 Thinking sebagai "strategic advisor" Pangkoopsudnas — generate COA options (scramble/shadow/divert), risk matrix, dan wargaming dengan reasoning transparan.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Modules Section -->
+  <section id="modules" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-tactical-amber/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="tactical-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          KURIKULUM
+        </div>
+        <h2 class="section-title">
+          6 MODUL TERINTEGRASI<br>
+          <span class="text-tactical-amber">BASIC → ADVANCED</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Piramida terbalik — dibuka dengan fundamental AI ringkas, langsung masuk ke hands-on Gemini dengan case Koopsudnas. Setiap sesi ter-konteks pada tugas pokok: Hanud, OMSP, Pembinaan, Doktrin, Gakkum Udara.</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Module 01 -->
+        <a href="modul-01-ai-fundamentals.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #a855f7;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-purple-400">01</span>
+            </div>
+            <div>
+              <div class="text-xs text-purple-400 font-mono">PEMBUKA • 3 JAM</div>
+              <h3 class="font-semibold">AI Fundamentals + Gemini</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Demistifikasi AI ringkas, orientasi ekosistem Gemini (gemini.google.com), framework RISEN, dan etika/OPSEC untuk Pamen Koopsudnas.</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Gemini Onboarding</span>
+          </div>
+        </a>
+        
+        <!-- Module 02 -->
+        <a href="modul-02-intelligence-analysis.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #22d3ee;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-cyan-400">02</span>
+            </div>
+            <div>
+              <div class="text-xs text-cyan-400 font-mono">HOOK • HANDS-ON • 4 JAM</div>
+              <h3 class="font-semibold">Intelligence Analysis</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Langsung praktek dengan Gemini: Deep Research untuk background Rafale/GM400α, pattern recognition di Laut Natuna Utara, threat assessment, multi-source fusion pakai NotebookLM.</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-cyan-500/20 rounded text-cyan-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Case: Natuna</span>
+          </div>
+        </a>
+        
+        <!-- Module 03 -->
+        <a href="modul-03-visual-intelligence.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #3b82f6;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-blue-400">03</span>
+            </div>
+            <div>
+              <div class="text-xs text-blue-400 font-mono">VISUAL • 3 JAM</div>
+              <h3 class="font-semibold">Visual Intelligence</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Gemini <strong class="text-white/70">Imagen</strong> untuk SITREP visual, <strong class="text-white/70">Canvas</strong> untuk dashboard interaktif, <strong class="text-white/70">Veo</strong> untuk video brief — output siap briefing Pangkoopsudnas.</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-blue-500/20 rounded text-blue-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Imagen + Canvas + Veo</span>
+          </div>
+        </a>
+        
+        <!-- Module 04 -->
+        <a href="modul-04-strategic-reasoning.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #f59e0b;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-amber-400">04</span>
+            </div>
+            <div>
+              <div class="text-xs text-amber-400 font-mono">ADVANCED • 3 JAM</div>
+              <h3 class="font-semibold">Strategic Reasoning</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4"><strong class="text-white/70">Gemini 2.5 Thinking</strong> untuk chain-of-thought, COA development (scramble/shadow/divert), risk wargaming, decision matrix untuk kasus Kogasudgab.</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-amber-500/20 rounded text-amber-400 text-xs">4 Sesi</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">COA + Wargaming</span>
+          </div>
+        </a>
+        
+        <!-- Module 05 -->
+        <a href="modul-05-capstone.html" class="module-card glass-lit p-6 rounded-2xl" style="--module-color: #f97316;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-orange-400">05</span>
+            </div>
+            <div>
+              <div class="text-xs text-orange-400 font-mono">CAPSTONE • 3 JAM</div>
+              <h3 class="font-semibold">Integrated AI Operations</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Full mission exercise Koopsudnas — intel fusion (Satrad + OSINT) → visual SITREP → COA analysis → decision brief Pangkoopsudnas, semua di Gemini.</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-orange-500/20 rounded text-orange-400 text-xs">4 Phases</span>
+            <span class="px-2 py-1 bg-white/10 rounded text-white/50 text-xs">Mission Package</span>
+          </div>
+        </a>
+
+        <!-- Module 06 -->
+        <a href="modul-06-multi-tool-operations.html" class="module-card glass-lit p-6 rounded-2xl relative" style="--module-color: #6366f1;">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <span class="font-display text-2xl text-indigo-400">06</span>
+            </div>
+            <div>
+              <div class="text-xs text-indigo-400 font-mono">ADVANCED WORKFLOW • 3 JAM</div>
+              <h3 class="font-semibold">Multi-Tool Operations</h3>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 mb-4">Orkestrasi 6 tools Gemini (Imagen, Canvas, Deep Research, Veo, Music, Guided Learning) + <strong class="text-white/70">NotebookLM</strong> untuk fusion dokumen doktrin — multi-tool workflow discipline Koopsudnas.</p>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-2 py-1 bg-indigo-500/20 rounded text-indigo-400 text-xs">9 Sesi</span>
+            <span class="px-2 py-1 bg-violet-500/20 rounded text-violet-400 text-xs">NotebookLM</span>
+            <span class="px-2 py-1 bg-rose-500/20 rounded text-rose-400 text-xs">6 Gemini Tools</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Methodology Section -->
+  <section id="methodology" class="relative py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="tactical-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          METODOLOGI
+        </div>
+        <h2 class="section-title">
+          LEARNING BY<br>
+          <span class="text-tactical-amber">DOING</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">📚</div>
+          <div class="text-tactical-amber font-semibold mb-2">20%</div>
+          <div class="text-sm text-white/60">Konsep & Framework</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">💻</div>
+          <div class="text-tactical-cyan font-semibold mb-2">50%</div>
+          <div class="text-sm text-white/60">Hands-On Practice</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">🎯</div>
+          <div class="text-tactical-green font-semibold mb-2">20%</div>
+          <div class="text-sm text-white/60">Scenario Exercise</div>
+        </div>
+        <div class="glass p-6 rounded-xl text-center">
+          <div class="text-4xl mb-4">💬</div>
+          <div class="text-tactical-purple font-semibold mb-2">10%</div>
+          <div class="text-sm text-white/60">Discussion & Q&A</div>
+        </div>
+      </div>
+      
+      <div class="mt-12 glass-lit p-8 rounded-2xl">
+        <h3 class="font-semibold text-lg mb-6 text-center">Setiap Sesi Mencakup:</h3>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-tactical-amber/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-tactical-amber">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">Prompt Templates</div>
+              <div class="text-sm text-white/60">Copy-paste ready untuk operasi nyata</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-tactical-cyan/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-tactical-cyan">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">Interactive Quiz</div>
+              <div class="text-sm text-white/60">Validasi pemahaman setiap konsep</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-tactical-green/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-tactical-green">✓</span>
+            </div>
+            <div>
+              <div class="font-medium">Practical Exercise</div>
+              <div class="text-sm text-white/60">Latihan dengan skenario realistis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Outcomes Section -->
+  <section id="outcomes" class="relative py-20 px-6 bg-gradient-to-b from-transparent via-tactical-cyan/5 to-transparent">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="tactical-badge inline-flex mb-4">
+          <span class="status-dot"></span>
+          LEARNING OUTCOMES
+        </div>
+        <h2 class="section-title">
+          SETELAH<br>
+          <span class="text-tactical-cyan">TRAINING</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-tactical-green/20 flex items-center justify-center">
+              <span class="text-tactical-green text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Mampu Menggunakan AI</h3>
+          </div>
+          <p class="text-white/60 text-sm">Untuk analisis intelijen, threat assessment, dan decision support dengan prompt engineering yang efektif.</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-tactical-green/20 flex items-center justify-center">
+              <span class="text-tactical-green text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Memiliki Template Library</h3>
+          </div>
+          <p class="text-white/60 text-sm">Koleksi prompt templates untuk berbagai kebutuhan operasional — siap pakai di lapangan.</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-tactical-green/20 flex items-center justify-center">
+              <span class="text-tactical-green text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Mampu Membuat Visual Intelligence</h3>
+          </div>
+          <p class="text-white/60 text-sm">Dashboard, SITREP, infografis, dan command briefing package yang profesional.</p>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-tactical-green/20 flex items-center justify-center">
+              <span class="text-tactical-green text-xl">✓</span>
+            </div>
+            <h3 class="font-semibold">Mampu Develop COA dengan AI</h3>
+          </div>
+          <p class="text-white/60 text-sm">Course of Action development, risk assessment, dan wargaming menggunakan AI sebagai strategic advisor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- CTA Section -->
+  <section class="relative py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="glass-lit p-12 rounded-3xl">
+        <h2 class="section-title mb-4">
+          SIAP UNTUK<br>
+          <span class="text-tactical-amber">UPGRADE CAPABILITY?</span>
+        </h2>
+        <p class="text-white/60 mb-8 max-w-xl mx-auto">
+          Program training 19 jam berbasis ekosistem Gemini untuk mempersiapkan Pamen Koopsudnas
+          mengoperasikan AI pada tugas pokok Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="modul-01-ai-fundamentals.html" class="cta-primary">
+            Mulai dari Modul 01
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+        </div>
+        <p class="text-white/30 text-sm mt-8">
+          Penyelenggara: <strong class="text-white/50">Velo CT</strong> — AI & Data Solutions
+        </p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-12 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-tactical-amber to-amber-600 flex items-center justify-center">
+            <svg class="w-6 h-6 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-lg tracking-wider">AI-OPINT</span>
+            <span class="block text-xs text-white/40 font-mono">by Velo CT</span>
+          </div>
+        </div>
+        <div class="text-center md:text-right">
+          <p class="text-white/40 text-sm">© 2026 Velo CT. All rights reserved.</p>
+          <p class="text-white/30 text-xs mt-1">AI & Data Solutions untuk Government & Corporate</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

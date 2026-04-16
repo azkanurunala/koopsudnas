@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 2.2 | Pattern Recognition dari Data Operasional</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#22d3ee',
+            'accent-light': '#67e8f9',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #22d3ee;
+      --accent-glow: rgba(34, 211, 238, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    /* Background Effects */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { 
+      width: 600px; height: 600px; 
+      top: -200px; left: -100px; 
+      background: var(--accent); 
+      opacity: 0.12; 
+    }
+    .blob-2 { 
+      width: 400px; height: 400px; 
+      bottom: -100px; right: -50px; 
+      background: #0891b2; 
+      opacity: 0.1; 
+      animation-delay: -3s; 
+    }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: 
+        linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    /* Glass Cards */
+    .glass {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+    }
+    
+    .glass-lit {
+      background: var(--color-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-top-color: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset,
+                  0 32px 64px -16px rgba(0,0,0,0.5);
+    }
+    
+    /* Slide Section */
+    .slide-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 24px;
+      position: relative;
+    }
+    
+    .slide-section:nth-child(even) {
+      background: linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.03) 50%, transparent 100%);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #67e8f9);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Slide Navigation */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .slide-nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .slide-nav-dot.active {
+      background: var(--accent);
+      border-color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    /* Typography */
+    .slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+    
+    .slide-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+    }
+    
+    /* Pattern Type Cards */
+    .pattern-card {
+      transition: all 0.3s ease;
+    }
+    
+    .pattern-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(34, 211, 238, 0.2);
+    }
+    
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+    
+    .data-table th {
+      background: rgba(34, 211, 238, 0.2);
+      padding: 8px 12px;
+      text-align: left;
+      color: var(--accent);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .data-table tr:hover td {
+      background: rgba(255,255,255,0.03);
+    }
+    
+    .data-table tr.anomaly td {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+    }
+    
+    .data-table tr.highlight td {
+      background: rgba(34, 211, 238, 0.1);
+    }
+    
+    /* Code Block */
+    .code-block {
+      background: #0a0f1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+    }
+    
+    /* Copy Button */
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #10b981;
+      color: #10b981;
+    }
+    
+    /* Quiz Styles */
+    .quiz-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.1);
+    }
+    
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.2);
+    }
+    
+    .quiz-option.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .quiz-option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.5); }
+    
+    /* Mobile Nav */
+    @media (max-width: 768px) {
+      .slide-nav { display: none; }
+    }
+    
+    /* Value Indicator */
+    .value-high {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .value-medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    /* Timeline Visualization */
+    .timeline-bar {
+      height: 30px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .timeline-segment {
+      position: absolute;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0, 
+  totalSlides: 11,
+  progress: 0,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}">
+
+  <!-- Background -->
+  <div class="scene-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="grid-pattern"></div>
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <!-- Slide Navigation Dots -->
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" 
+           :class="currentSlide === i-1 ? 'active' : ''"
+           @click="scrollToSlide(i-1)"
+           :title="'Slide ' + i">
+      </div>
+    </template>
+  </div>
+  
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-02-intelligence-analysis.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-sm">Modul 02</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 2.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">TEKNIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-02-01-deep-research.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 2.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-02-03-threat-assessment.html" class="text-xs text-white/40 hover:text-white/60">Sesi 2.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 02 • SESI 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        PATTERN RECOGNITION<br>
+        <span class="text-accent">DARI DATA OPERASIONAL</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Teknik mengidentifikasi <strong class="text-white">temporal, spatial, dan behavioral patterns</strong> 
+        dalam data operasional menggunakan AI.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">60</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3</div>
+          <div class="text-xs text-white/50">JENIS PATTERN</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">2</div>
+          <div class="text-xs text-white/50">DATA SET</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 2: 3 TYPES OF PATTERNS ==================== -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">JENIS PATTERN</div>
+        <h2 class="slide-title">
+          3 TIPE PATTERN<br>
+          <span class="text-accent">DALAM DATA OPERASIONAL</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Temporal -->
+        <div class="glass-lit p-6 rounded-2xl pattern-card">
+          <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center mb-4">
+            <span class="text-3xl">⏰</span>
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <h3 class="font-semibold text-lg">Temporal</h3>
+            <span class="value-high">HIGH VALUE</span>
+          </div>
+          <p class="text-white/60 text-sm mb-4">
+            Pola berdasarkan <strong class="text-white">waktu</strong> — kapan aktivitas terjadi, 
+            frekuensi, dan perubahan dari waktu ke waktu.
+          </p>
+          <div class="space-y-2 text-xs text-white/50">
+            <div>• Aktivitas berulang pada jam tertentu</div>
+            <div>• Peningkatan frekuensi tiba-tiba</div>
+            <div>• Anomali timing (di luar jam normal)</div>
+          </div>
+        </div>
+        
+        <!-- Spatial -->
+        <div class="glass-lit p-6 rounded-2xl pattern-card">
+          <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center mb-4">
+            <span class="text-3xl">📍</span>
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <h3 class="font-semibold text-lg">Spatial</h3>
+            <span class="value-high">HIGH VALUE</span>
+          </div>
+          <p class="text-white/60 text-sm mb-4">
+            Pola berdasarkan <strong class="text-white">lokasi</strong> — di mana aktivitas 
+            terkonsentrasi dan bagaimana pergerakan terjadi.
+          </p>
+          <div class="space-y-2 text-xs text-white/50">
+            <div>• Konsentrasi di area tertentu</div>
+            <div>• Rute pergerakan yang berulang</div>
+            <div>• Area of interest baru</div>
+          </div>
+        </div>
+        
+        <!-- Behavioral -->
+        <div class="glass-lit p-6 rounded-2xl pattern-card">
+          <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <span class="text-3xl">🎭</span>
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <h3 class="font-semibold text-lg">Behavioral</h3>
+            <span class="value-medium">MEDIUM</span>
+          </div>
+          <p class="text-white/60 text-sm mb-4">
+            Pola berdasarkan <strong class="text-white">perilaku</strong> — bagaimana 
+            target bertindak dan merespons stimulus.
+          </p>
+          <div class="space-y-2 text-xs text-white/50">
+            <div>• Perubahan taktik atau SOP</div>
+            <div>• Respons terhadap kehadiran kita</div>
+            <div>• Komunikasi patterns</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 3: TEMPORAL PATTERNS DEEP DIVE ==================== -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+          <span class="text-3xl">⏰</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm mb-1">PATTERN TYPE 1</div>
+          <h2 class="slide-subtitle">TEMPORAL PATTERNS</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl mb-4">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Apa yang Dicari?</h3>
+            <div class="space-y-3">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Frequency Changes</div>
+                <div class="text-xs text-white/50">Peningkatan atau penurunan aktivitas dari baseline normal</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Time-of-Day Patterns</div>
+                <div class="text-xs text-white/50">Aktivitas yang konsisten di jam tertentu</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Day-of-Week Patterns</div>
+                <div class="text-xs text-white/50">Aktivitas yang berulang di hari tertentu</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Anomalous Timing</div>
+                <div class="text-xs text-white/50">Aktivitas di waktu tidak biasa (malam, weekend)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-accent">Visualisasi: Activity Timeline</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Mon</span>
+                  <span>Normal activity (baseline)</span>
+                </div>
+                <div class="timeline-bar">
+                  <div class="timeline-segment bg-blue-500/50" style="left: 30%; width: 15%;">6</div>
+                  <div class="timeline-segment bg-blue-500/50" style="left: 55%; width: 20%;">8</div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Tue</span>
+                  <span>Normal</span>
+                </div>
+                <div class="timeline-bar">
+                  <div class="timeline-segment bg-blue-500/50" style="left: 32%; width: 18%;">7</div>
+                  <div class="timeline-segment bg-blue-500/50" style="left: 58%; width: 15%;">6</div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Wed</span>
+                  <span class="text-red-400">⚠ ANOMALY DETECTED</span>
+                </div>
+                <div class="timeline-bar">
+                  <div class="timeline-segment bg-red-500/70" style="left: 10%; width: 35%;">24</div>
+                  <div class="timeline-segment bg-red-500/70" style="left: 50%; width: 40%;">32</div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Thu</span>
+                  <span>Elevated</span>
+                </div>
+                <div class="timeline-bar">
+                  <div class="timeline-segment bg-amber-500/60" style="left: 25%; width: 25%;">14</div>
+                  <div class="timeline-segment bg-amber-500/60" style="left: 55%; width: 30%;">18</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div class="text-xs text-red-400 font-mono">⚠ Wednesday shows 4x increase from baseline — requires investigation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 4: SPATIAL PATTERNS ==================== -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center">
+          <span class="text-3xl">📍</span>
+        </div>
+        <div>
+          <div class="text-green-400 font-mono text-sm mb-1">PATTERN TYPE 2</div>
+          <h2 class="slide-subtitle">SPATIAL PATTERNS</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-green-400">Apa yang Dicari?</h3>
+            <div class="space-y-3">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Hotspots / Concentration</div>
+                <div class="text-xs text-white/50">Area dengan aktivitas tinggi yang tidak biasa</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Movement Corridors</div>
+                <div class="text-xs text-white/50">Rute yang sering dilalui, jalur transit</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">New Areas of Interest</div>
+                <div class="text-xs text-white/50">Lokasi baru yang mulai menunjukkan aktivitas</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="font-semibold text-sm mb-1">Avoidance Zones</div>
+                <div class="text-xs text-white/50">Area yang sengaja dihindari (bisa indikasi sensitif)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="glass-lit p-6 rounded-2xl">
+            <h3 class="font-semibold text-lg mb-4 text-green-400">Contoh Data: Sector Activity</h3>
+            
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>SECTOR</th>
+                    <th>LAST 24H</th>
+                    <th>PREV 24H</th>
+                    <th>CHANGE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>NE-5</td>
+                    <td>12</td>
+                    <td>14</td>
+                    <td class="text-white/50">-14%</td>
+                  </tr>
+                  <tr>
+                    <td>NE-6</td>
+                    <td>8</td>
+                    <td>10</td>
+                    <td class="text-white/50">-20%</td>
+                  </tr>
+                  <tr class="anomaly">
+                    <td class="font-semibold">NE-7</td>
+                    <td class="font-semibold">48</td>
+                    <td>12</td>
+                    <td class="text-red-400 font-semibold">+300% ↑</td>
+                  </tr>
+                  <tr>
+                    <td>E-1</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td class="text-white/50">-25%</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>E-2</td>
+                    <td>15</td>
+                    <td>4</td>
+                    <td class="text-amber-400 font-semibold">+275% ↑</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div class="text-xs text-red-400 font-mono">
+                ⚠ NE-7 dan E-2 menunjukkan peningkatan signifikan — possible shift of focus
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 5: BEHAVIORAL PATTERNS ==================== -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+          <span class="text-3xl">🎭</span>
+        </div>
+        <div>
+          <div class="text-purple-400 font-mono text-sm mb-1">PATTERN TYPE 3</div>
+          <h2 class="slide-subtitle">BEHAVIORAL PATTERNS</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-lg mb-4 text-purple-400">Indikator Behavioral Change</h3>
+          <div class="space-y-4">
+            <div class="p-4 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-sm">Tactic Changes</span>
+                <span class="value-high">HIGH ALERT</span>
+              </div>
+              <p class="text-xs text-white/50">
+                Perubahan cara operasi dari SOP normal — misal mulai menggunakan 
+                rute yang tidak biasa, timing berbeda.
+              </p>
+            </div>
+            
+            <div class="p-4 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-sm">Response to Stimulus</span>
+                <span class="value-medium">MEDIUM</span>
+              </div>
+              <p class="text-xs text-white/50">
+                Bagaimana target merespons kehadiran kita atau aktivitas lain — 
+                menghindar, meningkatkan aktivitas, atau ignore.
+              </p>
+            </div>
+            
+            <div class="p-4 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-sm">Communication Patterns</span>
+                <span class="value-medium">MEDIUM</span>
+              </div>
+              <p class="text-xs text-white/50">
+                Perubahan volume, waktu, atau karakteristik komunikasi — 
+                bisa indikasi persiapan atau respons.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-lg mb-4 text-purple-400">Case Study: Behavior Shift</h3>
+          
+          <div class="space-y-4">
+            <div class="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+              <div class="text-xs text-purple-400 font-mono mb-2">BASELINE (Jan-Feb):</div>
+              <ul class="text-sm text-white/60 space-y-1">
+                <li>• Flight paths: NW approach (90%)</li>
+                <li>• Average altitude: 35,000 ft</li>
+                <li>• Transponder: Always ON</li>
+                <li>• Communication: Standard ATC</li>
+              </ul>
+            </div>
+            
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div class="text-xs text-red-400 font-mono mb-2">RECENT (Mar):</div>
+              <ul class="text-sm text-white/60 space-y-1">
+                <li>• Flight paths: <span class="text-red-400">NE approach (60%)</span> ← NEW</li>
+                <li>• Average altitude: <span class="text-red-400">15,000-20,000 ft</span> ← LOWER</li>
+                <li>• Transponder: <span class="text-red-400">Often OFF</span> ← CONCERN</li>
+                <li>• Communication: <span class="text-red-400">Minimal/None</span> ← CONCERN</li>
+              </ul>
+            </div>
+            
+            <div class="p-3 bg-amber-500/10 rounded-lg">
+              <div class="text-xs text-amber-400 font-semibold">Assessment:</div>
+              <div class="text-xs text-white/60 mt-1">
+                Multiple behavioral indicators suggest deliberate evasion or preparation for different type of activity.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 6: PROMPT FOR PATTERN RECOGNITION ==================== -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-title">
+          PATTERN RECOGNITION<br>
+          <span class="text-accent">PROMPT</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" 
+                @click="
+                  navigator.clipboard.writeText(document.getElementById('pattern-prompt').innerText);
+                  copied = true;
+                  setTimeout(() => copied = false, 2000);
+                ">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: PATTERN DETECTION</div>
+        
+        <div class="code-block p-6" id="pattern-prompt">
+          <pre class="text-sm text-white/70 whitespace-pre-wrap">Kamu adalah <span class="text-accent">radar analyst dan pattern recognition specialist</span> dengan pengalaman dalam air defense operations.
+
+DATA INPUT:
+[PASTE DATA TABLE — include columns: TIME, SECTOR, TYPE, FREQUENCY, etc.]
+
+BASELINE INFORMATION:
+- Normal activity: [X events per 24 hours]
+- Normal sectors: [list primary sectors]
+- Normal time window: [0600-1800]
+
+ANALISIS YANG DIPERLUKAN:
+1. TEMPORAL PATTERNS:
+   - Identifikasi perubahan frekuensi dari baseline
+   - Cari aktivitas di waktu tidak biasa
+   - Note any time-based trends
+
+2. SPATIAL PATTERNS:
+   - Identifikasi hotspots (sector dengan activity tertinggi)
+   - Cari pergeseran area of interest
+   - Note movement corridors
+
+3. ANOMALIES:
+   - Flag data points yang deviate >20% dari normal
+   - Prioritaskan berdasarkan potential threat significance
+   - Assign severity: LOW/MEDIUM/HIGH
+
+OUTPUT FORMAT:
+## Summary (3 key findings)
+## Temporal Analysis
+## Spatial Analysis  
+## Anomaly Table (ID | Type | Severity | Action Required)
+## Recommended Follow-up
+
+Bahasa Indonesia formal.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 7: DATA SET FOR PRACTICE ==================== -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">DATA SIMULASI</div>
+        <h2 class="slide-title">
+          DATASET UNTUK<br>
+          <span class="text-accent">LATIHAN</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-accent">Radar Activity Log — 48 Hours</h3>
+          <span class="text-xs text-white/50">30 records, 4 anomalies</span>
+        </div>
+        
+        <div class="overflow-x-auto max-h-80">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>DATE</th>
+                <th>TIME</th>
+                <th>SECTOR</th>
+                <th>TYPE</th>
+                <th>COUNT</th>
+                <th>ALT (ft)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>001</td><td>11-APR</td><td>0600</td><td>NE-5</td><td>COMMERCIAL</td><td>4</td><td>35000</td></tr>
+              <tr><td>002</td><td>11-APR</td><td>0700</td><td>NE-5</td><td>COMMERCIAL</td><td>6</td><td>34000</td></tr>
+              <tr><td>003</td><td>11-APR</td><td>0800</td><td>NE-6</td><td>COMMERCIAL</td><td>5</td><td>36000</td></tr>
+              <tr><td>004</td><td>11-APR</td><td>0900</td><td>NE-6</td><td>COMMERCIAL</td><td>4</td><td>33000</td></tr>
+              <tr class="anomaly"><td>005</td><td>11-APR</td><td>1000</td><td>NE-7</td><td>UNKNOWN</td><td>12</td><td>15000</td></tr>
+              <tr><td>006</td><td>11-APR</td><td>1100</td><td>NE-5</td><td>COMMERCIAL</td><td>3</td><td>35000</td></tr>
+              <tr><td>007</td><td>11-APR</td><td>1200</td><td>NE-6</td><td>COMMERCIAL</td><td>5</td><td>34000</td></tr>
+              <tr class="anomaly"><td>008</td><td>11-APR</td><td>1300</td><td>NE-7</td><td>UNKNOWN</td><td>18</td><td>12000</td></tr>
+              <tr><td>009</td><td>11-APR</td><td>1400</td><td>E-1</td><td>COMMERCIAL</td><td>4</td><td>35000</td></tr>
+              <tr><td>010</td><td>11-APR</td><td>1500</td><td>E-1</td><td>COMMERCIAL</td><td>6</td><td>36000</td></tr>
+              <tr><td>011</td><td>11-APR</td><td>1600</td><td>NE-5</td><td>COMMERCIAL</td><td>5</td><td>34000</td></tr>
+              <tr><td>012</td><td>11-APR</td><td>1700</td><td>NE-6</td><td>COMMERCIAL</td><td>4</td><td>35000</td></tr>
+              <tr><td>013</td><td>11-APR</td><td>1800</td><td>NE-5</td><td>COMMERCIAL</td><td>3</td><td>33000</td></tr>
+              <tr class="anomaly"><td>014</td><td>11-APR</td><td>2200</td><td>NE-7</td><td>UNKNOWN</td><td>8</td><td>10000</td></tr>
+              <tr><td>015</td><td>12-APR</td><td>0600</td><td>NE-5</td><td>COMMERCIAL</td><td>5</td><td>35000</td></tr>
+              <tr><td>016</td><td>12-APR</td><td>0700</td><td>NE-6</td><td>COMMERCIAL</td><td>4</td><td>34000</td></tr>
+              <tr><td>017</td><td>12-APR</td><td>0800</td><td>E-1</td><td>COMMERCIAL</td><td>6</td><td>36000</td></tr>
+              <tr class="anomaly"><td>018</td><td>12-APR</td><td>0900</td><td>NE-7</td><td>UNKNOWN</td><td>24</td><td>8000</td></tr>
+              <tr><td>019</td><td>12-APR</td><td>1000</td><td>NE-5</td><td>COMMERCIAL</td><td>5</td><td>35000</td></tr>
+              <tr><td>020</td><td>12-APR</td><td>1100</td><td>NE-6</td><td>COMMERCIAL</td><td>4</td><td>34000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="text-sm text-accent font-semibold mb-2">Baseline Information:</div>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• Normal: 4-6 commercial flights per time slot</li>
+            <li>• Normal sectors: NE-5, NE-6, E-1</li>
+            <li>• Normal altitude: 30,000-38,000 ft</li>
+            <li>• Normal hours: 0600-1800</li>
+          </ul>
+        </div>
+        <div class="glass p-4 rounded-xl">
+          <div class="text-sm text-red-400 font-semibold mb-2">Anomalies to Find:</div>
+          <ul class="text-xs text-white/60 space-y-1">
+            <li>• All NE-7 sector activities (unusual sector)</li>
+            <li>• Low altitude flights (&lt;20,000 ft)</li>
+            <li>• Night activity (after 1800)</li>
+            <li>• "UNKNOWN" type classifications</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8: EXAMPLE OUTPUT ==================== -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT</div>
+        <h2 class="slide-title">
+          PATTERN ANALYSIS<br>
+          <span class="text-accent">RESULT</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-6">
+          <!-- Summary -->
+          <div class="p-4 bg-accent/10 border-l-4 border-accent rounded-r-xl">
+            <div class="font-semibold text-accent mb-2">SUMMARY (3 Key Findings)</div>
+            <ol class="text-sm text-white/70 space-y-1">
+              <li>1. <strong class="text-white">Sektor NE-7</strong> menunjukkan aktivitas tidak normal dengan 4 kejadian UNKNOWN type dalam 48 jam</li>
+              <li>2. <strong class="text-white">Low-altitude flights</strong> (8,000-15,000 ft) terkonsentrasi di NE-7 — jauh di bawah baseline 30,000+ ft</li>
+              <li>3. <strong class="text-white">Night activity</strong> terdeteksi (2200) — di luar normal hours</li>
+            </ol>
+          </div>
+          
+          <!-- Anomaly Table -->
+          <div>
+            <div class="font-semibold text-accent mb-3">ANOMALY TABLE</div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>ANOMALY</th>
+                    <th>SEVERITY</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="anomaly">
+                    <td>018</td>
+                    <td>24 counts, 8000ft, UNKNOWN</td>
+                    <td><span class="text-red-400 font-semibold">HIGH</span></td>
+                    <td>Immediate investigation</td>
+                  </tr>
+                  <tr class="anomaly">
+                    <td>008</td>
+                    <td>18 counts, 12000ft, UNKNOWN</td>
+                    <td><span class="text-red-400 font-semibold">HIGH</span></td>
+                    <td>Correlate with SIGINT</td>
+                  </tr>
+                  <tr>
+                    <td>005</td>
+                    <td>12 counts, 15000ft, UNKNOWN</td>
+                    <td><span class="text-amber-400 font-semibold">MEDIUM</span></td>
+                    <td>Continue monitoring</td>
+                  </tr>
+                  <tr>
+                    <td>014</td>
+                    <td>Night activity (2200)</td>
+                    <td><span class="text-amber-400 font-semibold">MEDIUM</span></td>
+                    <td>Review radar tapes</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Recommendation -->
+          <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div class="font-semibold text-amber-400 mb-2">RECOMMENDED ACTIONS</div>
+            <ol class="text-sm text-white/70 space-y-1">
+              <li>1. Tingkatkan patroli di sektor NE-7 untuk 24 jam ke depan</li>
+              <li>2. Request SIGINT support untuk identifikasi</li>
+              <li>3. Alert air defense units untuk kemungkinan intercept</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 8b: OPERATIONAL TEMPO PATTERNS ==================== -->
+  <section class="slide-section" id="slide-8b">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-4">BEYOND RADAR ANOMALIES</div>
+        <h2 class="slide-title">
+          OPERATIONAL TEMPO<br>
+          <span class="text-accent">PATTERNS</span>
+        </h2>
+        <p class="text-white/60 max-w-3xl mx-auto mt-4 text-sm">
+          Framework <strong class="text-white">temporal / spatial / behavioral</strong> tidak hanya untuk radar log.
+          Pattern recognition bekerja sama baiknya untuk tempo latihan, respons SAR, maintenance backlog, atau resource burn-rate.
+          Dua mini-case di bawah menunjukkan transferability-nya.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+
+        <!-- MINI-CASE 1: TRAINING CYCLE (purple — pembinaan) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-purple-400">MINI-CASE 1 • PEMBINAAN</div>
+              <h3 class="font-semibold text-white">Training Cycle Patterns</h3>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 italic mb-4">Skenario: Audit tempo training 3 skadron menjelang ADEX Koopsud II (90 hari)</div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">TEMPORAL</div>
+              <div class="text-white/70">Late starts sortie training vs jadwal (rata-rata 45 menit terlambat di Skadron X), compressed cycles menjelang deadline, gap drill &gt;10 hari.</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">SPATIAL</div>
+              <div class="text-white/70">Training area consolidation ke 1 range saja (bottleneck), skadron tertentu tidak pernah rotate ke training area B padahal dibutuhkan.</div>
+            </div>
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">BEHAVIORAL</div>
+              <div class="text-white/70">Skipped drills (low-complexity skipped first), substitusi pilot junior saat senior absent, pattern "paper-completed" tanpa actual flying.</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-purple-400 font-mono mb-1">INSIGHT YANG DICARI</div>
+              <div class="text-white/70">Skadron mana yang sedang struggling silently? Apakah tempo training sustainable sampai ADEX, atau akan burn-out di minggu terakhir?</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MINI-CASE 2: SAR MISSION PATTERNS (blue — OMSP) -->
+        <div class="glass-lit p-6 rounded-2xl border-t-4 border-blue-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-blue-400">MINI-CASE 2 • OMSP / SAR</div>
+              <h3 class="font-semibold text-white">SAR Mission Response Patterns</h3>
+            </div>
+          </div>
+          <div class="text-xs text-white/50 italic mb-4">Skenario: Analisis lessons learned — tempo respons Basarnas vs TNI AU lintas 8 bencana terakhir</div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">TEMPORAL</div>
+              <div class="text-white/70">Time-to-first-sortie: Basarnas rata-rata 2j15m, TNI AU rata-rata 4j30m. Gap terbesar di bencana waktu malam (response TNI AU delay 2x lipat).</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">SPATIAL</div>
+              <div class="text-white/70">Lanud forward terdekat sering bukan yang pertama tasked — routing via Koopsud HQ tambah 90 menit. Wilayah timur (Papua, Maluku) paling parah delay-nya.</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">BEHAVIORAL</div>
+              <div class="text-white/70">Pattern "wait for confirmation" sebelum launch C-130 — berbeda dengan Basarnas yang launch heli pada indikasi awal. Coordination call chain TNI AU lebih panjang (6 layer vs Basarnas 3 layer).</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-blue-400 font-mono mb-1">INSIGHT YANG DICARI</div>
+              <div class="text-white/70">Bottleneck bukan di aset atau kru — tapi di <strong class="text-white">decision &amp; coordination chain</strong>. Delegate authority ke Danlanud forward bisa potong 90–120 menit.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-8 glass p-6 rounded-2xl text-center max-w-4xl mx-auto">
+        <p class="text-white/70 text-sm">
+          <strong class="text-white">Catatan metodologi:</strong> framework <span class="text-accent">temporal / spatial / behavioral</span>
+          yang sama dengan radar log — hanya "unit of analysis"-nya yang berganti
+          (dari "contact" jadi "training sortie" atau "SAR mission"). Skill yang dibangun di slide 3–5 transferable ke semua domain.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 9: QUIZ ==================== -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">
+          <span class="text-accent">QUIZ</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ 
+        answer: null, 
+        submitted: false,
+        correct: false
+      }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Aktivitas di <strong class="text-white">sektor yang tidak biasa digunakan</strong> adalah contoh dari pattern jenis apa?
+        </p>
+        
+        <div class="grid sm:grid-cols-3 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl text-center" 
+               :class="{ 
+                 'selected': answer === 'a' && !submitted,
+                 'incorrect': answer === 'a' && submitted 
+               }"
+               @click="if(!submitted) answer = 'a'">
+            <div class="text-2xl mb-2">⏰</div>
+            <span>Temporal</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl text-center" 
+               :class="{ 
+                 'selected': answer === 'b' && !submitted,
+                 'correct': submitted && 'b' === 'b'
+               }"
+               @click="if(!submitted) answer = 'b'">
+            <div class="text-2xl mb-2">📍</div>
+            <span>Spatial</span>
+          </div>
+          
+          <div class="quiz-option glass p-4 rounded-xl text-center" 
+               :class="{ 
+                 'selected': answer === 'c' && !submitted,
+                 'incorrect': answer === 'c' && submitted 
+               }"
+               @click="if(!submitted) answer = 'c'">
+            <div class="text-2xl mb-2">🎭</div>
+            <span>Behavioral</span>
+          </div>
+        </div>
+        
+        <button 
+          class="w-full py-3 rounded-xl font-semibold transition-all"
+          :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'"
+          :disabled="!answer"
+          @click="submitted = true; correct = (answer === 'b')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: Spatial.</strong> 
+            Aktivitas di sektor yang tidak biasa adalah Spatial Pattern — berkaitan dengan LOKASI. 
+            Temporal berkaitan dengan waktu, Behavioral berkaitan dengan cara bertindak.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SLIDE 10: KEY TAKEAWAYS ==================== -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 2.2
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">3 Jenis Pattern</div>
+              <div class="text-sm text-white/60">Temporal (waktu), Spatial (lokasi), Behavioral (perilaku)</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Baseline is Key</div>
+              <div class="text-sm text-white/60">Anomali hanya terlihat jika kita tahu apa yang "normal"</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">AI Excels at Scale</div>
+              <div class="text-sm text-white/60">AI sangat bagus untuk menemukan pattern di data besar</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Severity Matters</div>
+              <div class="text-sm text-white/60">Tidak semua anomali sama — prioritaskan berdasarkan risk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-02-01-deep-research.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 2.1: Deep Research
+        </a>
+        <a href="sesi-02-03-threat-assessment.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 2.3 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Pattern Recognition Intel</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Gemini punya dua workflow yang powerful untuk pattern recognition intel: (1) <strong class="text-white">scanning OSINT publik</strong> via Deep Research mencari pola yang sama muncul di tempat lain, dan (2) <strong class="text-white">reasoning trace transparan</strong> via Thinking Mode untuk pattern yang ambiguous — termasuk anomali pergerakan udara di Natuna dan Celebes Sea.</p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- EMBED 1: GEMINI DEEP RESEARCH (SESI 6.4) -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">OSINT Pattern Hunting — Scan Web untuk Pola yang Sama</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK PATTERN RECOGNITION</div>
+            <p class="text-sm text-white/70">Setelah Anda identifikasi pola di data lokal (via Gemini 2.5 Pro di sesi ini), sering muncul pertanyaan berikutnya: <strong class="text-white">"pernah ada pola seperti ini di tempat lain?"</strong> — misal pola frekuensi sortie, timing exercise, signature komunikasi, atau tempo operasional. Deep Research adalah cara paling efektif untuk scan web publik mencari <strong class="text-white">historical analog</strong> atau <strong class="text-white">precedent</strong> pola tersebut, tanpa Anda harus buka satu per satu tab browser.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Pattern Cross-Reference</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Deskripsikan pola yang Anda temukan</strong> secara spesifik — bukan "ada pattern", tapi "frequency sortie meningkat 3x dalam window 72 jam menjelang aktivitas X". Spesifisitas = better pattern matching di web.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Buat Deep Research query</strong> untuk cari historical analog — "cari kasus di mana pola X terjadi, bagaimana follow-up-nya, apa outcome-nya".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — pastikan agent tidak terlalu sempit (hanya match literal) atau terlalu luas (kehilangan konteks).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Bandingkan historical analog dengan pola Anda</strong> — apa kesamaan dan perbedaannya? Analog memberikan <em>confidence booster</em> atau justru <em>counter-evidence</em>.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Tambahkan ke pattern assessment</strong> sebagai "corroboration" section — pola yang punya precedent punya confidence lebih tinggi dari pola yang first-seen.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Historical Pattern Analog</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Historical Analog untuk Pattern Berikut
+
+Pola yang saya amati di data lokal:
+[DESKRIPSI POLA — contoh:
+- Peningkatan frekuensi sortie air patrol dari baseline ~2/hari menjadi ~6/hari
+- Dalam window 72 jam
+- Diawali 1 event komunikasi-radio yang tidak biasa
+- Diikuti pergeseran posisi radar mobile]
+
+Pertanyaan riset:
+1. Apakah ada kasus historis terdokumentasi di kawasan Indo-Pasifik (2015-2024) di mana pola serupa muncul?
+2. Untuk setiap kasus yang ditemukan: apa konteks geopolitik/operasional saat itu? Apa follow-up yang terjadi (exercise, incident, normal ops)?
+3. Apakah pola ini biasanya precursor untuk kegiatan tertentu, atau apakah ini pola rutin yang disalahartikan?
+4. Sumber open-source mana (IISS, CSIS, Jane's, media internasional) yang paling sering melaporkan pola seperti ini?
+5. Apa indicator tambahan yang biasa muncul bersama pola ini di kasus historis?
+
+Format output:
+- Timeline 3-5 kasus historis paling relevan dengan citation
+- Tabel perbandingan: kasus historis vs pola yang saya amati (similarity + difference)
+- Confidence assessment: pola ini punya historical precedent atau first-of-kind
+- Indicator tambahan yang perlu di-collect untuk reduce uncertainty
+
+Scope: hanya open-source public. Jangan spekulasi tanpa dasar.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Pattern Hunting di Deep Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Deskripsi generik, bukan literal</strong> — jangan masukan nama unit/callsign nyata ke Deep Research. Deskripsikan pola secara struktural ("peningkatan sortie 3x dalam 72 jam" bukan "Skadron X bergerak").</li>
+              <li>• <strong class="text-white">Dua skenario, dua analog</strong> — kalau pola Anda bisa diinterpretasi 2 cara, minta analog untuk kedua interpretasi, lalu bandingkan.</li>
+              <li>• <strong class="text-white">Fresh eyes</strong> — jalankan Deep Research SEBELUM Anda finalize assessment Anda sendiri. Kalau run setelah, Anda cenderung konfirmasi bias.</li>
+              <li>• <strong class="text-white">Precedent ≠ kepastian</strong> — historical analog naikkan confidence tapi tidak pernah bikin 100%. Label tetap HIGH/MEDIUM/LOW.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- ======================================== -->
+      <!-- EMBED 2: GEMINI THINKING MODE (SESI 6.1) -->
+      <!-- ======================================== -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🧠</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.1 THINKING MODE</div>
+              <h3 class="text-lg font-semibold">Pattern Reasoning Trace — Untuk Pola yang Ambiguous</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK PATTERN RECOGNITION</div>
+            <p class="text-sm text-white/70">Saat pola yang Anda lihat <strong class="text-white">ambiguous</strong> — bisa diinterpretasi multiple way, confidence-nya di range MEDIUM, dan Anda butuh <strong class="text-white">reasoning trace transparan</strong> yang bisa di-review komandan. Gemini 2.5 Pro Thinking Mode menampilkan step-by-step reasoning eksplisit (di dalam <code class="bg-navy-900 px-1 rounded text-xs">&lt;thinking&gt;</code> tags) — bagus untuk pattern assessment yang perlu audit trail, bukan sekadar kesimpulan.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Reasoning Trace Pattern</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com</strong> → pilih model <strong class="text-indigo-300">Gemini 2.5 Pro</strong>. Thinking Mode hanya available di Pro, bukan Flash/Flash-Lite.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Struktur data pola</strong> dalam format yang rapi — tabel frekuensi, timeline, atau matrix relasi. Data yang rapi = reasoning yang lebih tajam.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Prompt dengan eksplisit "think step by step"</strong> dan minta pertimbangkan 3+ alternatif interpretasi sebelum ambil kesimpulan. Thinking Mode akan tampilkan trace reasoning lengkap.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Review reasoning trace</strong> — apakah AI pertimbangkan semua hipotesis? Apakah ada step yang lemah? Apakah kesimpulan follow dari reasoning atau lompat?</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Forward reasoning trace + kesimpulan ke komandan</strong> — komandan dapat audit trail yang bisa di-challenge di briefing, bukan black box.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Ambiguous Pattern Assessment</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Role: Senior Intelligence Analyst, Pamen Koopsudnas
+
+Task: Pattern Assessment dengan Reasoning Trace Transparan
+
+Data yang saya observe (period 72 jam):
+[ISI DATA — contoh tabel:
+Day 1: 4 sortie (baseline 2/hari), 3 radio check tidak biasa
+Day 2: 6 sortie, 1 radar mobile shift ke posisi baru
+Day 3: 5 sortie, komunikasi kembali normal, 1 aircraft tidak kembali ke base]
+
+Pertanyaan analitik:
+Apakah pola ini konsisten dengan (a) exercise rutin, (b) pre-positioning untuk kontingensi, atau (c) respons terhadap trigger eksternal yang belum saya ketahui?
+
+Instruksi reasoning:
+1. Pertimbangkan KETIGA hipotesis secara terpisah — tidak langsung pilih yang paling likely.
+2. Untuk setiap hipotesis: apa evidence yang support, apa evidence yang counter?
+3. Think step by step — tampilkan reasoning trace lengkap sebelum kesimpulan.
+4. Di akhir: rank ketiga hipotesis dengan confidence level + justifikasi.
+5. Identifikasi 3 data point tambahan yang akan paling membedakan antar hipotesis (collection requirements).
+
+Output format:
+- &lt;thinking&gt; [reasoning step-by-step, tampilkan alternatif yang dipertimbangkan]
+- Ranked hypotheses dengan confidence (HIGH/MEDIUM/LOW + justifikasi)
+- Collection requirements untuk reduce uncertainty
+- Satu paragraph assessment untuk komandan (non-teknikal)</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Thinking Mode untuk Pattern</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Reasoning trace ≠ ground truth</strong> — trace transparan adalah untuk <em>auditability</em>, bukan karena AI selalu benar. Review kritis.</li>
+              <li>• <strong class="text-white">Minta alternatif eksplisit</strong> — kalau tidak diminta, AI akan cenderung jump ke kesimpulan favorit. "Pertimbangkan 3 hipotesis sebelum pilih" = paksa kaliberasi.</li>
+              <li>• <strong class="text-white">Reasoning trace sebagai briefing backup</strong> — saat komandan challenge "kenapa Anda yakin X?", Anda punya trace reasoning yang bisa di-walk-through, bukan sekadar "AI bilang".</li>
+              <li>• <strong class="text-white">Dual workflow Gemini</strong> — Deep Research untuk scan OSINT luas (pola regional), Thinking Mode untuk reasoning mendalam dari data yang Anda bawa. Dua workflow = coverage penuh untuk pattern recognition Koopsudnas.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-01-gemini-ecosystem.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.1 — Gemini Ecosystem (Thinking Mode) →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- ROUTING GUIDE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🎯 Pattern Recognition Tool Routing</div>
+        <div class="grid md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-teal-400 mb-1">CLAUDE (sesi ini)</div><div class="text-white/70">Primary pattern detection dari data yang Anda bawa, framework-driven</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-indigo-400 mb-1">GEMINI DEEP RESEARCH</div><div class="text-white/70">Cross-reference pola ke historical analog di web publik</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg"><div class="font-mono text-indigo-400 mb-1">GEMINI THINKING MODE</div><div class="text-white/70">Reasoning trace untuk pola ambiguous yang butuh audit trail</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">
+        © 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 4.4 | Complete Decision Support Package</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#a855f7',
+            'accent-light': '#c084fc',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #a855f7; --accent-glow: rgba(168,85,247,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #7c3aed; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(168,85,247,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #c084fc); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .package-part { transition: all 0.3s ease; }
+    .package-part:hover { transform: scale(1.02); }
+    
+    .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .checklist-item:hover { background: rgba(255,255,255,0.06); }
+    .checklist-item.checked { background: rgba(168,85,247,0.1); }
+    .checklist-item.checked .check-box { background: #a855f7; border-color: #a855f7; }
+    .check-box { width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(168,85,247,0.1); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 13, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 04</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 4.4</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">40 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-04-03-risk-wargaming.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 4.3</a>
+        <span class="text-white/20">|</span>
+        <a href="modul-05-capstone.html" class="text-xs text-white/40 hover:text-white/60">Modul 05 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 04 • SESI 4 • CAPSTONE</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        COMPLETE<br>
+        <span class="text-accent">DECISION SUPPORT PACKAGE</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Capstone exercise: mengintegrasikan <strong class="text-white">Chain of Thought + COA Analysis + Risk Assessment</strong> 
+        menjadi complete decision support package.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-xl">🧠</div>
+          <div class="text-xs text-white/50">CoT</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-xl">🎯</div>
+          <div class="text-xs text-white/50">COA</div>
+        </div>
+        <div class="glass px-4 py-3 rounded-xl text-center">
+          <div class="text-xl">⚠️</div>
+          <div class="text-xs text-white/50">Risk</div>
+        </div>
+        <div class="flex items-center text-accent text-xl px-2">=</div>
+        <div class="glass px-6 py-3 rounded-xl text-center bg-accent/20 border-accent">
+          <div class="text-xl">📋</div>
+          <div class="text-xs text-accent font-semibold">DSP</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Capstone</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PACKAGE STRUCTURE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STRUKTUR</div>
+        <h2 class="slide-title">
+          4-PART<br>
+          <span class="text-accent">DECISION SUPPORT PACKAGE</span>
+        </h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="package-part glass-lit p-5 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">📋</span>
+          </div>
+          <div class="text-blue-400 font-mono text-xs mb-1">PART 1</div>
+          <div class="font-semibold">Situation Analysis</div>
+          <p class="text-xs text-white/50 mt-2">Chain-of-thought breakdown of the situation</p>
+        </div>
+        
+        <div class="package-part glass-lit p-5 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-xl bg-green-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">🎯</span>
+          </div>
+          <div class="text-green-400 font-mono text-xs mb-1">PART 2</div>
+          <div class="font-semibold">COA Options (3)</div>
+          <p class="text-xs text-white/50 mt-2">Three distinct courses of action</p>
+        </div>
+        
+        <div class="package-part glass-lit p-5 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">⚠️</span>
+          </div>
+          <div class="text-red-400 font-mono text-xs mb-1">PART 3</div>
+          <div class="font-semibold">Risk Assessment</div>
+          <p class="text-xs text-white/50 mt-2">Top risks with mitigations</p>
+        </div>
+        
+        <div class="package-part glass-lit p-5 rounded-2xl text-center">
+          <div class="w-14 h-14 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">✅</span>
+          </div>
+          <div class="text-accent font-mono text-xs mb-1">PART 4</div>
+          <div class="font-semibold">Recommendation</div>
+          <p class="text-xs text-white/50 mt-2">Justified recommendation to commander</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: TIME ALLOCATION -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TIME MANAGEMENT</div>
+        <h2 class="slide-subtitle">40 MINUTES BREAKDOWN</h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <div class="text-center">
+                <div class="text-2xl font-display text-blue-400">10</div>
+                <div class="text-xs text-white/40">min</div>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-blue-400 mb-1">Part 1: Situation Analysis</div>
+              <div class="text-sm text-white/60">Chain-of-thought breakdown, identify key factors, state assumptions</div>
+              <div class="h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                <div class="h-full w-1/4 bg-blue-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
+              <div class="text-center">
+                <div class="text-2xl font-display text-green-400">15</div>
+                <div class="text-xs text-white/40">min</div>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-green-400 mb-1">Part 2: COA Development</div>
+              <div class="text-sm text-white/60">Generate 3 COAs, create comparison matrix, preliminary ranking</div>
+              <div class="h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                <div class="h-full w-2/5 bg-green-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+              <div class="text-center">
+                <div class="text-2xl font-display text-red-400">10</div>
+                <div class="text-xs text-white/40">min</div>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-red-400 mb-1">Part 3: Risk Assessment</div>
+              <div class="text-sm text-white/60">Identify top 5 risks, assess likelihood/impact, develop mitigations</div>
+              <div class="h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                <div class="h-full w-1/4 bg-red-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <div class="text-center">
+                <div class="text-2xl font-display text-accent">5</div>
+                <div class="text-xs text-white/40">min</div>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-accent mb-1">Part 4: Final Recommendation</div>
+              <div class="text-sm text-white/60">Select COA, justify decision, state key caveats, propose decision points</div>
+              <div class="h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                <div class="h-full w-1/8 bg-accent rounded-full" style="width: 12.5%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: MASTER PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">MASTER TEMPLATE</div>
+        <h2 class="slide-subtitle">DECISION SUPPORT PACKAGE PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('dsp-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 COMPLETE DSP TEMPLATE</div>
+        
+        <div class="code-block p-4 max-h-64 overflow-y-auto" id="dsp-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai <span class="text-accent">strategic advisor</span>, create a complete Decision Support Package:
+
+=== SCENARIO ===
+[Describe the situation requiring decision]
+
+=== OBJECTIVE ===
+[What needs to be achieved]
+
+=== CONSTRAINTS ===
+- Time: [Deadline]
+- Resources: [Available assets]
+- Rules: [ROE, political limits]
+
+=== DELIVERABLES ===
+
+PART 1 - SITUATION ANALYSIS (Chain of Thought)
+Think step by step:
+1. Restate the problem
+2. Identify key factors (friendly, enemy, environment)
+3. List critical assumptions
+4. State information gaps
+
+PART 2 - COURSES OF ACTION
+Generate 3 distinct COAs:
+- COA A: [Aggressive approach]
+- COA B: [Balanced approach]  
+- COA C: [Conservative approach]
+
+For each: Description, Key Actions, Pros, Cons, Resource needs
+
+Create comparison matrix (Effectiveness, Risk, Cost, Speed, Flexibility)
+
+PART 3 - RISK ASSESSMENT
+Top 5 risks for recommended COA:
+| Risk | Likelihood | Impact | Level | Mitigation |
+
+Include wargaming insight: MLR and MDR
+
+PART 4 - RECOMMENDATION
+- RECOMMENDED COA: [X]
+- JUSTIFICATION: [Why this is optimal]
+- KEY CAVEATS: [Important assumptions/limitations]
+- DECISION POINTS: [If X happens, then consider Y]
+- NEXT UPDATE: [When to reassess]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: EXERCISE SCENARIO -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-6">
+          <span class="text-accent font-mono text-sm">CAPSTONE EXERCISE</span>
+        </div>
+        <h2 class="slide-title">
+          OPERATION<br>
+          <span class="text-accent">IRON RESOLVE</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl mb-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-accent mb-4">📋 Situation Brief</h3>
+            <div class="space-y-3 text-sm">
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50">Current Situation</div>
+                <div class="font-semibold text-amber-400">Increased naval activity detected near exclusive economic zone boundary</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50">Intel Summary</div>
+                <div class="text-white/70">3 frigates + 2 supply vessels observed conducting "exercises" 15nm from EEZ line. SIGINT indicates reconnaissance mission. HUMINT suggests 7-day duration.</div>
+              </div>
+              <div class="p-3 bg-white/5 rounded-lg">
+                <div class="text-xs text-white/50">Objective</div>
+                <div class="font-semibold">Deter violation of EEZ without escalating to armed confrontation</div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-accent mb-4">📊 Constraints & Resources</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between p-2 bg-white/5 rounded">
+                <span class="text-white/60">Timeline</span>
+                <span class="font-semibold">Decision needed within 12 hours</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white/5 rounded">
+                <span class="text-white/60">Available Naval</span>
+                <span class="font-semibold">2 corvettes, 1 patrol vessel</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white/5 rounded">
+                <span class="text-white/60">Available Air</span>
+                <span class="font-semibold">4 maritime patrol aircraft</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white/5 rounded">
+                <span class="text-white/60">ROE Limit</span>
+                <span class="text-amber-400 font-semibold">No first use of force</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white/5 rounded">
+                <span class="text-white/60">Political</span>
+                <span class="text-red-400 font-semibold">Avoid international incident</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl text-center">
+        <div class="text-accent font-semibold mb-1">🎯 Your Mission</div>
+        <div class="text-sm text-white/60">Create complete 4-part Decision Support Package dalam <strong class="text-white">40 menit</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: PART 1 GUIDANCE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+          <span class="text-2xl">📋</span>
+        </div>
+        <div>
+          <div class="text-blue-400 font-mono text-sm">PART 1</div>
+          <h2 class="slide-subtitle">SITUATION ANALYSIS</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="p-4 bg-blue-500/10 rounded-xl">
+            <div class="font-semibold text-blue-400 mb-2">1. Problem Restatement</div>
+            <div class="text-sm text-white/60">
+              "We need to respond to potential EEZ violation by foreign naval forces while avoiding escalation..."
+            </div>
+          </div>
+          
+          <div class="p-4 bg-blue-500/10 rounded-xl">
+            <div class="font-semibold text-blue-400 mb-2">2. Key Factors</div>
+            <div class="grid sm:grid-cols-3 gap-3 text-sm">
+              <div class="p-2 bg-white/5 rounded">
+                <div class="text-xs text-blue-400">FRIENDLY</div>
+                <div class="text-white/60">2 corvettes, limited air coverage</div>
+              </div>
+              <div class="p-2 bg-white/5 rounded">
+                <div class="text-xs text-red-400">ENEMY</div>
+                <div class="text-white/60">3 frigates, superior firepower</div>
+              </div>
+              <div class="p-2 bg-white/5 rounded">
+                <div class="text-xs text-green-400">ENVIRONMENT</div>
+                <div class="text-white/60">Near EEZ boundary, high visibility</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-blue-500/10 rounded-xl">
+            <div class="font-semibold text-blue-400 mb-2">3. Assumptions</div>
+            <div class="text-sm text-white/60">
+              • Adversary does not intend armed confrontation<br>
+              • HUMINT source reliability: B-2 (usually reliable)<br>
+              • Weather will remain favorable for 72h
+            </div>
+          </div>
+          
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="font-semibold text-amber-400 mb-2">4. Information Gaps</div>
+            <div class="text-sm text-white/60">
+              • Exact mission objectives unknown<br>
+              • Submarine presence unconfirmed<br>
+              • Adversary ROE unclear
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PART 2 GUIDANCE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center">
+          <span class="text-2xl">🎯</span>
+        </div>
+        <div>
+          <div class="text-green-400 font-mono text-sm">PART 2</div>
+          <h2 class="slide-subtitle">COA DEVELOPMENT</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="text-xs text-red-400 font-mono mb-2">COA A: SHOW OF FORCE</div>
+          <div class="font-semibold text-sm mb-2">Deploy all assets to intercept</div>
+          <div class="text-xs text-white/60">
+            Full naval + air deployment to EEZ boundary. Visible presence, active tracking.
+          </div>
+          <div class="mt-3 flex gap-2 flex-wrap">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">Max Deterrent</span>
+            <span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded">High Escalation</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl border border-green-500/30">
+          <div class="text-xs text-green-400 font-mono mb-2">COA B: LAYERED PRESENCE</div>
+          <div class="font-semibold text-sm mb-2">Graduated response posture</div>
+          <div class="text-xs text-white/60">
+            1 corvette at EEZ, air patrol active, 1 corvette on standby. Diplomatic note sent.
+          </div>
+          <div class="mt-3 flex gap-2 flex-wrap">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">Balanced</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">Flexible</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="text-xs text-blue-400 font-mono mb-2">COA C: OBSERVE & PROTEST</div>
+          <div class="font-semibold text-sm mb-2">Surveillance only</div>
+          <div class="text-xs text-white/60">
+            Air surveillance, document violations, formal diplomatic protest. No naval deployment.
+          </div>
+          <div class="mt-3 flex gap-2 flex-wrap">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">Low Risk</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">Low Deterrent</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl">
+        <div class="text-green-400 font-semibold mb-2">Preliminary Matrix Result</div>
+        <div class="text-sm text-white/60">
+          COA A: 6.2 | <strong class="text-green-400">COA B: 7.8</strong> | COA C: 6.5 
+          — COA B leads on balanced criteria
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: PART 3 GUIDANCE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center">
+          <span class="text-2xl">⚠️</span>
+        </div>
+        <div>
+          <div class="text-red-400 font-mono text-sm">PART 3</div>
+          <h2 class="slide-subtitle">RISK ASSESSMENT</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Escalation to armed incident</div>
+              <div class="text-xs text-white/50">Mitigation: Clear ROE, hot-line established</div>
+            </div>
+            <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded font-semibold">HIGH</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Adversary ignores presence, crosses EEZ</div>
+              <div class="text-xs text-white/50">Mitigation: Prepared escalation ladder</div>
+            </div>
+            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-semibold">MEDIUM</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">Equipment failure during deployment</div>
+              <div class="text-xs text-white/50">Mitigation: Standby corvette ready</div>
+            </div>
+            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded font-semibold">MEDIUM</span>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="text-xs text-amber-400 font-semibold mb-2">📊 MLR (Most Likely)</div>
+            <div class="text-sm text-white/60">
+              Adversary completes exercise, avoids direct EEZ violation, withdraws after 7 days
+            </div>
+          </div>
+          <div class="p-4 bg-red-500/10 rounded-xl">
+            <div class="text-xs text-red-400 font-semibold mb-2">⚠️ MDR (Most Dangerous)</div>
+            <div class="text-sm text-white/60">
+              Adversary tests response, brief EEZ incursion forces reaction decision
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: PART 4 GUIDANCE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+          <span class="text-2xl">✅</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm">PART 4</div>
+          <h2 class="slide-subtitle">RECOMMENDATION</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="p-4 bg-accent/20 rounded-xl mb-6">
+          <div class="font-semibold text-accent text-lg mb-2">RECOMMENDED: COA B (Layered Presence)</div>
+          <div class="text-sm text-white/70">
+            Provides credible deterrence while maintaining escalation control. Diplomatic engagement 
+            creates off-ramp. Reserve assets enable response to MDR if it materializes.
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-xs text-accent font-semibold mb-1">KEY CAVEATS</div>
+            <div class="text-sm text-white/60">
+              • Assumes adversary intent is not hostile<br>
+              • Requires diplomatic coordination within 6 hours<br>
+              • Effectiveness depends on visible air presence
+            </div>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-xs text-accent font-semibold mb-1">DECISION POINTS</div>
+            <div class="text-sm text-white/60">
+              • IF adversary crosses EEZ → Elevate to COA A, notify command<br>
+              • IF adversary withdraws early → De-escalate to COA C, maintain surveillance<br>
+              • IF exercise extends beyond 7 days → Reassess with updated intel
+            </div>
+          </div>
+          
+          <div class="p-3 bg-white/5 rounded-lg">
+            <div class="text-xs text-accent font-semibold mb-1">NEXT UPDATE</div>
+            <div class="text-sm text-white/60">
+              Situation reassessment in 24 hours or immediately if adversary movement detected
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: EVALUATION CRITERIA -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">RUBRIK</div>
+        <h2 class="slide-subtitle">SUCCESS CRITERIA</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Part 1: Situation Analysis</div>
+              <div class="text-xs text-white/50">Clear CoT, assumptions stated, gaps identified</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Part 2: COA Development</div>
+              <div class="text-xs text-white/50">3 distinct COAs, matrix comparison, preliminary ranking</div>
+            </div>
+            <div class="text-2xl font-display text-accent">30%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Part 3: Risk Assessment</div>
+              <div class="text-xs text-white/50">Top risks identified, mitigations proposed, MLR/MDR included</div>
+            </div>
+            <div class="text-2xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Part 4: Recommendation</div>
+              <div class="text-xs text-white/50">Clear selection, justified, caveats stated, decision points defined</div>
+            </div>
+            <div class="text-2xl font-display text-accent">25%</div>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-accent/20 rounded-xl text-center">
+          <span class="text-accent font-semibold text-lg">Passing Score: 70%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10B: DSP LINTAS DOMAIN -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CROSS-DOMAIN APPLICATION</div>
+        <h2 class="slide-title">
+          DSP<br>
+          <span class="text-accent">LINTAS DOMAIN</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Master template DSP (4-part package) domain-agnostic. Berikut 3 example outline untuk SAR, resource allocation, dan doctrine adoption — reference only.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- DSP SAR (Blue) B1 -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">B1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">OMSP / SAR</div>
+              <div class="font-semibold text-sm">DSP SAR DECISION</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">CENDRAWASIH RESCUE — ATR-72 missing, 72 souls on board.</div>
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="font-mono text-blue-400 mb-1">PART 1 — Situation Analysis</div>
+              <div class="text-white/60">Last known track, cuaca, drift model, survival window, asset availability.</div>
+            </div>
+            <div>
+              <div class="font-mono text-blue-400 mb-1">PART 2 — 3 COAs Search Strategy</div>
+              <div class="text-white/60">Grid / probability-based / tipoff-driven.</div>
+            </div>
+            <div>
+              <div class="font-mono text-blue-400 mb-1">PART 3 — Risks per COA</div>
+              <div class="text-white/60">False lead, fatigue crew, weather deterioration, asset attrition.</div>
+            </div>
+            <div>
+              <div class="font-mono text-blue-400 mb-1">PART 4 — Recommended Approach</div>
+              <div class="text-white/60">Hybrid probability-based + grid fallback, kirim ke Basarnas untuk ratifikasi.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DSP Resource (Purple) C3 -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-purple-400 font-bold">C3</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">PEMBINAAN</div>
+              <div class="font-semibold text-sm">DSP RESOURCE ALLOCATION</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">Anggaran pemeliharaan minus 15% lintas Koopsud I/II/III.</div>
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="font-mono text-purple-400 mb-1">PART 1 — Situation Analysis</div>
+              <div class="text-white/60">Serviceability rate, backlog, ops tempo, strategic posture tiap Koopsud.</div>
+            </div>
+            <div>
+              <div class="font-mono text-purple-400 mb-1">PART 2 — 3 COAs Priority</div>
+              <div class="text-white/60">Equal split / weighted (ops tempo) / risk-based (asset tertua prioritas).</div>
+            </div>
+            <div>
+              <div class="font-mono text-purple-400 mb-1">PART 3 — Risks</div>
+              <div class="text-white/60">Grounding risk, readiness gap, equity lintas satuan, moral impact.</div>
+            </div>
+            <div>
+              <div class="font-mono text-purple-400 mb-1">PART 4 — Recommended Allocation</div>
+              <div class="text-white/60">Risk-based split + 10% kontingensi, memo ke Pangkoopsudnas.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DSP Doctrine (Amber) D1 -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">D1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">DOKTRIN</div>
+              <div class="font-semibold text-sm">DSP DOCTRINE ADOPTION</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4 italic">IADS doctrine review — era UAV & long-range strike.</div>
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="font-mono text-amber-400 mb-1">PART 1 — Gap Analysis</div>
+              <div class="text-white/60">Doktrin existing vs best practice regional, sensor-shooter loop, C2 resilience.</div>
+            </div>
+            <div>
+              <div class="font-mono text-amber-400 mb-1">PART 2 — 3 COAs Rollout</div>
+              <div class="text-white/60">Big bang / phased / pilot unit.</div>
+            </div>
+            <div>
+              <div class="font-mono text-amber-400 mb-1">PART 3 — Change-Mgmt Risks</div>
+              <div class="text-white/60">Resistance satuan, training gap, interoperability legacy, cost re-fit.</div>
+            </div>
+            <div>
+              <div class="font-mono text-amber-400 mb-1">PART 4 — Recommended Direction</div>
+              <div class="text-white/60">Phased adoption 18 bulan + doctrine note brief ke Kasau.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-xs text-white/50 italic">Struktur 4-part identik — context dan stakeholder output yang berubah. Master template tetap domain-agnostic.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: CHECKLIST -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">QUALITY CHECK</div>
+        <h2 class="slide-subtitle">PRE-SUBMISSION CHECKLIST</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-3">
+          <div class="checklist-item" :class="checks[1] ? 'checked' : ''" @click="checks[1] = !checks[1]">
+            <div class="check-box">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 1: Problem clearly restated in own words?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[2] ? 'checked' : ''" @click="checks[2] = !checks[2]">
+            <div class="check-box">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 1: Assumptions and information gaps explicit?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[3] ? 'checked' : ''" @click="checks[3] = !checks[3]">
+            <div class="check-box">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 2: 3 COAs that are genuinely distinct?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
+            <div class="check-box">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 2: Comparison matrix with weighted scores?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[5] ? 'checked' : ''" @click="checks[5] = !checks[5]">
+            <div class="check-box">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 3: Top risks with likelihood + impact + mitigation?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[6] ? 'checked' : ''" @click="checks[6] = !checks[6]">
+            <div class="check-box">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 3: MLR and MDR included?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[7] ? 'checked' : ''" @click="checks[7] = !checks[7]">
+            <div class="check-box">
+              <svg x-show="checks[7]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 4: Clear recommendation with justification?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[8] ? 'checked' : ''" @click="checks[8] = !checks[8]">
+            <div class="check-box">
+              <svg x-show="checks[8]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Part 4: Decision points (if X then Y) defined?</span>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 8 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 8">
+            <div class="text-green-400 font-semibold">✓ Ready to present to commander!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 8">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/8 items complete'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: MODULE COMPLETE -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">MODUL 04</span><br>
+          COMPLETE! 🎉
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Chain of Thought</div>
+              <div class="text-sm text-white/60">Deep reasoning untuk strategic analysis</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">COA Analysis</div>
+              <div class="text-sm text-white/60">Generate & compare strategic options</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Risk & Wargaming</div>
+              <div class="text-sm text-white/60">AI as Red Team untuk test plans</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Decision Support Package</div>
+              <div class="text-sm text-white/60">Integrated output untuk commanders</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🏆 Strategic Reasoning Mastery Complete!</div>
+          <div class="text-sm text-white/60">Anda siap untuk Final Capstone — Modul 05: Integrated AI Operations</div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-04-03-risk-wargaming.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 4.3: Risk & Wargaming
+        </a>
+        <a href="modul-05-capstone.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Modul 05 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Decision Support</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Decision support dokumen = bukan hanya memo keputusan, tapi juga <strong class="text-white">briefing prep untuk pemangku keputusan</strong>. Dua workflow Gemini: (1) <strong class="text-white">Canvas</strong> untuk draft decision memo dengan section-level editing, dan (2) <strong class="text-white">Guided Learning</strong> untuk prep komandan dengan walkthrough interaktif sebelum keputusan.</p>
+      </div>
+
+      <!-- EMBED 1: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Decision Memo Drafting dengan Section-Level Iteration</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DECISION SUPPORT</div>
+            <p class="text-sm text-white/70">Decision memo punya struktur rigid (Decision Required, Background, Options, Recommendation, Implications, Next Steps) dan sering di-refine berkali-kali saat stakeholder feedback masuk. Canvas sangat cocok karena Anda bisa update section "Options" atau "Implications" tanpa rewrite section lain. Memo yang matang biasanya lewat 3-5 iterations — Canvas memungkinkan iterate tanpa loss of work.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Decision Memo di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Minta skeleton decision memo</strong> — 8 section standar termasuk "Decision Required" eksplisit di awal.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi "Decision Required" dulu</strong> — apa yang komandan harus putuskan, dalam 1 kalimat jelas.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Background minimal</strong> — asumsi komandan sudah punya context. Fokus di data yang BARU untuk decision.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Options section — tabel</strong> — pakai markdown table dengan Pros | Cons | Resource | Timeline per option.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Recommendation clear + actionable</strong> — opsi X, dengan implementasi step yang konkret.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Iterate per feedback</strong> — saat stakeholder revisi, highlight section saja, preserve lain.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Decision Memo</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas Decision Memo dengan struktur berikut:
+
+Judul: DECISION MEMO — [TOPIK]
+Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+Prepared by: [PLACEHOLDER]
+Decision by: [PLACEHOLDER — rank + position]
+Date: [PLACEHOLDER]
+
+Struktur:
+
+1. DECISION REQUIRED (1 kalimat eksplisit)
+   "Komandan diminta memutuskan: [X atau Y atau Z]"
+
+2. BLUF — BOTTOM LINE (3 kalimat maksimal)
+   - Situation
+   - Options yang tersedia
+   - Recommendation
+
+3. BACKGROUND (1 paragraf)
+   - Context singkat
+   - Trigger untuk decision
+   - Time pressure (ada deadline?)
+
+4. OPTIONS (tabel markdown)
+   | Option | Description | Pros | Cons | Resource | Timeline |
+   |---|---|---|---|---|---|
+   | A | [...] | [...] | [...] | [...] | [...] |
+   | B | [...] | [...] | [...] | [...] | [...] |
+   | C | [...] | [...] | [...] | [...] | [...] |
+
+5. RECOMMENDATION
+   - Preferred option + justification
+   - Why this, not others
+   - Conditions that would change recommendation
+
+6. IMPLICATIONS
+   - Resource impact
+   - Operational impact
+   - Strategic impact (long-term)
+   - Reputation/political impact
+   - Ethical/legal considerations
+
+7. IMPLEMENTATION
+   - Immediate actions (0-24h)
+   - Medium-term (24-72h)
+   - Coordination requirements
+   - Success criteria
+
+8. NEXT STEPS
+   - What commander needs to do
+   - What team will do after decision
+   - Review/checkpoint schedule
+
+Format: A4 formal, bahasa militer Indonesia, maksimal 3 halaman untuk briefing level Pangkoopsud.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Decision Memo</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Decision Required eksplisit di atas</strong> — komandan tidak boleh ragu apa yang harus diputuskan.</li>
+              <li>• <strong class="text-white">BLUF mandatory</strong> — 3 kalimat yang bisa dibaca sambil jalan ke ruang briefing.</li>
+              <li>• <strong class="text-white">Maksimal 3 halaman</strong> — memo panjang = memo tidak dibaca. Pangkat tinggi = waktu pendek.</li>
+              <li>• <strong class="text-white">"Why not others"</strong> — di Recommendation, jelaskan kenapa opsi lain tidak dipilih. Ini critical untuk defend.</li>
+              <li>• <strong class="text-white">Conditions for change</strong> — "jika X terjadi, recommendation berubah jadi Y". Kasih komandan optionality.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: GUIDED LEARNING (SESI 6.7) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📖</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.7 GUIDED LEARNING</div>
+              <h3 class="text-lg font-semibold">Decision Walkthrough Prep — Sebelum Brief ke Pemangku Keputusan</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DECISION SUPPORT</div>
+            <p class="text-sm text-white/70">Sebelum briefing pemangku keputusan, Anda perlu <strong class="text-white">simulate the decision conversation</strong> — apa yang akan ditanyakan, argumen counter, edge case. Guided Learning berfungsi sebagai <em>rehearsal partner</em>: AI memandu Anda melalui skenario decision, challenge asumsi, dan highlight blind spots. Ini jauh lebih efektif dari hanya baca ulang memo Anda sendiri.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Decision Rehearsal dengan Guided Learning</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka Guided Learning</strong> → instruksikan untuk role-play sebagai "skeptical commander reviewing your decision memo".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Paste decision memo</strong> dari Canvas (Embed 1) sebagai input.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">AI akan mulai walkthrough</strong> — bertanya section per section, challenge asumsi, probing alternatives.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Jawab setiap challenge</strong> seolah Anda sedang brief real commander. Ini stress-test argumen Anda.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Identify weak points</strong> — pertanyaan yang Anda sulit jawab = section yang perlu strengthen di memo.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Revisi memo di Canvas</strong> untuk strengthen weak points yang muncul dari walkthrough.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Decision Rehearsal Session</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat sesi Guided Learning sebagai "decision memo rehearsal partner".
+
+Role play: Anda adalah skeptical commander (rank setara Pangkoopsud) yang akan menerima briefing decision memo saya. Anda berpengalaman 25 tahun, sering challenge argumen yang lemah, dan butuh evidence untuk setiap klaim.
+
+My decision memo:
+[PASTE DECISION MEMO DARI CANVAS]
+
+Walkthrough structure:
+
+1. Initial reaction (30 detik)
+   - Sebagai commander, apa kesan pertama dari memo ini?
+   - Apa yang langsung catch your attention (positively or negatively)?
+
+2. Section-by-section probing
+   Untuk setiap section, tanya saya:
+   a) Assumption yang mendasari — seberapa solid?
+   b) Evidence yang saya reference — apakah credible?
+   c) Alternatives yang saya abaikan — kenapa di-reject?
+   d) Worst case di opsi yang saya recommend — bagaimana mitigasi?
+
+3. Stress test scenario
+   - "Jika besok X terjadi, apakah recommendation masih valid?"
+   - "Jika resource dipotong 30%, bagaimana?"
+   - "Jika waktu decision turun dari 48 jam ke 12 jam, adjust-nya bagaimana?"
+
+4. Political/institutional challenge
+   - "Bagaimana Anda jelaskan ini ke stakeholder X?"
+   - "Apa yang media akan tulis tentang keputusan ini?"
+   - "Bagaimana efeknya ke coalition partner?"
+
+5. Final decision simulation
+   - Setelah semua challenge, as commander apa keputusan saya?
+   - Apa kondisi yang akan flip decision saya ke opsi lain?
+
+6. Debrief
+   - 3 weakest point di memo saya yang perlu strengthen
+   - 2 strong point yang perlu dipertahankan
+   - Rekomendasi specific revision
+
+Tone: challenging tapi konstruktif. Jangan sekedar setuju — push saya untuk defend dan refine.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Decision Rehearsal</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Let AI challenge you</strong> — jangan cepat setuju. Defend argumen Anda seolah real commander push-back.</li>
+              <li>• <strong class="text-white">Stress test scenarios</strong> — "jika X berubah" adalah kunci. Lingkup decision jarang stabil.</li>
+              <li>• <strong class="text-white">Weak points = revisi prioritas</strong> — pertanyaan yang sulit Anda jawab harus di-strengthen di memo.</li>
+              <li>• <strong class="text-white">Rehearse 2-3 kali</strong> — sesi pertama untuk identify weakness, kedua untuk stress test, ketiga untuk polish.</li>
+              <li>• <strong class="text-white">Bawa decision log ke real briefing</strong> — note yang Anda buat dari rehearsal = preparation materi.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-07-guided-learning.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.7 — Guided Learning →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Decision Support Pipeline</div>
+        <div class="grid md:grid-cols-4 gap-2 text-xs">
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE (sesi ini)</div><div class="text-white/70">Analysis + option reasoning</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CANVAS</div><div class="text-white/70">Draft decision memo</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. GUIDED LEARNING</div><div class="text-white/70">Rehearsal + stress test</div></div>
+          <div class="p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. REAL BRIEFING</div><div class="text-white/70">Confident + defensible</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

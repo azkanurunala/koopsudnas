@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.2 | SITREP Visual Lintas Domain Koopsudnas</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#10b981',
+            'accent-light': '#34d399',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #10b981; --accent-glow: rgba(16,185,129,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #059669; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(16,185,129,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #34d399); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .sitrep-component { transition: all 0.3s ease; border: 1px solid transparent; }
+    .sitrep-component:hover { border-color: var(--accent); transform: scale(1.02); }
+    
+    .map-marker { width: 16px; height: 16px; border-radius: 50%; position: absolute; animation: pulse-marker 2s infinite; }
+    @keyframes pulse-marker { 0%, 100% { box-shadow: 0 0 0 0 currentColor; } 50% { box-shadow: 0 0 0 8px transparent; } }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(16,185,129,0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(16,185,129,0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-visual-intelligence.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 3.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">TEKNIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-03-01-visual-principles.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 3.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-03-03-dashboard-infografis.html" class="text-xs text-white/40 hover:text-white/60">Sesi 3.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 03 • SESI 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        SITREP VISUAL &<br>
+        <span class="text-accent">THREAT MAP CREATION</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Teknik membuat <strong class="text-white">visual SITREP</strong> yang informatif
+        dan <strong class="text-white">threat / SAR / bencana map</strong> yang bisa dibaca dalam hitungan detik —
+        lintas 4 domain tugas Koopsudnas.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-8 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT (Hanud)</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">SAR (OMSP)</span>
+        <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full">BENCANA (OMSP)</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">READINESS (Pembinaan)</span>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">45</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">2</div>
+          <div class="text-xs text-white/50">VISUAL TYPES</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">TEMPLATES</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SITREP VISUAL OVERVIEW -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">VISUAL SITREP</div>
+        <h2 class="slide-title">
+          ANATOMY OF A<br>
+          <span class="text-accent">VISUAL SITREP</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <div class="sitrep-component p-4 bg-red-500/10 rounded-xl text-center">
+            <div class="text-xs text-red-400 font-mono mb-2">HEADER</div>
+            <div class="font-display text-lg">DTG + CLASSIFICATION</div>
+            <div class="text-xs text-white/50">121500Z APR 2026</div>
+          </div>
+          <div class="sitrep-component p-4 bg-amber-500/10 rounded-xl text-center">
+            <div class="text-xs text-amber-400 font-mono mb-2">THREAT LEVEL</div>
+            <div class="font-display text-3xl text-amber-400">MEDIUM</div>
+          </div>
+          <div class="sitrep-component p-4 bg-green-500/10 rounded-xl text-center">
+            <div class="text-xs text-green-400 font-mono mb-2">NEXT UPDATE</div>
+            <div class="font-display text-lg">+6 HRS</div>
+            <div class="text-xs text-white/50">122100Z APR 2026</div>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div class="sitrep-component p-4 bg-red-500/5 rounded-xl">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <div class="text-sm font-semibold text-red-400">ENEMY STATUS</div>
+            </div>
+            <ul class="text-sm text-white/70 space-y-1">
+              <li>• 62 unidentified contacts in NE-7</li>
+              <li>• Low altitude activity (8-15K ft)</li>
+              <li>• Escalating trend (+300%)</li>
+            </ul>
+          </div>
+          <div class="sitrep-component p-4 bg-blue-500/5 rounded-xl">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div class="text-sm font-semibold text-blue-400">FRIENDLY STATUS</div>
+            </div>
+            <ul class="text-sm text-white/70 space-y-1">
+              <li>• All air defense units operational</li>
+              <li>• 2x CAP on standby</li>
+              <li>• Radar coverage 100%</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="sitrep-component p-4 bg-accent/10 rounded-xl">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-3 h-3 rounded-full bg-accent"></div>
+            <div class="text-sm font-semibold text-accent">RECOMMENDED ACTIONS</div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-3 text-sm text-white/70">
+            <div class="flex items-center gap-2">
+              <span class="text-accent">→</span>
+              Deploy CAP to NE-7 sector
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-accent">→</span>
+              Request SIGINT support
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: SITREP COMPONENTS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KOMPONEN</div>
+        <h2 class="slide-subtitle">6 ELEMEN SITREP VISUAL</h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mb-3">
+            <span class="text-red-400 font-bold">1</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Header/DTG</div>
+          <p class="text-xs text-white/50">Date-Time Group, classification level, reference number</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mb-3">
+            <span class="text-amber-400 font-bold">2</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Threat Level Indicator</div>
+          <p class="text-xs text-white/50">Visual yang instantly menunjukkan level (LOW/MED/HIGH)</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mb-3">
+            <span class="text-red-400 font-bold">3</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Enemy Status Card</div>
+          <p class="text-xs text-white/50">Summary aktivitas hostile, trends, key concerns</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
+            <span class="text-blue-400 font-bold">4</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Friendly Status Card</div>
+          <p class="text-xs text-white/50">Readiness own forces, capabilities, positioning</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3">
+            <span class="text-purple-400 font-bold">5</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Key Events Timeline</div>
+          <p class="text-xs text-white/50">Kronologi significant events dalam periode</p>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl">
+          <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center mb-3">
+            <span class="text-green-400 font-bold">6</span>
+          </div>
+          <div class="font-semibold text-sm mb-1">Action Items</div>
+          <p class="text-xs text-white/50">Recommended/required actions, dengan PIC jika applicable</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: SITREP PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">SITREP VISUAL PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('sitrep-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: VISUAL SITREP</div>
+        
+        <div class="code-block p-6" id="sitrep-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Buatkan <span class="text-accent">visual SITREP</span> dalam format HTML dengan komponen berikut:
+
+DATA INPUT:
+- DTG: [121500Z APR 2026]
+- Threat Level: [MEDIUM/HIGH/LOW]
+- Period: [last 24 hours]
+
+ENEMY STATUS:
+[paste key findings about hostile activity]
+
+FRIENDLY STATUS:
+[paste our force readiness/positioning]
+
+KEY EVENTS:
+[paste timeline of significant events]
+
+RECOMMENDED ACTIONS:
+[paste recommendations]
+
+DESIGN REQUIREMENTS:
+1. Header: DTG + Threat Level badge (color-coded)
+2. Two-column layout: Enemy (red accent) | Friendly (blue accent)
+3. Action items at bottom with green accent
+4. Next update time clearly visible
+5. Use military color scheme: dark background, tactical colors
+6. Total height: fit in single viewport (no scroll)
+7. Font: sans-serif, clear hierarchy
+
+OUTPUT: Complete HTML code dengan inline CSS</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: THREAT MAP OVERVIEW -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">THREAT MAP</div>
+        <h2 class="slide-title">
+          THREAT MAP<br>
+          <span class="text-accent">ELEMENTS</span>
+        </h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Map Symbology Standards</h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div class="w-4 h-4 rounded-full bg-red-500"></div>
+              <div>
+                <div class="font-semibold text-sm text-red-400">Red Markers</div>
+                <div class="text-xs text-white/50">Hostile positions, enemy contacts</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+              <div>
+                <div class="font-semibold text-sm text-blue-400">Blue Markers</div>
+                <div class="text-xs text-white/50">Friendly positions, our assets</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div class="w-4 h-4 rounded-full bg-amber-500"></div>
+              <div>
+                <div class="font-semibold text-sm text-amber-400">Amber Zones</div>
+                <div class="text-xs text-white/50">Areas of interest, caution zones</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div class="w-4 h-4 border-2 border-dashed border-white/40 rounded"></div>
+              <div>
+                <div class="font-semibold text-sm">Dashed Lines</div>
+                <div class="text-xs text-white/50">Movement corridors, projected routes</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div class="w-4 h-4 rounded bg-gradient-to-r from-green-500/50 to-red-500/50"></div>
+              <div>
+                <div class="font-semibold text-sm">Heat Gradient</div>
+                <div class="text-xs text-white/50">Threat intensity visualization</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Sample Threat Map</h3>
+          <div class="relative bg-navy-800 rounded-xl p-4 h-64">
+            <!-- Grid -->
+            <div class="absolute inset-4 grid grid-cols-4 grid-rows-4 border border-white/10">
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+              <div class="border border-white/5"></div>
+            </div>
+            
+            <!-- Threat Zone -->
+            <div class="absolute top-8 right-8 w-20 h-20 rounded-full bg-red-500/20 border border-red-500/40"></div>
+            
+            <!-- Red Markers (Hostile) -->
+            <div class="map-marker bg-red-500 text-red-500" style="top: 30%; right: 25%;"></div>
+            <div class="map-marker bg-red-500 text-red-500" style="top: 35%; right: 30%;"></div>
+            <div class="map-marker bg-red-500 text-red-500" style="top: 40%; right: 20%;"></div>
+            
+            <!-- Blue Markers (Friendly) -->
+            <div class="map-marker bg-blue-500 text-blue-500" style="bottom: 25%; left: 20%;"></div>
+            <div class="map-marker bg-blue-500 text-blue-500" style="bottom: 30%; left: 30%;"></div>
+            
+            <!-- Labels -->
+            <div class="absolute top-2 right-2 text-xs text-red-400 font-mono">NE-7</div>
+            <div class="absolute bottom-2 left-2 text-xs text-blue-400 font-mono">BASE</div>
+            
+            <!-- Legend -->
+            <div class="absolute bottom-2 right-2 text-xs text-white/40">
+              <span class="text-red-400">●</span> Hostile
+              <span class="text-blue-400 ml-2">●</span> Friendly
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-amber-500/10 rounded-lg">
+            <div class="text-xs text-amber-400 font-semibold">💡 3-Second Rule</div>
+            <div class="text-xs text-white/50">Threat concentration harus immediately visible tanpa membaca text</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: THREAT MAP PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">THREAT MAP PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('map-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 TEMPLATE: THREAT MAP</div>
+        
+        <div class="code-block p-6" id="map-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Buatkan <span class="text-accent">threat map visualization</span> dalam format SVG atau HTML Canvas:
+
+AREA COVERAGE:
+- Region: [describe area - e.g., "coastal sector NE-5 to NE-8"]
+- Grid system: [e.g., 4x4 sectors]
+
+HOSTILE POSITIONS (RED):
+[list coordinates/sectors with contact count]
+- NE-7: 62 contacts, concentrated north quadrant
+- NE-6: 8 contacts, scattered
+
+FRIENDLY POSITIONS (BLUE):
+[list coordinates/sectors]
+- Base Alpha: Air defense HQ
+- Station Bravo: Radar site
+
+MOVEMENT INDICATORS:
+[describe any movement patterns]
+- Hostile movement corridor: NE-7 → NE-6 direction
+
+THREAT ZONES:
+[describe high-threat areas]
+- High threat zone: NE-7 (highlight with red overlay)
+
+DESIGN REQUIREMENTS:
+1. Dark background (navy/black)
+2. Grid lines subtle (low opacity)
+3. Red = hostile, Blue = friendly, Amber = caution
+4. Include legend
+5. Sector labels visible
+6. Optional: threat intensity heat gradient
+
+OUTPUT: Complete SVG or HTML Canvas code</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6.5: SITREP VARIANTS — 4 Domain Koopsudnas -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">SITREP LINTAS DOMAIN</div>
+        <h2 class="slide-subtitle">4 VARIANT SITREP KOOPSUDNAS</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          6-element framework (Header/DTG, Level Indicator, Status Card, Friendly Card, Timeline, Actions)
+          tetap universal. Yang berubah: <em>apa yang ditampilkan</em> di tiap card dan stakeholder siapa yang dilayani.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5" x-data="{ variant: 'threat' }">
+        <div class="md:col-span-2 flex flex-wrap justify-center gap-2 mb-2">
+          <button @click="variant = 'threat'" :class="variant === 'threat' ? 'bg-red-500/30 border-red-500 text-red-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🎯 THREAT SITREP</button>
+          <button @click="variant = 'sar'" :class="variant === 'sar' ? 'bg-blue-500/30 border-blue-500 text-blue-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🆘 SAR SITREP</button>
+          <button @click="variant = 'bencana'" :class="variant === 'bencana' ? 'bg-green-500/30 border-green-500 text-green-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🌊 BENCANA SITREP</button>
+          <button @click="variant = 'readiness'" :class="variant === 'readiness' ? 'bg-purple-500/30 border-purple-500 text-purple-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🛠️ READINESS SITREP</button>
+        </div>
+
+        <!-- THREAT VARIANT -->
+        <template x-if="variant === 'threat'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-red-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-red-400 font-mono text-xs mb-2">VARIANT A • OPERASI PERTAHANAN UDARA</div>
+                <h3 class="font-semibold text-lg mb-3">Threat SITREP (Existing Default)</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> LOW / MED / HIGH (threat ke wilayah udara)</div>
+                  <div><strong class="text-white">Status Card 1 (RED):</strong> Enemy activity — contact count, altitude, behavior pattern</div>
+                  <div><strong class="text-white">Status Card 2 (BLUE):</strong> Friendly — CAP availability, radar coverage, ROE posture</div>
+                  <div><strong class="text-white">Timeline:</strong> Kronologi kontak anomali 24h terakhir</div>
+                  <div><strong class="text-white">Actions:</strong> Deploy CAP / request SIGINT / alert air defense</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Pangkoopsudnas, Pusatkodal, ops crew</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant A):
+
+Level: HIGH/MED/LOW (threat)
+Enemy card (RED):
+  - Contact count & trend
+  - Altitude band
+  - Behavior (reconn/transit/
+    evasive)
+Friendly card (BLUE):
+  - CAP status & numbers
+  - Radar coverage %
+  - Sector ready state
+Timeline: kontak anomali 24h
+Actions:
+  - Immediate (deploy/alert)
+  - Short-term (ISR request)</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- SAR VARIANT -->
+        <template x-if="variant === 'sar'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-blue-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-blue-400 font-mono text-xs mb-2">VARIANT B • OMSP / CENDRAWASIH RESCUE</div>
+                <h3 class="font-semibold text-lg mb-3">SAR SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Survivor risk (TIME-CRITICAL / CRITICAL / STABLE)</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Search progress — sektor checked, debris found, last known position</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Survivor & weather — pax count, BMKG outlook, visibility</div>
+                  <div><strong class="text-white">Timeline:</strong> Key events (lost contact, asset launch, debris found, etc.)</div>
+                  <div><strong class="text-white">Actions:</strong> Expand search sector / reposition asset / request BASARNAS</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Basarnas, Kemenhub, TNI AL, keluarga via Posko Krisis</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant B):
+
+Level: TIME-CRITICAL/CRITICAL/
+       STABLE (survivor risk)
+Progress card:
+  - Sektor checked (x/y)
+  - Debris / signs of life
+  - Last known position
+Conditions card:
+  - Pax count
+  - BMKG forecast (6h)
+  - Visibility / wave height
+Timeline: lost contact → now
+Actions (multi-agency):
+  - Koopsudnas airlift
+  - Basarnas coordination
+  - BMKG update request</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- BENCANA VARIANT -->
+        <template x-if="variant === 'bencana'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-green-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-green-400 font-mono text-xs mb-2">VARIANT C • OMSP / BANJIR SULAWESI</div>
+                <h3 class="font-semibold text-lg mb-3">Bencana SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Humanitarian severity (RED/AMBER/GREEN)</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Affected area — jumlah pengungsi, shelter aktif, logistik shortfall</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Lift capacity — C-130 sortie, cargo delivered, next ETA</div>
+                  <div><strong class="text-white">Timeline:</strong> Sortie log 24h + shelter resupply milestone</div>
+                  <div><strong class="text-white">Actions:</strong> Re-prioritize shelter / tambah sortie / koordinasi BNPB</div>
+                  <div><strong class="text-white">Stakeholder:</strong> BNPB, Pemda, PMI, Kemenkes, media publik</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant C):
+
+Level: RED/AMBER/GREEN
+       (humanitarian severity)
+Impact card:
+  - Pengungsi (jumlah, lokasi)
+  - Shelter aktif & kapasitas
+  - Logistik shortfall
+Lift card:
+  - Sortie dilaksanakan
+  - Cargo delivered (ton)
+  - Aset on-ground / enroute
+Timeline: sortie + resupply log
+Actions:
+  - Re-prioritize shelter
+  - Tambah sortie window
+  - Koordinasi BNPB/Pemda</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- READINESS VARIANT -->
+        <template x-if="variant === 'readiness'">
+          <div class="md:col-span-2 glass-lit p-6 rounded-2xl border border-purple-500/30">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="text-purple-400 font-mono text-xs mb-2">VARIANT D • PEMBINAAN SATUAN / ADEX</div>
+                <h3 class="font-semibold text-lg mb-3">Readiness SITREP</h3>
+                <div class="text-xs text-white/70 space-y-2">
+                  <div><strong class="text-white">Level Indicator:</strong> Overall readiness (GREEN/AMBER/RED) menjelang ADEX</div>
+                  <div><strong class="text-white">Status Card 1:</strong> Serviceability — % aircraft operational, maintenance backlog</div>
+                  <div><strong class="text-white">Status Card 2:</strong> Crew currency — flight hours, training gap, qualification status</div>
+                  <div><strong class="text-white">Timeline:</strong> Training milestone + logistik milestone menuju exercise</div>
+                  <div><strong class="text-white">Actions:</strong> Remediation priorities, resource request, training schedule adjustment</div>
+                  <div><strong class="text-white">Stakeholder:</strong> Pangkoopsudnas, Dinas Teknik, Dinas Operasi</div>
+                </div>
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">PROMPT SNIPPET (variant D):
+
+Level: GREEN/AMBER/RED
+       (readiness menjelang ADEX)
+Serviceability card:
+  - % aircraft ops (per tipe)
+  - Maintenance backlog
+  - Spare parts critical list
+Currency card:
+  - Flight hours vs standar
+  - Training gap (skill matrix)
+  - Qualification status
+Timeline: milestone menuju
+          exercise D-day
+Actions:
+  - Remediation priority
+  - Resource / budget request</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">Catatan:</strong> Color-coding juga beradaptasi — untuk SAR/Bencana,
+        warna hijau/biru = "progress positif" (sektor aman, shelter tercover), bukan "friendly unit".
+        Pastikan legend eksplisit di tiap variant agar command audience tidak salah baca.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: VISUAL STANDARDS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STANDAR</div>
+        <h2 class="slide-subtitle">VISUAL QUALITY STANDARDS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-green-400 mb-4">✓ DO's</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Consistent Color Coding</div>
+              <div class="text-xs text-white/50">Red always = threat, Blue always = friendly — no exceptions</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Clear Hierarchy</div>
+              <div class="text-xs text-white/50">Threat level paling prominent, supporting data lebih kecil</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Actionable Output</div>
+              <div class="text-xs text-white/50">Setiap visual harus ada "So what?" / recommended action</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Single Viewport</div>
+              <div class="text-xs text-white/50">Fit dalam satu screen — no scrolling required</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-red-400 mb-4">✕ DON'Ts</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Information Overload</div>
+              <div class="text-xs text-white/50">Jangan cram semua data — show summary, detail on request</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Decorative Elements</div>
+              <div class="text-xs text-white/50">No icons/graphics yang tidak add meaning</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Ambiguous Colors</div>
+              <div class="text-xs text-white/50">Jangan gunakan warna mirip untuk hal berbeda (red vs orange)</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Missing Context</div>
+              <div class="text-xs text-white/50">Selalu include DTG, period covered, data source</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: ITERATION TIPS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PRO TIPS</div>
+        <h2 class="slide-subtitle">ITERATIVE REFINEMENT</h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <p class="text-white/70 text-center mb-8">
+          AI jarang menghasilkan visual sempurna di percobaan pertama. 
+          Gunakan <strong class="text-white">iterative prompting</strong> untuk refine.
+        </p>
+        
+        <div class="space-y-4">
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="font-mono text-sm text-accent mb-2">Iteration 1: Structure</div>
+            <div class="text-sm text-white/60">"Create basic SITREP layout with header, two columns, and action section"</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <svg class="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          
+          <div class="p-4 bg-cyan-500/10 rounded-xl">
+            <div class="font-mono text-sm text-cyan-400 mb-2">Iteration 2: Visual Polish</div>
+            <div class="text-sm text-white/60">"Make the threat level indicator larger and add color-coded badges"</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <svg class="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          
+          <div class="p-4 bg-amber-500/10 rounded-xl">
+            <div class="font-mono text-sm text-amber-400 mb-2">Iteration 3: Content</div>
+            <div class="text-sm text-white/60">"Replace placeholder text with actual data: [paste your data]"</div>
+          </div>
+          
+          <div class="flex justify-center">
+            <svg class="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          
+          <div class="p-4 bg-green-500/10 rounded-xl">
+            <div class="font-mono text-sm text-green-400 mb-2">Iteration 4: Final Review</div>
+            <div class="text-sm text-white/60">"Ensure 3-second rule compliance and add next update timestamp"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false, correct: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam standar military mapping, warna apa yang digunakan untuk menandai <strong class="text-white">friendly positions</strong>?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl flex items-center gap-3" :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <div class="w-4 h-4 rounded-full bg-red-500"></div>
+            <span>Red</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl flex items-center gap-3" :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted }" @click="if(!submitted) answer = 'b'">
+            <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+            <span>Blue</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl flex items-center gap-3" :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <div class="w-4 h-4 rounded-full bg-green-500"></div>
+            <span>Green</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl flex items-center gap-3" :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <div class="w-4 h-4 rounded-full bg-amber-500"></div>
+            <span>Amber</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true; correct = (answer === 'b')">
+          <span x-text="submitted ? (correct ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="correct ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="correct ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: Blue.</strong> 
+            Standard NATO: Blue = Friendly, Red = Hostile, Green = Safe/Neutral, Amber = Caution/Unknown.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 3.2
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">6 SITREP Components</div>
+              <div class="text-sm text-white/60">Header, Threat Level, Enemy, Friendly, Timeline, Actions</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Standard Colors</div>
+              <div class="text-sm text-white/60">Red=Hostile, Blue=Friendly, Amber=Caution, Green=Safe</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Single Viewport</div>
+              <div class="text-sm text-white/60">All critical info visible tanpa scroll</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Iterate to Perfect</div>
+              <div class="text-sm text-white/60">Structure → Polish → Content → Review</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-03-01-visual-principles.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 3.1: Visual Principles
+        </a>
+        <a href="sesi-03-03-dashboard-infografis.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 3.3 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk SITREP Visual</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">SITREP visual punya dua bagian: (1) <strong class="text-white">graphic elements</strong> — map view, icon, illustrasi situasional via <strong class="text-white">Gemini Imagen (Create Image)</strong>, dan (2) <strong class="text-white">layout dokumen</strong> — cara semua elemen disusun via <strong class="text-white">Canvas</strong>. Dua tools Gemini, satu pipeline SITREP yang lengkap.</p>
+      </div>
+
+      <!-- EMBED 1: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Generate Graphic Elements untuk SITREP — Map View, Icon, Illustrasi</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK SITREP VISUAL</div>
+            <p class="text-sm text-white/70">Untuk <strong class="text-white">generic situational map, icon set, atau illustrasi konsep</strong> yang akan menjadi visual utama SITREP. Gemini Imagen (Create Image) mengubah deskripsi teks menjadi visual nyata dalam detik. Fokus pada <em>generic illustrative</em> (bukan accurate real map), karena Imagen tidak reliable untuk geografi akurat — pakai placeholder "Laut Natuna Utara area" bukan koordinat nyata.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Generate SITREP Visuals</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com → Create Image</strong>. Pastikan aspect ratio 16:9 (SITREP slide standard).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Tulis prompt dengan 4-komponen framework</strong>: SUBJECT + STYLE + COMPOSITION + CONSTRAINT.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">OPSEC gate</strong>: hindari nama negara, koordinat real, nama satuan, insignia. Pakai generic descriptor ("coastal archipelago", "tropical region").</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Generate 3-4 variasi</strong>, pilih yang paling ikut prinsip visual sesi ini (hierarchy, contrast, alignment).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Add watermark</strong> "AI GENERATED • ILUSTRASI" sebelum digunakan di dokumen resmi.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Text labels manual</strong> — AI image generators masih lemah di text rendering. Label data manual di Google Slides setelah insert image.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Generic Situational Awareness Map</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">SUBJECT:
+Top-down tactical situational awareness map infographic showing a generic tropical coastal region with multiple islands and open sea areas. Central focal point: highlighted zone of interest (marked with circle/ring). Secondary elements: flight path indicators (dashed lines), detection range arcs, zone labels.
+
+STYLE:
+Modern military briefing aesthetic. Flat vector illustration style (NOT photorealistic). Dark navy blue background (#050810), accent colors: indigo (#6366f1), amber for alerts (#f59e0b), white for labels. Clean professional look.
+
+COMPOSITION:
+16:9 aspect ratio. Top-down map view. Focal zone positioned using rule of thirds (left-third or center). Legend placeholder in bottom-right corner. Grid overlay faint, geographic texture minimal. Sufficient negative space for text labels to be added later.
+
+CONSTRAINT:
+- NO specific country names, NO real geographical accuracy
+- NO identifiable unit insignia or flags
+- NO realistic aircraft — only generic symbols if needed (triangles, arrows)
+- Generic "archipelago region" — could be anywhere tropical
+- Leave empty spaces for manual text labels (AI text rendering unreliable)
+- Watermark-friendly layout (bottom strip clear for "AI GENERATED" badge)
+
+Purpose: training SITREP illustration, not for operational use.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips SITREP Image Generation</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Hindari "military"</strong> — Imagen filter sensitif. Gunakan "tactical", "surveillance", "coastal monitoring".</li>
+              <li>• <strong class="text-white">4 variations → pilih 1</strong> — variance antar generate besar, selalu generate multiple dan bandingkan.</li>
+              <li>• <strong class="text-white">Watermark wajib</strong> di semua visual yang keluar internal — "AI GENERATED • FOR TRAINING" biar tidak disalahartikan authentic intel.</li>
+              <li>• <strong class="text-white">Pipeline ke Canvas</strong> — setelah image selesai, insert ke Canvas SITREP document (Embed 2 di bawah) sebagai visual aid.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Draft SITREP Document Layout — Section-Level Iteration</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK SITREP VISUAL</div>
+            <p class="text-sm text-white/70">SITREP punya struktur standar: Header (date/time/period), Situation Summary, Enemy Activity, Friendly Forces, Logistics, Assessment, Recommendations. Canvas memungkinkan Anda <strong class="text-white">draft semua section dalam satu workspace</strong> dan <strong class="text-white">update bagian tertentu tanpa rewrite</strong> — essential saat situasi berkembang dan Anda perlu update hanya section "Enemy Activity" setiap 4 jam tanpa mengubah konteks lain.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — SITREP di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka Canvas, minta skeleton SITREP</strong> — 7 section standar (Header, Sum, Enemy, Friendly, Log, Assess, Recs).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Header dan Situation Summary</strong> manual — ini kerangka narasi yang akan menjiwai section lain.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Insert image placeholder</strong> di Situation Summary — nanti diganti image dari Create Image (Embed 1).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Tambah tabel "Contact Log"</strong> via instruksi Canvas — kolom Time | Contact ID | Location (generic) | Status.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Iterate Enemy Activity section</strong> saat data update — highlight section, instruksi "perbarui HANYA section Enemy Activity dengan data terbaru, jangan ubah lainnya".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Google Docs</strong> → insert final images, add header organisasi, klasifikasi banner, distribusi.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — SITREP Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas SITREP document dengan struktur berikut:
+
+Header:
+- Type: SITREP
+- Periode: [PLACEHOLDER — akan diisi]
+- Dari: [PLACEHOLDER]
+- Kepada: [PLACEHOLDER]
+- Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+
+Section:
+1. SITUATION SUMMARY (3-4 kalimat BLUF, include placeholder "[INSERT SITUATIONAL MAP]")
+2. ENEMY ACTIVITY (24 jam terakhir, gunakan generic terminology)
+   - Tabel: Time | Contact | Location | Status | Confidence
+3. FRIENDLY FORCES
+   - Posture status
+   - Aset on-alert
+   - Operational tempo
+4. LOGISTICS & SUPPORT
+   - Fuel/ammunition status
+   - Maintenance/serviceability
+5. ASSESSMENT
+   - Threat level: [LOW/MEDIUM/HIGH/CRITICAL]
+   - Confidence: [LOW/MEDIUM/HIGH]
+   - Short-term projection (next 24h)
+6. RECOMMENDATIONS
+   - 3 tindakan prioritas
+   - Collection requirements
+7. SIGN-OFF
+
+Format:
+- Bahasa formal militer Indonesia
+- Generic callsign & lokasi (TIDAK ada data real)
+- Siap cetak untuk briefing
+- Section 2-5 siapkan sebagai placeholder yang saya akan isi manual</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips SITREP di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Skeleton dulu, isi kemudian</strong> — jangan minta AI generate isi; isi manual supaya akurat.</li>
+              <li>• <strong class="text-white">Image placeholder</strong> di posisi tepat supaya Anda tahu di mana Create Image output akan di-insert.</li>
+              <li>• <strong class="text-white">Tabel contact log</strong> paling rawan update — minta AI buat markdown table, lebih mudah revisi per row.</li>
+              <li>• <strong class="text-white">Pipeline lengkap</strong>: Create Image (visual) → Canvas (layout) → Google Docs (finalisasi).</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Recommended SITREP Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE (sesi ini)</div><div class="text-white/70">Write narrative + analysis</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CREATE IMAGE</div><div class="text-white/70">Generate situational visuals</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CANVAS</div><div class="text-white/70">Layout SITREP document</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. GOOGLE DOCS</div><div class="text-white/70">Final + distribusi</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

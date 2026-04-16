@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.3 | Canvas — Workspace Interaktif Gemini</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#6366f1',
+            'accent-light': '#818cf8',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #6366f1; --accent-glow: rgba(99,102,241,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #8b5cf6; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%); }
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #818cf8); z-index: 100; transition: width 0.3s ease; }
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .prompt-block .label { color: #818cf8; font-weight: 600; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 6px; font-size: 0.65rem; color: #818cf8; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(99,102,241,0.4); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1200px; }
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">45 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">CANVAS</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-02-create-image.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-04-deep-research.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 3 • CANVAS</span>
+      </div>
+      <h1 class="slide-title mb-6">GEMINI<br><span class="text-accent">CANVAS</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Workspace interaktif Gemini untuk <strong class="text-white">draft, edit, dan iterasi</strong> dokumen secara real-time — SITREP, briefing package, analisis doktrin, dan SOP — side-by-side dengan AI.
+      </p>
+      <div class="grid sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📋</div><div class="text-accent font-mono text-xs mb-1">LIVE EDIT</div><div class="text-sm text-white/70">Edit dokumen sambil AI menyesuaikan</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">🔄</div><div class="text-accent font-mono text-xs mb-1">ITERASI</div><div class="text-sm text-white/70">Revisi bagian tertentu tanpa rewrite</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📊</div><div class="text-accent font-mono text-xs mb-1">TABEL & CHART</div><div class="text-sm text-white/70">Visualisasi data inline</div></div>
+        <div class="glass p-4 rounded-xl"><div class="text-2xl mb-2">📤</div><div class="text-accent font-mono text-xs mb-1">EXPORT</div><div class="text-sm text-white/70">Google Docs, PDF, copy</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: TUJUAN -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OBJECTIVES</div>
+        <h2 class="slide-title">TUJUAN <span class="text-accent">SESI INI</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">1</span></div>
+            <div><div class="font-semibold text-white mb-1">Mengenal Canvas Interface</div><div class="text-sm text-white/60">Pahami perbedaan mode Chat vs Canvas, kapan beralih, dan cara membuka Canvas dari sidebar Gemini</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">2</span></div>
+            <div><div class="font-semibold text-white mb-1">Draft SITREP di Canvas</div><div class="text-sm text-white/60">Mulai dari template, AI mengisi draf, Anda edit inline — proses 10 menit yang biasa 45 menit manual</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">3</span></div>
+            <div><div class="font-semibold text-white mb-1">Section-Level Instruction</div><div class="text-sm text-white/60">Minta AI revisi satu section tanpa ubah bagian lain — teknik highlight + instruksi</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">4</span></div>
+            <div><div class="font-semibold text-white mb-1">4 Use Case Koopsudnas</div><div class="text-sm text-white/60">Canvas untuk SITREP hanud, koordinasi SAR, assessment readiness satuan, dan draft doktrin note</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">5</span></div>
+            <div><div class="font-semibold text-white mb-1">Export ke Google Docs</div><div class="text-sm text-white/60">Finalisasi dokumen dari Canvas ke Google Docs → format → distribusi ke satuan</div></div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold">6</span></div>
+            <div><div class="font-semibold text-white mb-1">Hands-on + Quiz</div><div class="text-sm text-white/60">Latihan langsung 20 menit membuat SITREP multi-domain, quiz 4 pertanyaan penutup</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: APA ITU CANVAS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KONSEP DASAR</div>
+        <h2 class="slide-title">APA ITU <span class="text-accent">CANVAS?</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 items-start">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="text-4xl mb-4">💬</div>
+          <h3 class="text-xl font-semibold text-white/60 mb-3">Mode Chat (biasa)</h3>
+          <ul class="space-y-2 text-sm text-white/60">
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✗</span> Respons AI terpisah dari dokumen kerja Anda</li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✗</span> Setiap revisi = prompt baru + copy-paste manual</li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✗</span> Tidak bisa edit bagian tertentu secara terisolasi</li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✗</span> Tidak ada export langsung</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-accent/30">
+          <div class="text-4xl mb-4">📋</div>
+          <h3 class="text-xl font-semibold text-accent mb-3">Mode Canvas</h3>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-1">✓</span> Dokumen hidup di panel kanan, chat di kiri</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-1">✓</span> Highlight teks → instruksi AI → update inline</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-1">✓</span> Revisi satu section tanpa ganggu bagian lain</li>
+            <li class="flex items-start gap-2"><span class="text-green-400 mt-1">✓</span> Export ke Google Docs / copy / print PDF</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-8 p-5 glass rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">🎯</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Analogi sederhana</div>
+            <div class="text-sm text-white/70">Canvas = <strong class="text-accent">Google Docs dengan AI embedded</strong>. Anda tidak perlu bolak-balik copy-paste antara Gemini chat dan Word. Dokumen dan AI ada dalam satu layar, berkolaborasi secara langsung.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: CARA MEMBUKA CANVAS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HOW TO START</div>
+        <h2 class="slide-title">CARA BUKA <span class="text-accent">CANVAS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-6">
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">1</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Buka gemini.google.com</div>
+              <div class="text-sm text-white/60">Login dengan akun Google. Pastikan menggunakan Gemini 2.5 Flash atau Pro (bukan versi lama).</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">2</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Klik "Canvas" di sidebar kiri atau Tools</div>
+              <div class="text-sm text-white/60">Ikon berbentuk dokumen/papan. Atau ketik langsung di chat: <span class="font-mono text-accent text-xs">"Buat Canvas untuk SITREP Hanud"</span></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">3</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Layar split: Chat (kiri) + Dokumen (kanan)</div>
+              <div class="text-sm text-white/60">Panel kanan menampilkan dokumen aktif. Panel kiri tetap sebagai chat untuk instruksi. Anda bisa scroll panel kanan secara independen.</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">4</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Berikan instruksi pertama</div>
+              <div class="text-sm text-white/60">Ketik di chat: template yang diinginkan, konteks, format. AI akan populate dokumen di panel kanan secara langsung.</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">5</div>
+            <div>
+              <div class="font-semibold text-white mb-1">Highlight → Edit Section Tertentu</div>
+              <div class="text-sm text-white/60">Di panel kanan, select bagian teks → klik ikon AI yang muncul → berikan instruksi spesifik untuk bagian itu. Bagian lain tidak tersentuh.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: 4 USE CASE -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">USE CASES</div>
+        <h2 class="slide-title">4 USE CASE <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400 text-xl">🛡️</div>
+            <div><div class="font-mono text-xs text-red-400 mb-0.5">DOMAIN A — HANUD</div><h3 class="font-semibold text-white">SITREP Hanud</h3></div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">Draft SITREP 24 jam untuk komandan — status kontak, postur pertahanan, anomali, rekomendasi. Canvas memungkinkan update section "Kontak Aktif" tanpa rewrite keseluruhan.</p>
+          <div class="text-xs font-mono text-accent">→ Update bagian Threat Level tanpa ubah Executive Summary</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-green-500">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-xl">🚁</div>
+            <div><div class="font-mono text-xs text-green-400 mb-0.5">DOMAIN B — OMSP/SAR</div><h3 class="font-semibold text-white">Koordinasi SAR</h3></div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">Buat action plan koordinasi SAR multi-agency (TNI AU + Basarnas + Kemenhub) — Canvas update penugasan tiap aset saat situasi berkembang tanpa restart dokumen.</p>
+          <div class="text-xs font-mono text-accent">→ Update section "Resource Allocation" saat aset baru tersedia</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-blue-500">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 text-xl">📊</div>
+            <div><div class="font-mono text-xs text-blue-400 mb-0.5">DOMAIN C — PEMBINAAN</div><h3 class="font-semibold text-white">Assessment Readiness</h3></div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">Laporan readiness Koopsud II menjelang ADEX — serviceability, flight hours, ammo, crew currency. Update tabel per satuan saat data masuk tanpa reformat ulang.</p>
+          <div class="text-xs font-mono text-accent">→ Revisi tabel readiness Skadron X tanpa ubah narasi lainnya</div>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-purple-500">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 text-xl">📖</div>
+            <div><div class="font-mono text-xs text-purple-400 mb-0.5">DOMAIN D — DOKTRIN</div><h3 class="font-semibold text-white">Draft Doktrin Note</h3></div>
+          </div>
+          <p class="text-sm text-white/60 mb-3">Draft doctrine note untuk update postur IADS — Canvas iterasi section metodologi, temuan, dan rekomendasi secara terpisah sambil mempertahankan struktur keseluruhan.</p>
+          <div class="text-xs font-mono text-accent">→ Perkuat bagian "Rekomendasi" tanpa ubah "Tinjauan Pustaka"</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: TEKNIK SECTION EDITING -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK LANJUTAN</div>
+        <h2 class="slide-title">SECTION-LEVEL <span class="text-accent">EDITING</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <p class="text-white/70 mb-6">Keunggulan Canvas yang paling sering dipakai Pamen: <strong class="text-white">revisi satu bagian dokumen tanpa rewrite keseluruhan</strong>. Berikut teknik lengkapnya:</p>
+        <div class="space-y-5">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-accent mb-2">Teknik 1 — Highlight + Inline Prompt</div>
+            <div class="text-sm text-white/70 mb-2">Select teks di panel kanan → ikon pensil AI muncul → ketik instruksi → AI update hanya bagian itu.</div>
+            <div class="prompt-block" id="c3-t1">
+              <button class="copy-btn" @click="copyText('c3-t1')" x-text="copied === 'c3-t1' ? '✓ Copied!' : 'Copy'"></button>
+              [Highlight: paragraph "Rekomendasi Tindakan"]<br><br>
+              Perkuat rekomendasi ini dengan 2 opsi COA konkret:<br>
+              COA 1: tindakan preventif (response time 15 menit)<br>
+              COA 2: tindakan agresif (scramble immediate)<br>
+              Tambahkan risk/benefit masing-masing COA dalam 1 kalimat.
+            </div>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-accent mb-2">Teknik 2 — Chat Instruction ke Bagian Bernama</div>
+            <div class="text-sm text-white/70 mb-2">Dari panel chat, instruksikan secara eksplisit bagian mana yang direvisi tanpa highlight.</div>
+            <div class="prompt-block" id="c3-t2">
+              <button class="copy-btn" @click="copyText('c3-t2')" x-text="copied === 'c3-t2' ? '✓ Copied!' : 'Copy'"></button>
+              Perbarui HANYA section "Intelligence Summary" dengan tambahan:<br>
+              - Confidence level untuk setiap sumber: HIGH/MEDIUM/LOW<br>
+              - Flag satu data gap yang paling kritikal<br>
+              Jangan ubah section lain di dokumen ini.
+            </div>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-accent mb-2">Teknik 3 — Minta AI Tambahkan Tabel</div>
+            <div class="text-sm text-white/70 mb-2">AI bisa insert tabel langsung di Canvas — sangat berguna untuk readiness matrix atau resource allocation SAR.</div>
+            <div class="prompt-block" id="c3-t3">
+              <button class="copy-btn" @click="copyText('c3-t3')" x-text="copied === 'c3-t3' ? '✓ Copied!' : 'Copy'"></button>
+              Setelah section "Kekuatan Udara", tambahkan tabel readiness dengan kolom:<br>
+              | Satuan | Aset | Serviceable | FMC% | Crew Ready | Status |<br>
+              Isi dengan data placeholder yang realistis untuk 3 skadron.<br>
+              Format tabel: Markdown table agar bisa di-export ke Docs.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PROMPT TEMPLATES -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROMPT LIBRARY</div>
+        <h2 class="slide-title">TEMPLATE <span class="text-accent">CANVAS</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded font-mono">C-01</span>
+              <span class="font-semibold">Canvas SITREP Hanud — Template Awal</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="c3-c01">
+                <button class="copy-btn" @click="copyText('c3-c01')" x-text="copied === 'c3-c01' ? '✓ Copied!' : 'Copy'"></button>
+                Buat Canvas untuk SITREP Hanud periode 24 jam terakhir.<br><br>
+                Struktur dokumen:<br>
+                1. EXECUTIVE SUMMARY (3-4 kalimat, tone komandan)<br>
+                2. SITUASI UDARA — kontak aktif, status IFF, anomali<br>
+                3. POSTUR HANUD — aset siap, radar coverage, satuan on-alert<br>
+                4. THREAT ASSESSMENT — level ancaman + confidence (HIGH/MED/LOW)<br>
+                5. INTELLIGENCE GAPS — apa yang belum diketahui<br>
+                6. REKOMENDASI — 3 tindakan prioritas<br><br>
+                Skenario: Satu kontak unidentified terpantau masuk FIR Ujung Pandang dari arah NE, kecepatan 480 knot, tidak merespons IFF. Kontak hilang setelah 12 menit.<br><br>
+                Gunakan placeholder [WAKTU], [KOORDINAT], [CALLSIGN] untuk data yang akan diisi manual. Format: siap cetak untuk briefing komandan.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded font-mono">C-02</span>
+              <span class="font-semibold">Canvas SAR Action Plan — CENDRAWASIH RESCUE</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="c3-c02">
+                <button class="copy-btn" @click="copyText('c3-c02')" x-text="copied === 'c3-c02' ? '✓ Copied!' : 'Copy'"></button>
+                Buat Canvas untuk SAR Action Plan operasi CENDRAWASIH RESCUE.<br><br>
+                Skenario: Pesawat sipil (ATR-72) hilang kontak di Pegunungan Bintang, Papua. Last contact H-3 jam. Cuaca buruk (ceiling 500ft, vis 1km). Koordinasi multi-agency: TNI AU (helikopter SAR), Basarnas (ground team), Kemenhub (ATC data), Pemda (logistik).<br><br>
+                Struktur dokumen:<br>
+                1. SITUATION OVERVIEW — kronologi singkat<br>
+                2. SEARCH AREA PRIORITY — 3 area berdasarkan last known position + ETOPS deviation<br>
+                3. ASSET ASSIGNMENT — tabel: Aset | Instansi | Wilayah | Jam Berangkat | Status<br>
+                4. COMMAND & COORDINATION — siapa mengomando apa, jalur komunikasi<br>
+                5. WEATHER CONSTRAINTS — go/no-go criteria per area<br>
+                6. TIMELINE H+0 s/d H+72<br>
+                7. CONTINGENCY — jika cuaca tidak membaik dalam 24 jam<br><br>
+                Bahasa: formal militer Indonesia. Siap untuk briefing Pangkoopsud.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">C-03</span>
+              <span class="font-semibold">Canvas Doctrine Note — IADS Update</span>
+            </div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="c3-c03">
+                <button class="copy-btn" @click="copyText('c3-c03')" x-text="copied === 'c3-c03' ? '✓ Copied!' : 'Copy'"></button>
+                Buat Canvas untuk Doctrine Note: "Update Postur IADS Koopsudnas menghadapi Threat Drone Swarm".<br><br>
+                Struktur:<br>
+                1. PENDAHULUAN — latar belakang, mengapa doktrin perlu diupdate<br>
+                2. TINJAUAN ANCAMAN — karakteristik drone swarm modern, gap deteksi radar konvensional<br>
+                3. REVIEW DOKTRIN EXISTING — apa yang masih relevan, apa yang obsolete<br>
+                4. LESSONS LEARNED — dari exercise ADEX terbaru + studi kasus regional (generic)<br>
+                5. REKOMENDASI PERUBAHAN DOKTRIN — 5 perubahan prioritas<br>
+                6. IMPLIKASI ALUTSISTA — sistem C-UAS apa yang perlu diakuisisi/diupgrade<br>
+                7. KESIMPULAN<br><br>
+                Tone: akademik-militer. Panjang: ±4 halaman A4. Catatan: ini untuk internal working draft, bukan publikasi final.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: TIPS & PITFALLS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">BEST PRACTICE</div>
+        <h2 class="slide-title">TIPS & <span class="text-accent">PITFALLS</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-green-400 mb-4">✓ TIPS YANG BEKERJA</div>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3 text-sm"><span class="text-green-400 font-bold mt-0.5">✓</span><div><strong class="text-white">Mulai dengan struktur dulu</strong> — minta AI buat kerangka kosong, baru isi section per section</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-green-400 font-bold mt-0.5">✓</span><div><strong class="text-white">Satu instruksi, satu perubahan</strong> — jangan campur beberapa instruksi dalam satu prompt Canvas</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-green-400 font-bold mt-0.5">✓</span><div><strong class="text-white">Sebutkan nama section</strong> — "update HANYA bagian Executive Summary" lebih aman dari "perbarui bagian atas"</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-green-400 font-bold mt-0.5">✓</span><div><strong class="text-white">Export sering</strong> — simpan versi ke Google Docs setiap milestone penting untuk audit trail</div></li>
+          </ul>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="font-mono text-xs text-red-400 mb-4">✗ PITFALLS YANG SERING TERJADI</div>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3 text-sm"><span class="text-red-400 font-bold mt-0.5">✗</span><div><strong class="text-white">Instruksi ambigu</strong> — "perbaiki dokumennya" tanpa spesifikasi apa yang diperbaiki → AI mungkin rewrite seluruh dokumen</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-red-400 font-bold mt-0.5">✗</span><div><strong class="text-white">Tidak verifikasi output</strong> — AI bisa "mengarang" data placeholder yang terlihat nyata. Selalu ganti dengan data aktual sebelum distribusi.</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-red-400 font-bold mt-0.5">✗</span><div><strong class="text-white">Dokumen terlalu panjang</strong> — Canvas paling efektif untuk dokumen 1-5 halaman. Dokumen 20+ halaman lebih cocok pakai NotebookLM.</div></li>
+            <li class="flex items-start gap-3 text-sm"><span class="text-red-400 font-bold mt-0.5">✗</span><div><strong class="text-white">Lupa OPSEC</strong> — jangan masukkan data classified, callsign nyata, atau koordinat aktual ke Canvas (cloud-based tool).</div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: CANVAS vs CHAT vs NOTEBOOKLM -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">DECISION MATRIX</div>
+        <h2 class="slide-title">CANVAS vs CHAT <span class="text-accent">vs NOTEBOOKLM</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left py-3 px-4 text-accent font-mono text-xs">KRITERIA</th>
+              <th class="text-left py-3 px-4 text-white/70">Chat Gemini</th>
+              <th class="text-left py-3 px-4 text-accent">Canvas</th>
+              <th class="text-left py-3 px-4 text-violet-400">NotebookLM</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr>
+              <td class="py-3 px-4 text-white/50 font-mono text-xs">TASK TYPE</td>
+              <td class="py-3 px-4 text-white/70">Q&A, quick analysis</td>
+              <td class="py-3 px-4 text-white">Draft & iterate dokumen</td>
+              <td class="py-3 px-4 text-violet-300">Synthesis dari banyak dokumen</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-white/50 font-mono text-xs">INPUT</td>
+              <td class="py-3 px-4 text-white/70">Teks, gambar, audio</td>
+              <td class="py-3 px-4 text-white">Instruksi + template</td>
+              <td class="py-3 px-4 text-violet-300">Upload PDF/dokumen</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-white/50 font-mono text-xs">ITERASI</td>
+              <td class="py-3 px-4 text-white/70">Copy-paste manual</td>
+              <td class="py-3 px-4 text-white">Inline, section-level</td>
+              <td class="py-3 px-4 text-violet-300">Tanya-jawab berbasis sumber</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-white/50 font-mono text-xs">EXPORT</td>
+              <td class="py-3 px-4 text-white/70">Copy text only</td>
+              <td class="py-3 px-4 text-white">Google Docs, PDF</td>
+              <td class="py-3 px-4 text-violet-300">Audio overview, cite snippet</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-white/50 font-mono text-xs">BEST FOR</td>
+              <td class="py-3 px-4 text-white/70">Tanya cepat, research</td>
+              <td class="py-3 px-4 text-green-400 font-semibold">SITREP, briefing, SOP</td>
+              <td class="py-3 px-4 text-violet-300">Intel synthesis, doktrin review</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-6 p-4 glass rounded-xl text-sm text-white/60 text-center">
+        <strong class="text-accent">Rule of thumb:</strong> Kalau tujuan akhirnya adalah <strong class="text-white">dokumen yang bisa di-print dan ditandatangani</strong> → pakai Canvas. Kalau tujuannya adalah <strong class="text-white">menjawab pertanyaan dari banyak dokumen yang sudah ada</strong> → pakai NotebookLM.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: HANDS-ON -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">HANDS-ON</div>
+        <h2 class="slide-title">LATIHAN <span class="text-accent">20 MENIT</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Setup (2 menit)</div>
+          <p class="text-sm text-white/70">Buka gemini.google.com → aktifkan Canvas (klik "Canvas" di sidebar atau Tools). Anda akan membuat SITREP multi-domain lengkap dalam satu dokumen Canvas, iterasi section per section.</p>
+        </div>
+        <div class="space-y-5">
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-accent">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold">1</div>
+              <div><div class="font-semibold text-white">Buat SITREP Hanud dasar (6 menit)</div><div class="text-xs text-accent font-mono">DOMAIN A</div></div>
+            </div>
+            <p class="text-sm text-white/70">Gunakan prompt C-01 dari Prompt Library (slide sebelumnya). Biarkan AI generate draf pertama. Baca hasilnya — jangan edit dulu.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-400 font-bold">2</div>
+              <div><div class="font-semibold text-white">Tambah section SAR (6 menit)</div><div class="text-xs text-green-400 font-mono">DOMAIN B</div></div>
+            </div>
+            <p class="text-sm text-white/70">Dari panel chat, instruksikan: <span class="font-mono text-xs text-accent">"Tambahkan section baru setelah Threat Assessment: 'OMSP — SAR Status' untuk laporan satu insiden aircraft emergency di Papua. Jangan ubah section lain."</span> Amati bagaimana Canvas hanya menambahkan section baru.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-400 font-bold">3</div>
+              <div><div class="font-semibold text-white">Revisi Executive Summary (3 menit)</div><div class="text-xs text-purple-400 font-mono">ITERASI</div></div>
+            </div>
+            <p class="text-sm text-white/70">Highlight section Executive Summary → instruksi: <span class="font-mono text-xs text-accent">"Persingkat menjadi 2 kalimat, tone harus lebih assertive untuk level Pangkoopsud."</span> Bandingkan sebelum dan sesudah.</p>
+          </div>
+          <div class="p-5 bg-white/5 rounded-xl border-l-4 border-amber-500">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 text-amber-400 font-bold">4</div>
+              <div><div class="font-semibold text-white">Export ke Google Docs (3 menit)</div><div class="text-xs text-amber-400 font-mono">EXPORT</div></div>
+            </div>
+            <p class="text-sm text-white/70">Klik tombol "Export" di Canvas → "Open in Google Docs". Lihat format, rapikan judul, tambahkan header instansi. Ini adalah workflow akhir sebelum distribusi ke satuan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'b') this.score++;
+      if (this.answers.q2 === 'c') this.score++;
+      if (this.answers.q3 === 'a') this.score++;
+      if (this.answers.q4 === 'd') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.3</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi pemahaman Canvas sebelum lanjut ke Deep Research</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Keunggulan utama Canvas dibanding mode chat biasa adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Respons AI lebih cepat dari mode chat</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Dokumen dan AI berada dalam satu workspace, revisi bisa section-level tanpa rewrite ulang</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas bisa mengakses internet secara real-time</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas menggunakan model AI yang berbeda dari chat biasa</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Kapan sebaiknya menggunakan NotebookLM daripada Canvas?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Saat membuat SITREP yang akan dicetak dan ditandatangani</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Saat membutuhkan template SAR action plan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Saat perlu menjawab pertanyaan dari banyak dokumen yang sudah di-upload</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-indigo-500"><span class="text-sm text-white/80">Keduanya selalu bisa digunakan bergantian tanpa perbedaan</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Teknik paling aman untuk merevisi satu section Canvas tanpa mengubah bagian lain adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Sebutkan nama section secara eksplisit dalam instruksi, atau gunakan highlight + inline AI</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Ketik instruksi pendek seperti "perbaiki" tanpa spesifikasi</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Hapus section yang tidak mau diubah, revisi, lalu tambahkan kembali</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas selalu otomatis tahu bagian mana yang ingin direvisi</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Pertimbangan OPSEC paling kritis saat menggunakan Canvas untuk dokumen Koopsudnas adalah…</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas tidak boleh digunakan untuk dokumen apapun yang berhubungan dengan militer</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Canvas hanya bisa digunakan dengan akun Google khusus militer</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Dokumen Canvas wajib dienkripsi sebelum export</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-indigo-500"><span class="text-sm text-white/80">Jangan masukkan data classified, callsign nyata, atau koordinat aktual — Canvas adalah cloud-based tool</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Anda siap lanjut ke Deep Research.' : score >= 3 ? 'Baik! Review 1 topik yang missed.' : score >= 2 ? 'Cukup. Ulang slide Tips & Pitfalls.' : 'Kembali ke slide 3-5 untuk review konsep.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q1 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'b' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong><span class="text-white/60 ml-2">— Canvas menggabungkan dokumen + AI dalam satu workspace dengan kemampuan section-level editing</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q2 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'c' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong><span class="text-white/60 ml-2">— NotebookLM untuk synthesis dari banyak dokumen; Canvas untuk draft & iterasi dokumen baru</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q3 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'a' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong><span class="text-white/60 ml-2">— Selalu sebutkan nama section secara eksplisit atau gunakan highlight untuk isolasi editing</span></div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'"><strong :class="answers.q4 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'd' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong><span class="text-white/60 ml-2">— Canvas adalah cloud tool: gunakan data fiktif/placeholder untuk latihan, data nyata hanya untuk produk akhir non-classified</span></div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- WRAP UP & NAVIGATION -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Canvas = Dokumen + AI dalam 1 Layar</div><div class="text-sm text-white/60">Tidak perlu copy-paste lagi antara chat dan Word/Google Docs.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Section-Level Editing</div><div class="text-sm text-white/60">Revisi bagian tertentu tanpa ganggu struktur dokumen lainnya.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">4 Domain Koopsudnas</div><div class="text-sm text-white/60">Canvas applicable untuk SITREP hanud, SAR action plan, readiness report, dan doctrine note.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">OPSEC First</div><div class="text-sm text-white/60">Pakai data placeholder untuk latihan. Ganti dengan data nyata hanya untuk dokumen non-classified final.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Deep dive ke <strong class="text-white">Deep Research</strong> — autonomous research agent Gemini yang bisa membuat laporan 15+ halaman dengan citation dari puluhan sumber web</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-02-create-image.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.2: Create Image</a>
+        <a href="sesi-06-04-deep-research.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.4: Deep Research →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🖼️</span><div class="font-semibold text-indigo-300">Create Image</div></div><div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/40 bg-indigo-500/10"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📋</span><div class="font-semibold text-indigo-300">Canvas</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">SESI INI</span></div><div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, SITREP, briefing — editable side-by-side dengan AI.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🔎</span><div class="font-semibold text-indigo-300">Deep Research</div></div><div class="text-xs text-white/60">Riset multi-source OSINT otomatis dengan citation grounding.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎬</span><div class="font-semibold text-indigo-300">Create Video</div></div><div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">🎵</span><div class="font-semibold text-indigo-300">Create Music</div><span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span></div><div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial.</div></div>
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);"><div class="flex items-center gap-2 mb-2"><span class="text-2xl">📖</span><div class="font-semibold text-indigo-300">Guided Learning</div></div><div class="text-xs text-white/60">Self-paced walkthrough interaktif untuk onboarding doktrin baru, SOP, training personel.</div></div>
+      </div>
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

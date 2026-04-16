@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 4.2 | Course of Action (COA) Analysis</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#10b981',
+            'accent-light': '#34d399',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #10b981; --accent-glow: rgba(16,185,129,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #059669; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(16,185,129,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #34d399); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .coa-card { transition: all 0.3s ease; border-left: 4px solid var(--coa-color, var(--accent)); }
+    .coa-card:hover { transform: translateX(4px); }
+    
+    .matrix-table { width: 100%; border-collapse: collapse; }
+    .matrix-table th, .matrix-table td { padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+    .matrix-table th { background: rgba(255,255,255,0.05); font-weight: 600; }
+    .matrix-table td { font-size: 0.875rem; }
+    
+    .score-high { color: #10b981; }
+    .score-mid { color: #f59e0b; }
+    .score-low { color: #ef4444; }
+    
+    .quiz-option { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(16,185,129,0.1); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(16,185,129,0.2); }
+    .quiz-option.correct { border-color: #10b981; background: rgba(16,185,129,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 11, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-04-strategic-reasoning.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 04</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 4.2</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">50 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">TEKNIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-04-01-deep-thinking.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 4.1</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-04-03-risk-wargaming.html" class="text-xs text-white/40 hover:text-white/60">Sesi 4.3 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 04 • SESI 2</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        COURSE OF ACTION<br>
+        <span class="text-accent">(COA) ANALYSIS</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Teknik untuk <strong class="text-white">generate multiple options</strong> dan 
+        <strong class="text-accent">compare secara objektif</strong> menggunakan AI.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">50</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">STEPS</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">3+</div>
+          <div class="text-xs text-white/50">COA OPTIONS</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Belajar</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: WHAT IS COA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KONSEP</div>
+        <h2 class="slide-title">
+          WHAT IS<br>
+          <span class="text-accent">COA ANALYSIS?</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <p class="text-lg text-white/70 text-center mb-8">
+          <strong class="text-white">Course of Action (COA)</strong> adalah opsi tindakan yang dapat diambil 
+          untuk mencapai objective. COA Analysis adalah proses <strong class="text-accent">systematic comparison</strong> 
+          antar opsi untuk memilih yang terbaik.
+        </p>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">🎯</span>
+            </div>
+            <div class="font-semibold text-blue-400 mb-2">Define Objective</div>
+            <div class="text-sm text-white/50">Apa yang ingin dicapai?</div>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">📊</span>
+            </div>
+            <div class="font-semibold text-amber-400 mb-2">Generate Options</div>
+            <div class="text-sm text-white/50">Apa saja cara mencapainya?</div>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">✅</span>
+            </div>
+            <div class="font-semibold text-accent mb-2">Compare & Select</div>
+            <div class="text-sm text-white/50">Mana yang paling optimal?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 4-STEP PROCESS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PROCESS</div>
+        <h2 class="slide-subtitle">4-STEP COA DEVELOPMENT</h2>
+      </div>
+      
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #3b82f6;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-blue-400">1</span>
+            </div>
+            <div>
+              <div class="font-semibold text-blue-400">Define Objective</div>
+              <div class="text-xs text-white/50">Tetapkan tujuan yang jelas</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            "Neutralize reconnaissance activity in NE-7 within 72 hours while minimizing escalation risk"
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #10b981;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-green-400">2</span>
+            </div>
+            <div>
+              <div class="font-semibold text-green-400">Identify Constraints</div>
+              <div class="text-xs text-white/50">Batasan yang harus dipatuhi</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Resources, time limits, rules of engagement, political considerations
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #f59e0b;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-amber-400">3</span>
+            </div>
+            <div>
+              <div class="font-semibold text-amber-400">Generate Options</div>
+              <div class="text-xs text-white/50">Brainstorm 3-5 distinct COAs</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Opsi harus MECE: Mutually Exclusive, Collectively Exhaustive
+          </p>
+        </div>
+        
+        <div class="coa-card glass-lit p-5 rounded-2xl" style="--coa-color: #a855f7;">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-xl font-display text-purple-400">4</span>
+            </div>
+            <div>
+              <div class="font-semibold text-purple-400">Evaluate & Compare</div>
+              <div class="text-xs text-white/50">Score against criteria</div>
+            </div>
+          </div>
+          <p class="text-sm text-white/60 pl-14">
+            Weighted matrix comparison untuk objektif decision
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: EVALUATION CRITERIA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KRITERIA</div>
+        <h2 class="slide-subtitle">STANDARD EVALUATION CRITERIA</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Military/Operational Criteria</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Effectiveness</span>
+                <span class="text-xs text-white/40">Will it achieve the objective?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Feasibility</span>
+                <span class="text-xs text-white/40">Can we actually do this?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Risk Level</span>
+                <span class="text-xs text-white/40">What could go wrong?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Speed</span>
+                <span class="text-xs text-white/40">How fast can we execute?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Resource & Strategic Criteria</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Resource Cost</span>
+                <span class="text-xs text-white/40">Personnel, equipment, budget</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Flexibility</span>
+                <span class="text-xs text-white/40">Can we adapt if needed?</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Escalation Risk</span>
+                <span class="text-xs text-white/40">Political/diplomatic impact</span>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm">Sustainability</span>
+                <span class="text-xs text-white/40">Can we maintain this?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: COMPARISON MATRIX -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEKNIK</div>
+        <h2 class="slide-subtitle">WEIGHTED COMPARISON MATRIX</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl overflow-x-auto">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th class="text-left">Criteria</th>
+              <th>Weight</th>
+              <th class="text-green-400">COA A<br><span class="text-xs font-normal text-white/50">Aggressive</span></th>
+              <th class="text-amber-400">COA B<br><span class="text-xs font-normal text-white/50">Balanced</span></th>
+              <th class="text-purple-400">COA C<br><span class="text-xs font-normal text-white/50">Conservative</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left text-white/70">Effectiveness</td>
+              <td class="text-accent font-semibold">30%</td>
+              <td class="score-high">9</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">6</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Risk Level (lower=better)</td>
+              <td class="text-accent font-semibold">25%</td>
+              <td class="score-low">4</td>
+              <td class="score-mid">7</td>
+              <td class="score-high">9</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Resource Cost (lower=better)</td>
+              <td class="text-accent font-semibold">20%</td>
+              <td class="score-low">3</td>
+              <td class="score-mid">6</td>
+              <td class="score-high">8</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Speed</td>
+              <td class="text-accent font-semibold">15%</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">7</td>
+              <td class="score-low">5</td>
+            </tr>
+            <tr>
+              <td class="text-left text-white/70">Flexibility</td>
+              <td class="text-accent font-semibold">10%</td>
+              <td class="score-low">4</td>
+              <td class="score-high">8</td>
+              <td class="score-mid">7</td>
+            </tr>
+            <tr class="font-bold bg-white/5">
+              <td class="text-left">WEIGHTED SCORE</td>
+              <td>100%</td>
+              <td class="text-green-400">5.95</td>
+              <td class="text-amber-400">7.25</td>
+              <td class="text-purple-400">7.05</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="mt-6 p-4 bg-accent/20 rounded-xl">
+          <div class="flex items-center gap-3">
+            <span class="text-accent font-semibold">📊 RECOMMENDATION:</span>
+            <span class="text-white">COA B (Balanced) — Highest weighted score with optimal risk-reward balance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: COA GENERATION PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">COA GENERATION PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('coa-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 COA GENERATION TEMPLATE</div>
+        
+        <div class="code-block p-4" id="coa-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai <span class="text-accent">[strategic military planner]</span>, 
+generate 3-4 distinct Courses of Action untuk situasi berikut:
+
+OBJECTIVE:
+[State clear objective - e.g., "Neutralize reconnaissance in NE-7 within 72h"]
+
+CONSTRAINTS:
+- Resources: [Available assets]
+- Time: [Deadline]
+- Rules of Engagement: [Any limitations]
+- Other: [Political, diplomatic considerations]
+
+CURRENT SITUATION:
+[Brief situation summary]
+
+REQUIREMENTS:
+For EACH COA, provide:
+1. NAME: Descriptive label (e.g., "Aggressive Intercept")
+2. DESCRIPTION: 2-3 sentence summary
+3. KEY ACTIONS: What specific steps
+4. RESOURCE REQUIREMENTS: What we need
+5. TIMELINE: How long to execute
+6. PROS: Main advantages
+7. CONS: Main disadvantages
+8. RISK LEVEL: HIGH/MEDIUM/LOW
+
+Ensure COAs are:
+- DISTINCT (genuinely different approaches)
+- FEASIBLE (can actually be executed)
+- COMPLETE (addresses the full objective)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: COA COMPARISON PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">COA COMPARISON PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('compare-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 COA COMPARISON TEMPLATE</div>
+        
+        <div class="code-block p-4" id="compare-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Compare the following COAs using weighted criteria analysis:
+
+COA A: [Name]
+[Brief description]
+
+COA B: [Name]
+[Brief description]
+
+COA C: [Name]
+[Brief description]
+
+EVALUATION CRITERIA (with weights):
+1. Effectiveness (30%) - Will it achieve objective?
+2. Risk Level (25%) - What could go wrong? (lower risk = higher score)
+3. Resource Cost (20%) - Personnel, equipment (lower cost = higher score)
+4. Speed (15%) - Time to execute
+5. Flexibility (10%) - Ability to adapt
+
+INSTRUCTIONS:
+1. Score each COA 1-10 for each criterion
+2. Calculate weighted score
+3. Create comparison matrix
+4. Provide RECOMMENDATION with justification
+
+OUTPUT FORMAT:
+| Criteria | Weight | COA A | COA B | COA C |
+|----------|--------|-------|-------|-------|
+| ... | ... | ... | ... | ... |
+| WEIGHTED TOTAL | 100% | X.XX | X.XX | X.XX |
+
+RECOMMENDATION: [COA X]
+JUSTIFICATION: [Why this COA is optimal]
+CAVEATS: [What to watch out for]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: SAMPLE OUTPUT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">CONTOH OUTPUT</div>
+        <h2 class="slide-subtitle">AI-GENERATED COA ANALYSIS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #ef4444;">
+          <div class="text-xs text-red-400 font-mono mb-2">COA A: AGGRESSIVE INTERCEPT</div>
+          <div class="font-semibold mb-2">Full CAP deployment + SIGINT surge</div>
+          <div class="text-xs text-white/60 mb-3">
+            Deploy all available CAP to NE-7 with aggressive intercept ROE. 
+            Maximum deterrent effect.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">High Effect</span>
+            <span class="px-2 py-0.5 bg-red-500/20 text-red-400 rounded">High Risk</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #f59e0b;">
+          <div class="text-xs text-amber-400 font-mono mb-2">COA B: BALANCED RESPONSE</div>
+          <div class="font-semibold mb-2">Increased patrols + diplomatic channel</div>
+          <div class="text-xs text-white/60 mb-3">
+            Double patrol frequency, enhance SIGINT, open back-channel communication. 
+            Measured escalation.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Med Effect</span>
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Med Risk</span>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-5 rounded-2xl coa-card" style="--coa-color: #3b82f6;">
+          <div class="text-xs text-blue-400 font-mono mb-2">COA C: OBSERVE & REPORT</div>
+          <div class="font-semibold mb-2">Enhanced surveillance only</div>
+          <div class="text-xs text-white/60 mb-3">
+            Increase ISR coverage, document activity, build intelligence picture. 
+            No direct engagement.
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded">Low Effect</span>
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">Low Risk</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-4 rounded-xl">
+        <div class="text-accent font-semibold mb-2">AI RECOMMENDATION</div>
+        <div class="text-sm text-white/70">
+          <strong class="text-amber-400">COA B (Balanced Response)</strong> is recommended. 
+          It achieves 80% of the deterrent effect of COA A while maintaining escalation control. 
+          The diplomatic back-channel provides an off-ramp if tensions rise. 
+          <em class="text-white/50">Caveat: Requires coordination with diplomatic corps within 24h.</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8B: COA COMPARISON LINTAS DOMAIN -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CROSS-DOMAIN APPLICATION</div>
+        <h2 class="slide-title">
+          COA COMPARISON<br>
+          <span class="text-accent">LINTAS DOMAIN</span>
+        </h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Framework 5 weighted criteria sama — hanya berubah konteks. Berikut 3 mini-case: SAR, training approach, doctrine rollout.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- SAR (Blue) B1 -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span class="text-blue-400 font-bold">B1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-blue-400">OMSP / SAR</div>
+              <div class="font-semibold text-sm">SEARCH STRATEGY</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">Kriteria: <strong class="text-blue-400">coverage</strong> / <strong class="text-blue-400">time</strong> / <strong class="text-blue-400">risk</strong> / <strong class="text-blue-400">resource</strong></div>
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+              <div class="font-semibold text-blue-300 mb-1">COA-A: Grid Search</div>
+              <div class="text-white/60">Systematic sweep sektor. Coverage max, time lambat, risk rendah, resource heavy.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+              <div class="font-semibold text-blue-300 mb-1">COA-B: Probability-Based</div>
+              <div class="text-white/60">Drift + weather model → priority sectors. Coverage targeted, time cepat, risk sedang.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+              <div class="font-semibold text-blue-300 mb-1">COA-C: Tipoff-Driven</div>
+              <div class="text-white/60">Follow radar last track + saksi nelayan. Cepat tapi risk false lead tinggi.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Training (Purple) C2 -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-purple-400 font-bold">C2</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-purple-400">PEMBINAAN</div>
+              <div class="font-semibold text-sm">TRAINING APPROACH</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">Kriteria: <strong class="text-purple-400">cost</strong> / <strong class="text-purple-400">realism</strong> / <strong class="text-purple-400">risk</strong> / <strong class="text-purple-400">currency impact</strong></div>
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div class="font-semibold text-purple-300 mb-1">COA-A: Simulator-Heavy</div>
+              <div class="text-white/60">Cost rendah, risk minimal, realism sedang, currency parsial.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div class="font-semibold text-purple-300 mb-1">COA-B: Field-Heavy</div>
+              <div class="text-white/60">Realism max, currency penuh, cost tinggi, risk attrition asset.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div class="font-semibold text-purple-300 mb-1">COA-C: Mixed (70/30)</div>
+              <div class="text-white/60">Balance cost-realism-risk, kurva belajar paling stabil.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Doctrine (Amber) D1 -->
+        <div class="glass-lit p-6 rounded-2xl border border-amber-500/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-amber-400 font-bold">D1</span>
+            </div>
+            <div>
+              <div class="font-mono text-xs text-amber-400">DOKTRIN</div>
+              <div class="font-semibold text-sm">DOCTRINE ROLLOUT</div>
+            </div>
+          </div>
+          <div class="text-xs text-white/60 mb-4">Kriteria: <strong class="text-amber-400">speed</strong> / <strong class="text-amber-400">risk</strong> / <strong class="text-amber-400">adoption</strong> / <strong class="text-amber-400">cost</strong></div>
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <div class="font-semibold text-amber-300 mb-1">COA-A: Big Bang</div>
+              <div class="text-white/60">Seluruh Koopsud switch bareng. Speed max, risk disruption tinggi.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <div class="font-semibold text-amber-300 mb-1">COA-B: Phased</div>
+              <div class="text-white/60">Tiga gelombang 6-bulanan. Speed sedang, risk terkelola, adoption smooth.</div>
+            </div>
+            <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <div class="font-semibold text-amber-300 mb-1">COA-C: Pilot Unit</div>
+              <div class="text-white/60">1 wing pilot → evaluate → scale. Speed lambat, risk paling rendah.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-xs text-white/50 italic">Framework 5 weighted criteria tetap — student mengubah bobot sesuai konteks (SAR prioritaskan time, doktrin prioritaskan risk).</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: QUIZ -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title"><span class="text-accent">QUIZ</span></h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl" x-data="{ answer: null, submitted: false }">
+        <div class="text-sm text-accent font-mono mb-4">PERTANYAAN</div>
+        <p class="text-lg mb-6">
+          Dalam COA development, apa yang dimaksud dengan opsi yang <strong class="text-white">MECE</strong>?
+        </p>
+        
+        <div class="grid sm:grid-cols-2 gap-3 mb-6">
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'a' && !submitted, 'incorrect': answer === 'a' && submitted }" @click="if(!submitted) answer = 'a'">
+            <span>A. Most Effective, Cost Efficient</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'b' && !submitted, 'correct': submitted }" @click="if(!submitted) answer = 'b'">
+            <span>B. Mutually Exclusive, Collectively Exhaustive</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'c' && !submitted, 'incorrect': answer === 'c' && submitted }" @click="if(!submitted) answer = 'c'">
+            <span>C. Military Evaluation, Criteria Examination</span>
+          </div>
+          <div class="quiz-option glass p-4 rounded-xl" :class="{ 'selected': answer === 'd' && !submitted, 'incorrect': answer === 'd' && submitted }" @click="if(!submitted) answer = 'd'">
+            <span>D. Minimum Effort, Complete Execution</span>
+          </div>
+        </div>
+        
+        <button class="w-full py-3 rounded-xl font-semibold transition-all" :class="answer ? 'bg-accent text-navy-900 hover:bg-accent-light cursor-pointer' : 'bg-white/10 text-white/30 cursor-not-allowed'" :disabled="!answer" @click="submitted = true">
+          <span x-text="submitted ? (answer === 'b' ? '✓ Benar!' : '✕ Kurang tepat') : 'Submit Jawaban'"></span>
+        </button>
+        
+        <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl" :class="answer === 'b' ? 'bg-green-500/20' : 'bg-amber-500/20'">
+          <p class="text-sm" :class="answer === 'b' ? 'text-green-400' : 'text-amber-400'">
+            <strong>Jawaban benar: B (Mutually Exclusive, Collectively Exhaustive).</strong> 
+            MECE artinya setiap COA berbeda satu sama lain (tidak overlap) dan secara bersama mencakup semua kemungkinan pendekatan yang reasonable.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 4.2
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">4-Step Process</div>
+              <div class="text-sm text-white/60">Objective → Constraints → Generate → Evaluate</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">3-5 Distinct Options</div>
+              <div class="text-sm text-white/60">COAs harus MECE — berbeda dan komprehensif</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Weighted Matrix</div>
+              <div class="text-sm text-white/60">Objektif comparison dengan criteria scoring</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">AI Generates, Human Decides</div>
+              <div class="text-sm text-white/60">AI membantu analisis, keputusan tetap di tangan manusia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-04-01-deep-thinking.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 4.1: Chain of Thought
+        </a>
+        <a href="sesi-04-03-risk-wargaming.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 4.3 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk COA Analysis</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">COA analysis butuh dua pekerjaan komplementer: (1) <strong class="text-white">precedent research</strong> untuk cari COA historis yang pernah digunakan dalam situasi serupa (Deep Research), dan (2) <strong class="text-white">document drafting</strong> untuk COA comparison matrix dan final recommendation (Canvas). Dua tools Gemini yang mengcover keduanya secara native.</p>
+      </div>
+
+      <!-- EMBED 1: DEEP RESEARCH (SESI 6.4) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">COA Precedent Research — Historical Analog dari OSINT</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COA ANALYSIS</div>
+            <p class="text-sm text-white/70">Sebelum Anda develop COA dari awal, selalu tanya: "pernah ada situasi serupa yang di-solve dengan COA tertentu?" — precedent research menghemat waktu dan menghindari reinventing wheel. Deep Research cocok untuk scan OSINT publik (doktrin terbuka, lessons learned, academic case studies) mencari <strong class="text-white">historical COA yang pernah digunakan</strong> untuk situasi serupa di kawasan atau dunia.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — COA Precedent Research</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Karakterisasi situasi</strong> secara struktural — apa trigger, apa constraint, apa decision space. Bukan deskripsi literal, tapi abstract pattern.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Submit Deep Research query</strong> untuk cari analog historis — "negara X di situasi mirip Y memilih COA Z dengan outcome W".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — pastikan agent mencari dari doctrine papers, case studies, not just news.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Extract COA pattern</strong> dari analog — apa COA yang digunakan, apa trade-off, apa outcome. Bukan copy literal tapi prinsip yang applicable.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Feed ke Gemini 2.5 Pro COA analysis</strong> (sesi ini) — "berdasarkan 3 historical analog ini, apa COA yang Anda sarankan untuk situasi Koopsudnas sekarang?" dengan Thinking Mode aktif.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — COA Historical Analog</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: Historical COA Analog untuk Decision Support
+
+Situational Pattern yang saya hadapi:
+[DESKRIPSI STRUKTURAL — contoh:
+- Decision context: airspace sovereignty challenge di FIR
+- Trigger: unidentified contact repeated incursion
+- Constraints: tidak ada escalation mandate, harus proportional response, coalition considerations
+- Decision space: from monitoring-only to visual identification to intercept-and-escort]
+
+Research Question:
+Cari 3-5 kasus historis (terdokumentasi public) di mana negara di kawasan Indo-Pasifik atau global menghadapi decision context serupa:
+
+Untuk setiap analog:
+1. Konteks situasi (negara, waktu, trigger)
+2. COA yang dipilih — deskripsi lengkap
+3. Alternatif COA yang dipertimbangkan (jika dokumentasi ada)
+4. Trade-off analysis yang dilakukan
+5. Outcome — apa yang terjadi sebagai konsekuensi
+6. Lessons learned / post-event reflection (jika ada)
+
+Sumber prioritas:
+- Doctrine papers dan military journals (Naval War College Review, Strategic Studies Quarterly)
+- Case study dari think tanks (CSIS, RAND, IISS, RUSI)
+- Academic publication pada military decision-making
+- Government after-action reports yang dipublikasikan
+
+Format output:
+- Executive summary dari trend pattern (apa yang sering jadi pilihan)
+- 5 detailed case analog dengan citation
+- Pattern extraction: COA apa yang cenderung succeed, apa yang fail
+- Applicability assessment: mana analog yang paling relevan dengan situasi saya, mana yang kurang relevan karena konteks berbeda
+
+Catatan: hanya sumber publik, hindari spekulasi. Label jika information unclear.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips COA Precedent Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Structural pattern > literal match</strong> — analog yang paling valuable biasanya dari context berbeda tapi structural similar.</li>
+              <li>• <strong class="text-white">Cari outcome data</strong> — analog tanpa outcome tidak berguna. Pastikan ada lessons learned atau post-event reflection.</li>
+              <li>• <strong class="text-white">Applicability bukan copy</strong> — extract prinsip, jangan copy COA literal. Context Anda berbeda.</li>
+              <li>• <strong class="text-white">Flag disanalogies</strong> — apa yang membedakan situasi Anda dari analog? Ini membantu tune COA ke context unique Anda.</li>
+              <li>• <strong class="text-white">Pipeline ke Canvas</strong> — temuan analog masuk ke COA comparison matrix di Canvas (Embed 2).</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">COA Comparison Matrix + Final Recommendation Document</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK COA ANALYSIS</div>
+            <p class="text-sm text-white/70">COA document punya struktur standar (Problem Statement, COA 1/2/3, Comparison Matrix, Recommendation) dan <strong class="text-white">setiap COA sering di-refine terpisah</strong> saat komandan berikan feedback. Canvas memungkinkan Anda update deskripsi COA 2 tanpa mengubah COA 1 atau Comparison Matrix yang sudah final.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — COA Document di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Skeleton COA document</strong> — Problem Statement, Assumptions, COA 1, COA 2, COA 3, Comparison Matrix, Recommendation, Implementation.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Problem Statement dulu</strong> — 2-3 kalimat clear, measurable. Ini akan drive semua section turunan.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Develop COA satu per satu</strong> dengan struktur konsisten: Description, Required Resources, Timeline, Pros, Cons, Risk.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Generate Comparison Matrix</strong> — markdown table dengan kriteria (Feasibility, Acceptability, Suitability, Distinguishability, Completeness) per COA.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Recommendation section TERAKHIR</strong> — refer ke Matrix, jangan pre-commit sebelum analysis selesai.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Iterate per feedback</strong> — jika komandan minta revisi COA 2, highlight section COA 2 saja, preserve lain.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — COA Document Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas COA Analysis Document dengan struktur lengkap:
+
+Judul: COA Analysis — [ISI TOPIK]
+Classification: UNCLASSIFIED // FOR TRAINING ONLY
+Prepared by: [PLACEHOLDER]
+
+Struktur:
+
+1. PROBLEM STATEMENT (2-3 kalimat)
+   - Situation
+   - Objective
+   - Constraints
+
+2. ASSUMPTIONS (bullet list)
+   - Political
+   - Operational
+   - Resource
+   - Time-based
+
+3. COA 1: [NAMA SINGKAT]
+   3.1 Description (1 paragraf)
+   3.2 Required Resources (list)
+   3.3 Timeline (H+0 to H+72)
+   3.4 Pros (3-5 bullet)
+   3.5 Cons (3-5 bullet)
+   3.6 Key Risks
+   3.7 Historical Analog (jika ada — reference ke Deep Research)
+
+4. COA 2: [NAMA SINGKAT]
+   [Same structure as COA 1]
+
+5. COA 3: [NAMA SINGKAT]
+   [Same structure as COA 1]
+
+6. COMPARISON MATRIX (markdown table)
+   | Criteria | COA 1 | COA 2 | COA 3 |
+   |---|---|---|---|
+   | Feasibility | [score + justif] | [score + justif] | [score + justif] |
+   | Acceptability | [score + justif] | [score + justif] | [score + justif] |
+   | Suitability | [score + justif] | [score + justif] | [score + justif] |
+   | Distinguishability | [score + justif] | [score + justif] | [score + justif] |
+   | Completeness | [score + justif] | [score + justif] | [score + justif] |
+   | TOTAL | [weighted sum] | [weighted sum] | [weighted sum] |
+
+7. RECOMMENDATION
+   - Preferred COA: [COA X]
+   - Justification (refer to Matrix)
+   - Success criteria
+   - Decision authority needed
+
+8. IMPLEMENTATION
+   - Immediate actions (next 24h)
+   - Resource allocation
+   - Coordination requirements
+   - Review/checkpoint schedule
+
+Format: formal military Indonesia, siap cetak untuk briefing komandan.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips COA Document di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Problem Statement dulu</strong> — jika PS tidak clear, semua COA akan goyang.</li>
+              <li>• <strong class="text-white">Same structure per COA</strong> — comparability butuh format identik. Set template sekali, apply ke semua COA.</li>
+              <li>• <strong class="text-white">Recommendation terakhir</strong> — jangan pre-commit. Let the analysis drive the recommendation.</li>
+              <li>• <strong class="text-white">Matrix scoring transparan</strong> — setiap cell butuh justifikasi singkat, bukan angka mentah.</li>
+              <li>• <strong class="text-white">Reference Deep Research analog</strong> — section "Historical Analog" per COA = powerful defend.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 COA Analysis Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">1. DEEP RESEARCH</div><div class="text-white/70">Historical COA analog</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">2. CLAUDE (sesi ini)</div><div class="text-white/70">COA development + reasoning</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CANVAS</div><div class="text-white/70">Document + matrix + iterate</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. GOOGLE DOCS</div><div class="text-white/70">Final brief package</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

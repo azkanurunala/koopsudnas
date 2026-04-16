@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 2.3 | Hands-On: Risk Assessment Lintas Domain Koopsudnas</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': {
+              900: '#050810',
+              800: '#0a0f1a',
+              700: '#0f1628',
+              600: '#1a2642',
+            },
+            'accent': '#10b981',
+            'accent-light': '#34d399',
+            'tactical': {
+              amber: '#f59e0b',
+              cyan: '#22d3ee',
+              green: '#10b981',
+              red: '#ef4444',
+              purple: '#a855f7',
+              teal: '#14b8a6',
+            }
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --color-bg: #050810;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.3);
+    }
+    
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--color-bg);
+      color: rgba(255, 255, 255, 0.92);
+      overflow-x: hidden;
+    }
+    
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--color-bg);
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #059669; opacity: 0.1; animation-delay: -3s; }
+    
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.05); }
+    }
+    
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #34d399); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: 0.05em; }
+    
+    .data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; }
+    .data-table th { background: rgba(16, 185, 129, 0.2); padding: 6px 8px; text-align: left; color: var(--accent); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .data-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }
+    .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .data-table tr.anomaly td { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; }
+    
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16, 185, 129, 0.3); border-color: #10b981; color: #10b981; }
+    
+    .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .checklist-item:hover { background: rgba(255,255,255,0.06); }
+    .checklist-item.checked { background: rgba(16, 185, 129, 0.1); }
+    .checklist-item.checked .check-box { background: #10b981; border-color: #10b981; }
+    .check-box { width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; }
+    
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 3px; }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+    
+    .phase-card { transition: all 0.3s ease; }
+    .phase-card:hover { transform: translateY(-4px); }
+    .phase-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  </style>
+</head>
+<body x-data="{ 
+  currentSlide: 0,
+  totalSlides: 13,
+  progress: 0,
+  init() {
+    this.updateProgress();
+    window.addEventListener('scroll', () => this.updateProgress());
+  },
+  updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    this.progress = (scrollTop / docHeight) * 100;
+    const slides = document.querySelectorAll('.slide-section');
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        this.currentSlide = index;
+      }
+    });
+  },
+  scrollToSlide(index) {
+    const slides = document.querySelectorAll('.slide-section');
+    if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' });
+  }
+}">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-02-intelligence-analysis.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 02</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 2.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">75 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-02-02-pattern-recognition.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 2.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-02-04-multi-source-fusion.html" class="text-xs text-white/40 hover:text-white/60">Sesi 2.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section" id="slide-1">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 02 • SESI 3 • PRAKTIK</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        HANDS-ON:<br>
+        <span class="text-accent">RISK ASSESSMENT</span>
+      </h1>
+
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Praktik lengkap menghasilkan <strong class="text-white">Risk Assessment Brief</strong>
+        dari data simulasi multi-source — guided demo + independent exercise.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-12 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT RISK (Hanud)</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">HUMANITARIAN RISK (OMSP/SAR)</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">LEGAL RISK (Gakkum Udara)</span>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">75</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">2</div>
+          <div class="text-xs text-white/50">FASE</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">100</div>
+          <div class="text-xs text-white/50">DATA POINTS</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Praktik</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SESSION STRUCTURE -->
+  <section class="slide-section" id="slide-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STRUKTUR SESI</div>
+        <h2 class="slide-subtitle">2 FASE PEMBELAJARAN</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl phase-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+              <span class="text-3xl">👨‍🏫</span>
+            </div>
+            <div>
+              <div class="text-xs text-accent font-mono">FASE 1</div>
+              <div class="font-semibold text-xl">Guided Analysis</div>
+            </div>
+          </div>
+          <div class="text-3xl font-display text-accent mb-2">35 <span class="text-lg text-white/50">menit</span></div>
+          <p class="text-white/60 text-sm mb-4">
+            Instruktur memandu analisis dataset simulasi langkah demi langkah.
+          </p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              50 data points dari 24 jam
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Step-by-step prompting
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Real-time Q&A
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl phase-card">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+              <span class="text-3xl">✍️</span>
+            </div>
+            <div>
+              <div class="text-xs text-amber-400 font-mono">FASE 2</div>
+              <div class="font-semibold text-xl">Independent Exercise</div>
+            </div>
+          </div>
+          <div class="text-3xl font-display text-amber-400 mb-2">40 <span class="text-lg text-white/50">menit</span></div>
+          <p class="text-white/60 text-sm mb-4">
+            Anda mengerjakan sendiri dengan dataset baru yang lebih kompleks.
+          </p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              100 data points dari 48 jam
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Multi-source data
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Full threat assessment
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: GUIDED DEMO - DATA SET -->
+  <section class="slide-section" id="slide-3">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+          <span class="text-xl">👨‍🏫</span>
+        </div>
+        <div>
+          <div class="text-accent font-mono text-sm">FASE 1: GUIDED DEMO</div>
+          <h2 class="slide-subtitle">DATASET SIMULASI A</h2>
+        </div>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="glass-lit p-4 rounded-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-accent text-sm">Radar Data — 24 Hours</h3>
+            <span class="text-xs text-white/40">50 records</span>
+          </div>
+          <div class="overflow-x-auto max-h-64">
+            <table class="data-table">
+              <thead>
+                <tr><th>ID</th><th>TIME</th><th>SECTOR</th><th>TYPE</th><th>CNT</th><th>ALT</th><th>SPD</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>R01</td><td>0600</td><td>NE-5</td><td>COMM</td><td>4</td><td>35K</td><td>450</td></tr>
+                <tr><td>R02</td><td>0630</td><td>NE-5</td><td>COMM</td><td>3</td><td>34K</td><td>440</td></tr>
+                <tr><td>R03</td><td>0700</td><td>NE-6</td><td>COMM</td><td>5</td><td>36K</td><td>460</td></tr>
+                <tr><td>R04</td><td>0730</td><td>NE-6</td><td>COMM</td><td>4</td><td>35K</td><td>450</td></tr>
+                <tr class="anomaly"><td>R05</td><td>0800</td><td>NE-7</td><td>UNK</td><td>8</td><td>15K</td><td>280</td></tr>
+                <tr><td>R06</td><td>0830</td><td>NE-5</td><td>COMM</td><td>3</td><td>34K</td><td>445</td></tr>
+                <tr><td>R07</td><td>0900</td><td>E-1</td><td>COMM</td><td>4</td><td>35K</td><td>450</td></tr>
+                <tr class="anomaly"><td>R08</td><td>0930</td><td>NE-7</td><td>UNK</td><td>12</td><td>12K</td><td>250</td></tr>
+                <tr><td>R09</td><td>1000</td><td>NE-5</td><td>COMM</td><td>5</td><td>36K</td><td>460</td></tr>
+                <tr><td>R10</td><td>1030</td><td>NE-6</td><td>COMM</td><td>4</td><td>35K</td><td>455</td></tr>
+                <tr class="anomaly"><td>R11</td><td>1100</td><td>NE-7</td><td>UNK</td><td>18</td><td>10K</td><td>220</td></tr>
+                <tr><td>R12</td><td>1130</td><td>E-1</td><td>COMM</td><td>3</td><td>34K</td><td>440</td></tr>
+                <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-4 rounded-2xl">
+          <h3 class="font-semibold text-accent text-sm mb-3">Field Report — Unit Patroli</h3>
+          <div class="code-block p-4 text-xs max-h-64 overflow-y-auto">
+            <pre class="text-white/70 whitespace-pre-wrap">FROM: Unit Patroli Sektor Utara
+DTG: 111200Z APR 2026
+SUBJ: Suspicious Activity Report
+
+1. OBSERVATION:
+   - Time: 1045-1115 local
+   - Location: Grid NE-7, approx 50nm offshore
+   - Activity: Multiple low-flying aircraft
+
+2. DETAILS:
+   - Estimated 3-4 aircraft
+   - Altitude: Very low (below radar coverage at times)
+   - No response to radio calls
+   - Appeared to be conducting pattern flights
+
+3. WEATHER: Clear, visibility 15nm+
+
+4. ASSESSMENT: 
+   Possible reconnaissance activity. 
+   Recommend increased air patrol.
+
+5. RELIABILITY: B-2 (Usually reliable, 
+   probable information)</pre>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4 grid md:grid-cols-2 gap-4">
+        <div class="glass p-3 rounded-xl">
+          <div class="text-xs text-accent font-semibold mb-1">BASELINE INFO:</div>
+          <div class="text-xs text-white/50">Normal: 3-5 COMM flights/slot, altitude 30-38K ft, sectors NE-5, NE-6, E-1</div>
+        </div>
+        <div class="glass p-3 rounded-xl">
+          <div class="text-xs text-red-400 font-semibold mb-1">ANOMALIES VISIBLE:</div>
+          <div class="text-xs text-white/50">Sector NE-7 (unusual), Low altitude (<20K), UNK type, Increasing count</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: GUIDED DEMO - STEP 1 -->
+  <section class="slide-section" id="slide-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-navy-900 font-bold">1</div>
+        <div>
+          <div class="text-accent font-mono text-sm">GUIDED STEP 1</div>
+          <h2 class="slide-subtitle">INITIAL DATA SCAN</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Prompt untuk Initial Scan</h3>
+          <div class="code-block p-4">
+            <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai radar analyst, review data berikut dan berikan:
+1. Summary statistik (total records, time range, sectors covered)
+2. Identifikasi data points yang anomali (deviasi dari baseline)
+3. Initial observations
+
+BASELINE:
+- Normal sectors: NE-5, NE-6, E-1
+- Normal altitude: 30,000-38,000 ft
+- Normal type: COMM (commercial)
+- Normal count: 3-5 per time slot
+
+DATA:
+[paste radar data table]</pre>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Expected Output</h3>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-accent font-semibold text-xs mb-1">SUMMARY:</div>
+              <div class="text-white/60">50 records, 24-hour period, 4 sectors (NE-5, NE-6, NE-7, E-1)</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="text-red-400 font-semibold text-xs mb-1">ANOMALIES DETECTED:</div>
+              <ul class="text-white/60 space-y-1">
+                <li>• R05, R08, R11: Sector NE-7 (not in baseline)</li>
+                <li>• R05, R08, R11: Type UNK (unknown)</li>
+                <li>• R05, R08, R11: Altitude 10-15K (below normal)</li>
+                <li>• Count escalating: 8 → 12 → 18</li>
+              </ul>
+            </div>
+            <div class="p-3 bg-amber-500/10 rounded-lg">
+              <div class="text-amber-400 font-semibold text-xs mb-1">INITIAL OBSERVATION:</div>
+              <div class="text-white/60">Concentrated anomalies in NE-7 sector with escalating pattern</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: GUIDED DEMO - STEP 2 -->
+  <section class="slide-section" id="slide-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-navy-900 font-bold">2</div>
+        <div>
+          <div class="text-accent font-mono text-sm">GUIDED STEP 2</div>
+          <h2 class="slide-subtitle">CROSS-SOURCE CORRELATION</h2>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Prompt untuk Correlation</h3>
+          <div class="code-block p-4">
+            <pre class="text-xs text-white/70 whitespace-pre-wrap">Sekarang korelasikan radar data dengan field report:
+
+RADAR ANOMALIES:
+- R05 (0800): NE-7, 8 contacts, 15K ft
+- R08 (0930): NE-7, 12 contacts, 12K ft  
+- R11 (1100): NE-7, 18 contacts, 10K ft
+
+FIELD REPORT:
+[paste field report]
+
+ANALISIS:
+1. Apakah waktu dan lokasi match?
+2. Apakah field report confirm atau contradict radar?
+3. Apa yang field report tambahkan (info baru)?
+4. Confidence level dari correlation?</pre>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">Expected Output</h3>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="text-green-400 font-semibold text-xs mb-1">✓ CORRELATION FOUND:</div>
+              <ul class="text-white/60 space-y-1">
+                <li>• Time match: Field report 1045-1115 aligns with R11 (1100)</li>
+                <li>• Location match: Grid NE-7 confirmed</li>
+                <li>• Altitude match: "Very low" consistent with 10-15K</li>
+              </ul>
+            </div>
+            <div class="p-3 bg-cyan-500/10 rounded-lg">
+              <div class="text-cyan-400 font-semibold text-xs mb-1">+ NEW INFORMATION:</div>
+              <ul class="text-white/60 space-y-1">
+                <li>• Aircraft count: 3-4 (matches radar trend)</li>
+                <li>• Behavior: "Pattern flights" (reconnaissance indicator)</li>
+                <li>• No radio response (evasion behavior)</li>
+              </ul>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-white font-semibold text-xs mb-1">CONFIDENCE:</div>
+              <div class="text-white/60"><span class="text-green-400 font-semibold">HIGH</span> — Multiple sources confirm same activity</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: GUIDED DEMO - STEP 3 -->
+  <section class="slide-section" id="slide-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-navy-900 font-bold">3</div>
+        <div>
+          <div class="text-accent font-mono text-sm">GUIDED STEP 3</div>
+          <h2 class="slide-subtitle">THREAT ASSESSMENT</h2>
+        </div>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('threat-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <h3 class="font-semibold text-accent mb-4">Final Prompt: Generate Threat Assessment</h3>
+        <div class="code-block p-4" id="threat-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai intelligence analyst senior, berdasarkan analisis sebelumnya, buat THREAT ASSESSMENT BRIEF.
+
+CORRELATED FINDINGS:
+- Radar: 3 anomaly events in NE-7 (0800, 0930, 1100)
+- Activity escalating: 8 → 12 → 18 contacts
+- Low altitude (10-15K ft), no transponder
+- Field report confirms visual (1045-1115)
+- Pattern flights observed, no radio response
+- Source reliability: B-2
+
+ASSESS AND PROVIDE:
+1. Threat Level (LOW/MEDIUM/HIGH) dengan justifikasi
+2. Most likely hypothesis tentang aktivitas ini
+3. Intelligence gaps yang masih ada
+4. Recommended actions (immediate + short-term)
+
+FORMAT OUTPUT:
+## BLUF (50 kata)
+## Threat Assessment
+## Key Evidence
+## Intelligence Gaps  
+## Recommended Actions
+
+Bahasa Indonesia formal, max 300 kata.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: GUIDED DEMO - FINAL OUTPUT -->
+  <section class="slide-section" id="slide-7">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-6">
+        <div class="text-accent font-mono text-sm mb-2">GUIDED DEMO RESULT</div>
+        <h2 class="slide-subtitle">CONTOH OUTPUT LENGKAP</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">THREAT ASSESSMENT BRIEF — NE-7 Activity</h3>
+          <span class="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-mono rounded-full">MEDIUM-HIGH</span>
+        </div>
+        
+        <div class="space-y-4 text-sm">
+          <div class="p-4 bg-accent/10 border-l-4 border-accent rounded-r-xl">
+            <div class="font-semibold text-accent mb-2">BLUF</div>
+            <p class="text-white/80">Aktivitas pesawat tidak teridentifikasi terdeteksi di sektor NE-7 dengan pola eskalasi. Korelasi radar dan visual mengindikasikan <strong>kemungkinan reconnaissance operation</strong>. Threat Level: <strong class="text-amber-400">MEDIUM-HIGH</strong>. Rekomendasi: tingkatkan patroli dan request air intercept.</p>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="font-semibold text-accent text-xs mb-2">THREAT ASSESSMENT</div>
+              <div class="text-white/60">
+                <strong class="text-amber-400">MEDIUM-HIGH</strong> (Confidence: HIGH)<br>
+                Justifikasi: Multiple indicators of deliberate intelligence gathering — low altitude flight, no transponder, pattern behavior, evasion of communication.
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="font-semibold text-accent text-xs mb-2">KEY EVIDENCE</div>
+              <ul class="text-white/60 space-y-1">
+                <li>• Escalating activity (8→12→18)</li>
+                <li>• Unusual sector (NE-7)</li>
+                <li>• Visual confirmation (B-2 source)</li>
+                <li>• Evasion behavior</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-amber-500/10 rounded-lg">
+            <div class="font-semibold text-amber-400 text-xs mb-2">RECOMMENDED ACTIONS</div>
+            <div class="grid md:grid-cols-2 gap-2 text-white/60">
+              <div><strong>Immediate:</strong> Deploy CAP ke NE-7</div>
+              <div><strong>Short-term:</strong> Request SIGINT support</div>
+              <div><strong>Immediate:</strong> Alert air defense units</div>
+              <div><strong>Short-term:</strong> Increase radar coverage</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: INDEPENDENT EXERCISE INTRO -->
+  <section class="slide-section" id="slide-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-full mb-6">
+          <span class="text-amber-400 font-mono text-sm">FASE 2: INDEPENDENT EXERCISE</span>
+        </div>
+        <h2 class="slide-title">
+          EXERCISE:<br>
+          <span class="text-amber-400">SEKTOR BRAVO</span>
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+            <span class="text-3xl">🎯</span>
+          </div>
+          <div>
+            <div class="font-semibold text-xl">Misi Anda</div>
+            <div class="text-white/60">Buat Complete Threat Assessment Brief</div>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h4 class="font-semibold text-amber-400 mb-3">📋 Data yang Tersedia:</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                <span><strong class="text-white">Radar Data B:</strong> 100 records, 48 jam</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                <span><strong class="text-white">SIGINT Report:</strong> Communications intercept</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">•</span>
+                <span><strong class="text-white">HUMINT Report:</strong> Field observation</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-amber-400 mb-3">✅ Deliverables:</h4>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">1.</span>
+                <span>Initial scan & anomaly identification</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">2.</span>
+                <span>Cross-source correlation matrix</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">3.</span>
+                <span>Complete Threat Assessment Brief</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+          <div class="text-amber-400 font-semibold mb-1">⏱️ Waktu: 40 Menit</div>
+          <div class="text-sm text-white/60">Gunakan teknik yang sudah dipraktikkan di Fase 1</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: EXERCISE DATA SET -->
+  <section class="slide-section" id="slide-9">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-6">
+        <div class="text-amber-400 font-mono text-sm mb-2">EXERCISE DATA</div>
+        <h2 class="slide-subtitle">DATASET SEKTOR BRAVO</h2>
+      </div>
+      
+      <div class="grid lg:grid-cols-3 gap-4">
+        <!-- Radar Data B -->
+        <div class="glass-lit p-4 rounded-2xl">
+          <h3 class="font-semibold text-amber-400 text-sm mb-2">📡 Radar Data B (excerpt)</h3>
+          <div class="overflow-x-auto max-h-52">
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>DAY</th><th>TIME</th><th>SEC</th><th>CNT</th><th>ALT</th></tr></thead>
+              <tbody>
+                <tr><td>B01</td><td>D1</td><td>0600</td><td>E-2</td><td>3</td><td>34K</td></tr>
+                <tr><td>B02</td><td>D1</td><td>0800</td><td>E-2</td><td>4</td><td>35K</td></tr>
+                <tr class="anomaly"><td>B03</td><td>D1</td><td>1000</td><td>E-3</td><td>9</td><td>18K</td></tr>
+                <tr><td>B04</td><td>D1</td><td>1200</td><td>E-2</td><td>5</td><td>36K</td></tr>
+                <tr class="anomaly"><td>B05</td><td>D1</td><td>1400</td><td>E-3</td><td>15</td><td>12K</td></tr>
+                <tr><td>B06</td><td>D1</td><td>1600</td><td>E-2</td><td>4</td><td>34K</td></tr>
+                <tr class="anomaly"><td>B07</td><td>D1</td><td>2200</td><td>E-3</td><td>6</td><td>8K</td></tr>
+                <tr><td>B08</td><td>D2</td><td>0600</td><td>E-2</td><td>4</td><td>35K</td></tr>
+                <tr class="anomaly"><td>B09</td><td>D2</td><td>0800</td><td>E-3</td><td>22</td><td>10K</td></tr>
+                <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2 text-xs text-white/40">Baseline: E-2 sector, 3-5 cnt, 30-38K alt</div>
+        </div>
+        
+        <!-- SIGINT -->
+        <div class="glass-lit p-4 rounded-2xl">
+          <h3 class="font-semibold text-cyan-400 text-sm mb-2">📻 SIGINT Report</h3>
+          <div class="code-block p-3 text-xs max-h-52 overflow-y-auto">
+            <pre class="text-white/70 whitespace-pre-wrap">DTG: D1-1500Z
+TYPE: Communications Intercept
+
+SUMMARY:
+Increased radio traffic detected in 
+E-3 sector vicinity. Multiple callsigns 
+observed using non-standard frequencies.
+
+KEY OBSERVATIONS:
+- Freq: Outside normal aviation bands
+- Pattern: Short burst transmissions
+- Duration: 3-5 seconds each
+- Peak: D1-1400 to D1-1600
+
+ASSESSMENT:
+Possible military or intelligence 
+communications. Not consistent with 
+commercial aviation profiles.
+
+RELIABILITY: C-3</pre>
+          </div>
+        </div>
+        
+        <!-- HUMINT -->
+        <div class="glass-lit p-4 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 text-sm mb-2">👁️ HUMINT Report</h3>
+          <div class="code-block p-3 text-xs max-h-52 overflow-y-auto">
+            <pre class="text-white/70 whitespace-pre-wrap">DTG: D2-0900Z
+SOURCE: Fishing vessel captain
+
+OBSERVATION:
+Multiple aircraft observed 
+conducting low passes over 
+waters in E-3 sector.
+
+DETAILS:
+- Time: Approx 0730-0830 local
+- Count: 4-5 aircraft
+- Altitude: "Very low, under clouds"
+- Behavior: "Circling and photographing"
+- Markings: Could not identify
+
+ASSESSMENT:
+Appears to be surveillance operation.
+Aircraft behavior not consistent 
+with commercial or SAR operations.
+
+RELIABILITY: B-2</pre>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4 glass p-4 rounded-xl">
+        <div class="text-sm text-white/60 text-center">
+          <strong class="text-white">Tugas:</strong> Analisis ketiga sumber, korelasikan, dan buat Threat Assessment Brief lengkap
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: ALTERNATIVE VARIANTS — Humanitarian & Legal Risk -->
+  <section class="slide-section" id="slide-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">VARIANT EXERCISE (OPSIONAL)</div>
+        <h2 class="slide-subtitle">RISK ASSESSMENT LINTAS DOMAIN</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Framework 3-step (scan → correlate → assess) yang sama juga bisa dipakai untuk domain non-tempur.
+          Pilih satu variant di bawah untuk coba sendiri setelah Sektor Bravo selesai.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- VARIANT B: Humanitarian Risk (OMSP/SAR) -->
+        <div class="glass-lit p-6 rounded-2xl border border-blue-500/30" x-data="{ open: false }">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl">🆘</span>
+            </div>
+            <div>
+              <div class="text-blue-400 font-mono text-xs mb-1">VARIANT B • OMSP</div>
+              <h3 class="font-semibold text-lg">Humanitarian Risk — CENDRAWASIH RESCUE</h3>
+              <p class="text-xs text-white/50 mt-1">Bukan threat ke kita, tapi risk ke keselamatan survivor & keberhasilan misi SAR</p>
+            </div>
+          </div>
+
+          <div class="p-3 bg-blue-500/10 rounded-lg mb-3 text-xs">
+            <div class="text-blue-400 font-semibold mb-1">SKENARIO:</div>
+            <div class="text-white/70">Gempa M7.2 Banda Sea 0215L. ATR-72 rute Ambon–Kaimana lost contact 0230L (4.2°S 129.8°E, 18,000 ft). 68 pax + 4 kru. Cuaca visibility &lt;2 km. Basarnas request airlift koordinasi.</div>
+          </div>
+
+          <button @click="open = !open" class="w-full text-left text-xs text-blue-400 hover:text-blue-300 flex items-center justify-between py-2 border-t border-white/10">
+            <span x-text="open ? '▲ Tutup contoh prompt' : '▼ Lihat contoh prompt variant B'"></span>
+          </button>
+
+          <div x-show="open" x-collapse class="mt-3">
+            <div class="code-block p-4">
+              <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai SAR coordinator Koopsudnas,
+review 3 sumber berikut dan hasilkan
+HUMANITARIAN RISK ASSESSMENT BRIEF.
+
+SUMBER:
+1. Radar last track ATR-72 (timestamp,
+   heading, altitude, speed drop-off)
+2. BMKG weather forecast (visibility,
+   wind, wave height, 6-jam outlook)
+3. SAR asset availability (C-130, CN-235,
+   helikopter, ETA ke search area)
+
+LAKUKAN 3 LANGKAH:
+1. Scan: identifikasi data anomali
+   (komunikasi terakhir, drift probability)
+2. Correlate: match weather + last track
+   → estimasi search area prioritas
+3. Assess risk:
+   - Risk to survivor (time-critical factor)
+   - Risk to SAR mission success
+   - Risk to rescue aircraft (weather)
+
+FORMAT:
+## BLUF (50 kata)
+## Risk Level (LOW/MED/HIGH) + confidence
+## Prioritized Search Sectors
+## Resource Allocation
+## Immediate Actions (0-6h)
+
+Tone: humanitarian, multi-agency
+(Basarnas/TNI AL/BMKG), bukan combat.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT C: Legal Risk (Gakkum Udara) -->
+        <div class="glass-lit p-6 rounded-2xl border border-purple-500/30" x-data="{ open: false }">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl">⚖️</span>
+            </div>
+            <div>
+              <div class="text-purple-400 font-mono text-xs mb-1">VARIANT C • GAKKUM UDARA</div>
+              <h3 class="font-semibold text-lg">Legal Risk — FIR VIOLATION</h3>
+              <p class="text-xs text-white/50 mt-1">Risk eskalasi diplomatik + risk chain-of-custody evidence</p>
+            </div>
+          </div>
+
+          <div class="p-3 bg-purple-500/10 rounded-lg mb-3 text-xs">
+            <div class="text-purple-400 font-semibold mb-1">SKENARIO:</div>
+            <div class="text-white/70">Business jet asing masuk FIR Jakarta tanpa clearance, tidak respons radio, heading menuju ruang udara sensitif. Opsi: force-down prosedur. Koordinasi AirNav + Kemlu.</div>
+          </div>
+
+          <button @click="open = !open" class="w-full text-left text-xs text-purple-400 hover:text-purple-300 flex items-center justify-between py-2 border-t border-white/10">
+            <span x-text="open ? '▲ Tutup contoh prompt' : '▼ Lihat contoh prompt variant C'"></span>
+          </button>
+
+          <div x-show="open" x-collapse class="mt-3">
+            <div class="code-block p-4">
+              <pre class="text-xs text-white/70 whitespace-pre-wrap">Sebagai Perwira Ops Koopsudnas
+dengan latar gakkum udara, review
+3 sumber berikut dan hasilkan
+LEGAL RISK ASSESSMENT BRIEF.
+
+SUMBER:
+1. Radar track pesawat (registrasi,
+   heading, altitude, kecepatan)
+2. AirNav clearance log (tidak ada
+   filed flight plan, no radio response)
+3. Diplomatic context (asal pesawat,
+   perjanjian bilateral relevan)
+
+LAKUKAN 3 LANGKAH:
+1. Scan: identifikasi pelanggaran
+   (ruang udara, komunikasi, transponder)
+2. Correlate: radar + clearance + context
+   → kategori pelanggaran
+3. Assess legal risk:
+   - Risk eskalasi diplomatik
+   - Risk chain-of-custody evidence
+   - Risk prosedural (ROE, UU Penerbangan)
+
+FORMAT:
+## BLUF (50 kata)
+## Legal Risk Level + confidence
+## Escalation Ladder (peaceful → force-down)
+## Stakeholder Notifications
+   (AirNav, Kemlu, Kejakmil)
+## Immediate Actions
+
+Tone: analitis, prosedural,
+mengacu UU Penerbangan & ICAO.</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 p-4 glass rounded-xl text-center text-xs text-white/60">
+        <strong class="text-accent">Prinsip yang sama:</strong> scan → correlate → assess + justification + recommendations.
+        Yang berubah hanya <em>framing risk</em> (threat / humanitarian / legal) dan stakeholder yang dilayani brief-nya.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: SCORING RUBRIC -->
+  <section class="slide-section" id="slide-11">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">RUBRIK PENILAIAN</div>
+        <h2 class="slide-subtitle">KRITERIA SUKSES</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold text-white">Anomaly Identification</div>
+              <div class="text-xs text-white/50">Menemukan minimal 4 anomali dari radar data</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold text-white">Cross-Source Correlation</div>
+              <div class="text-xs text-white/50">Menghubungkan ketiga sumber dengan benar</div>
+            </div>
+            <div class="text-2xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold text-white">Risk Level Justification</div>
+              <div class="text-xs text-white/50">Level risk (threat / humanitarian / legal) dengan reasoning solid</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold text-white">Actionable Recommendations</div>
+              <div class="text-xs text-white/50">Rekomendasi spesifik dan executable</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold text-white">Prompt Quality & Iteration</div>
+              <div class="text-xs text-white/50">Menggunakan RISEN, iterate untuk improve</div>
+            </div>
+            <div class="text-2xl font-display text-accent">15%</div>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-accent/20 rounded-xl text-center">
+          <span class="text-accent font-semibold text-lg">Passing Score: 70%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: CHECKLIST -->
+  <section class="slide-section" id="slide-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">SELF-CHECK</div>
+        <h2 class="slide-subtitle">CHECKLIST SEBELUM SUBMIT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl" x-data="{ checks: {} }">
+        <div class="space-y-3">
+          <div class="checklist-item" :class="checks[1] ? 'checked' : ''" @click="checks[1] = !checks[1]">
+            <div class="check-box">
+              <svg x-show="checks[1]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Semua anomali di radar data sudah teridentifikasi?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[2] ? 'checked' : ''" @click="checks[2] = !checks[2]">
+            <div class="check-box">
+              <svg x-show="checks[2]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">SIGINT dan HUMINT sudah dikorelasikan dengan radar?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[3] ? 'checked' : ''" @click="checks[3] = !checks[3]">
+            <div class="check-box">
+              <svg x-show="checks[3]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Risk level (threat/humanitarian/legal) ada justifikasi yang jelas?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[4] ? 'checked' : ''" @click="checks[4] = !checks[4]">
+            <div class="check-box">
+              <svg x-show="checks[4]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Ada confidence level untuk setiap assessment?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[5] ? 'checked' : ''" @click="checks[5] = !checks[5]">
+            <div class="check-box">
+              <svg x-show="checks[5]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Recommendations spesifik (immediate + short-term)?</span>
+          </div>
+          
+          <div class="checklist-item" :class="checks[6] ? 'checked' : ''" @click="checks[6] = !checks[6]">
+            <div class="check-box">
+              <svg x-show="checks[6]" class="w-4 h-4 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-white/80">Sudah iterate prompt minimal 1x untuk improve?</span>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 rounded-xl text-center" :class="Object.keys(checks).filter(k => checks[k]).length === 6 ? 'bg-green-500/20' : 'bg-white/5'">
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length === 6">
+            <div class="text-green-400 font-semibold">✓ Ready to submit!</div>
+          </template>
+          <template x-if="Object.keys(checks).filter(k => checks[k]).length < 6">
+            <div class="text-white/50" x-text="Object.keys(checks).filter(k => checks[k]).length + '/6 completed'"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13: KEY TAKEAWAYS -->
+  <section class="slide-section" id="slide-13">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 2.3
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Step-by-Step Works</div>
+              <div class="text-sm text-white/60">Initial scan → Correlation → Assessment</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Multi-Source = Higher Confidence</div>
+              <div class="text-sm text-white/60">Correlation meningkatkan reliability assessment</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Baseline is Critical</div>
+              <div class="text-sm text-white/60">Tanpa baseline, anomali tidak terlihat</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Framework Lintas Domain</div>
+              <div class="text-sm text-white/60">3-step sama dipakai untuk threat, OMSP/SAR, maupun gakkum udara</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl sm:col-span-2">
+            <span class="text-accent font-bold text-xl">5</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Iterate Your Prompts</div>
+              <div class="text-sm text-white/60">First output jarang perfect — refine framing dan konteks stakeholder.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-02-02-pattern-recognition.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 2.2: Pattern Recognition
+        </a>
+        <a href="sesi-02-04-multi-source-fusion.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 2.4 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Threat Assessment</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Threat assessment butuh dua pekerjaan: (1) <strong class="text-white">menulis dokumen assessment</strong> yang terstruktur dan bisa di-iterate section-level, dan (2) <strong class="text-white">research kapabilitas adversary</strong> dari web publik. Dua workflow Gemini berikut meng-cover keduanya secara native.</p>
+      </div>
+
+      <!-- EMBED 1: GEMINI CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Draft Threat Assessment Document — Section-Level Editing</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK THREAT ASSESSMENT</div>
+            <p class="text-sm text-white/70">Threat assessment dokumen biasanya punya struktur tetap (Executive Summary, Capability, Intent, Opportunity, Historical Pattern, Confidence Assessment, Recommendations) tapi <strong class="text-white">setiap section sering di-iterate terpisah</strong> saat data baru masuk. Canvas menyediakan workspace di mana Anda bisa update section "Threat Level" tanpa mengubah "Executive Summary", atau menambah tabel kapabilitas tanpa rewrite konteks.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Threat Assessment di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Buka gemini.google.com → Canvas</strong>. Instruksi pertama: minta AI buat skeleton threat assessment document dengan 7 section standar.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi section "Capability" dulu</strong> dengan data spesifik yang Anda punya — observed vs assessed vs assumed.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Iterate per section</strong> — instruksi eksplisit per section, yang lain tidak tersentuh.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Tambah Confidence Matrix tabel</strong> — markdown table dengan kolom Claim/Evidence/Confidence/Source.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Revisi Executive Summary terakhir</strong> — highlight + instruksi "persingkat, tone Pangkoopsud".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Google Docs</strong> → header instansi + klasifikasi.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Canvas Threat Assessment Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas untuk Threat Assessment Document dengan struktur berikut:
+
+Judul: Threat Assessment — [ISI TOPIK, e.g., "Unidentified Contact NE Sektor FIR Ujung Pandang"]
+Periode: [ISI, e.g., "72 jam terakhir, per 2026-04-15 1800 LT"]
+Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+
+Struktur 7 section:
+1. EXECUTIVE SUMMARY (BLUF 3-4 kalimat, threat level + confidence)
+2. SITUATIONAL CONTEXT (latar belakang ops, timeline, area generic)
+3. CAPABILITY ASSESSMENT (Observed | Assessed | Assumed + confidence per baris)
+4. INTENT ASSESSMENT (3 hipotesis intent + evidence pro/contra + ranking)
+5. OPPORTUNITY ASSESSMENT (window, enabling/constraining factors)
+6. CONFIDENCE MATRIX (tabel: Claim | Evidence | Confidence | Source)
+7. RECOMMENDATIONS (3 tindakan prioritas + collection requirements + escalation criteria)
+
+Catatan:
+- Gunakan generic callsign/lokasi — TIDAK ada data classified
+- Format siap cetak untuk briefing komandan
+- Bahasa formal militer Indonesia
+- Section 3-5 siapkan sebagai placeholder yang akan saya isi bertahap</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Threat Assessment di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Mulai skeleton kosong</strong> — isi manual section kritis, biarkan AI bantu turunan.</li>
+              <li>• <strong class="text-white">OPSEC</strong> — jangan upload data classified; pakai placeholder + data fiktif training.</li>
+              <li>• <strong class="text-white">Executive Summary terakhir</strong> — revisi setelah body stabil.</li>
+              <li>• <strong class="text-white">Confidence Matrix = audit trail</strong> — defend assessment saat komandan challenge.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: GEMINI DEEP RESEARCH (SESI 6.4) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🔎</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.4 DEEP RESEARCH</div>
+              <h3 class="text-lg font-semibold">Adversary Capability Research dari OSINT Publik</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK THREAT ASSESSMENT</div>
+            <p class="text-sm text-white/70">Untuk section <strong class="text-white">"Capability Assessment"</strong> dalam threat document, Anda butuh background info tentang kapabilitas aktor potensial dari OSINT publik — specs platform, doktrin yang dipublikasikan, lessons learned dari deployment terdokumentasi. Deep Research adalah cara paling cepat untuk kumpulkan ini dalam 10 menit alih-alih 2 jam browsing manual. Hasilnya langsung masukkan ke Canvas threat document.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Capability Research Pipeline</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi kapabilitas yang perlu di-assess</strong> — platform, sensor, weapon, doktrin. Generic terms untuk OPSEC.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Submit Deep Research query</strong> dengan scope spesifik — platform, period, sumber (Jane's, IISS, CSIS).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Review research plan</strong> — filter sumber yang tidak otoritatif.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Verifikasi klaim kuantitatif</strong> (range, speed, payload) — angka yang unverified → label UNVERIFIED di threat doc.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Copy ke Canvas threat doc</strong> section "Capability Assessment" — pisahkan Observed / Assessed / Assumed.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — OSINT Capability Research</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Research report: OSINT Capability Profile untuk Threat Assessment
+
+Subjek: [PLATFORM/SISTEM, e.g., "modern long-range surface-to-air missile systems in the Indo-Pacific region"]
+Period: 2020-2024 (open-source publications)
+Purpose: Background data untuk threat assessment — hanya baseline kapabilitas yang sudah publik.
+
+Aspek yang dicakup:
+1. TECHNICAL SPECIFICATIONS (range, target envelope, guidance, sensor integration)
+2. DEPLOYMENT PATTERN (negara operator, jumlah system dari open-source, lokasi publik)
+3. DOCTRINAL USAGE (integration dengan IADS, limitasi yang diketahui)
+4. OPERATIONAL HISTORY (kasus penggunaan terdokumentasi, lessons learned)
+5. COUNTERMEASURES (mitigasi publik, vulnerability yang diketahui)
+
+Sumber prioritas:
+- IISS Military Balance (official)
+- Jane's Defence Weekly / Jane's Intelligence Review
+- CSIS/RUSI think tank reports
+- Government white papers yang dipublikasikan
+
+Catatan:
+- Hanya sumber publik/open-source
+- Flag semua angka kuantitatif untuk verifikasi
+- Jika konflik antar sumber, dokumentasikan perbedaan
+
+Output:
+- Executive summary (5 bullets)
+- Capability profile per aspect
+- Bibliography dengan URL
+- Data gaps (apa yang BELUM ada di open-source)</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Capability Research</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">OSINT = baseline, bukan truth</strong> — kapabilitas aktual sering berbeda dari spec publikasi. Label "open-source estimate".</li>
+              <li>• <strong class="text-white">Kuantitatif = verifikasi wajib</strong> — angka sering outdated. Verifikasi 3 sumber independen.</li>
+              <li>• <strong class="text-white">Generic target = safe</strong> — "modern long-range SAM" daripada nama sistem spesifik negara tertentu.</li>
+              <li>• <strong class="text-white">Pipeline ke Canvas</strong> — hasil Deep Research langsung masuk section "Capability Assessment" di Canvas threat doc.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-04-deep-research.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.4 — Deep Research →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE DIAGRAM -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Recommended Pipeline untuk Threat Assessment</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">1. DEEP RESEARCH</div><div class="text-white/70">Capability OSINT</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">2. CLAUDE (sesi ini)</div><div class="text-white/70">Framework + reasoning</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CANVAS</div><div class="text-white/70">Document draft + iterate</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. GOOGLE DOCS</div><div class="text-white/70">Final + distribusi</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

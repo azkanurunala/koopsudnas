@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 3.3 | Dashboard & Infografis Lintas Domain Koopsudnas</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#f59e0b',
+            'accent-light': '#fbbf24',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #f59e0b; --accent-glow: rgba(245,158,11,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+    
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #d97706; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+    
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+    
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+    
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.03) 50%, transparent 100%); }
+    
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #fbbf24); z-index: 100; transition: width 0.3s ease; }
+    
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+    
+    .code-block { background: #0a0f1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+    .copy-btn.copied { background: rgba(16,185,129,0.3); border-color: #10b981; color: #10b981; }
+    
+    .dashboard-widget { transition: all 0.3s ease; }
+    .dashboard-widget:hover { transform: scale(1.02); box-shadow: 0 10px 30px -10px rgba(245,158,11,0.3); }
+    
+    .phase-indicator { display: flex; align-items: center; gap: 8px; }
+    .phase-indicator .line { flex: 1; height: 2px; background: rgba(255,255,255,0.1); }
+    .phase-indicator .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+    .phase-indicator .dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .phase-indicator .dot.complete { background: #10b981; }
+    
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 13, progress: 0, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+  
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+  
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-03-visual-intelligence.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 03</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 3.3</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">PRAKTIK</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-03-02-sitrep-visual.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 3.2</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-03-04-command-briefing.html" class="text-xs text-white/40 hover:text-white/60">Sesi 3.4 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 03 • SESI 3 • PRAKTIK</span>
+      </div>
+      
+      <h1 class="slide-title mb-6">
+        HANDS-ON:<br>
+        <span class="text-accent">DASHBOARD & INFOGRAFIS</span>
+      </h1>
+      
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+        Praktik membuat <strong class="text-white">dashboard</strong> dan <strong class="text-white">infografis</strong>
+        dari data simulasi — lintas 4 domain Koopsudnas: threat, SAR, bencana, dan readiness satuan.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-8 text-xs font-mono">
+        <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full">THREAT DASH</span>
+        <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">SAR DASH</span>
+        <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full">BENCANA DASH</span>
+        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">READINESS DASH</span>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-6 mb-12">
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">60</div>
+          <div class="text-xs text-white/50">MENIT</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">2</div>
+          <div class="text-xs text-white/50">EXERCISE</div>
+        </div>
+        <div class="glass px-6 py-4 rounded-xl text-center">
+          <div class="text-2xl font-display text-accent">4</div>
+          <div class="text-xs text-white/50">VISUAL OUTPUTS</div>
+        </div>
+      </div>
+      
+      <a href="#slide-2" class="inline-flex items-center gap-2 text-accent hover:text-accent-light transition-colors">
+        <span>Mulai Praktik</span>
+        <svg class="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SESSION STRUCTURE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STRUKTUR SESI</div>
+        <h2 class="slide-subtitle">2 EXERCISE PRAKTIK</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
+              <span class="text-3xl">📊</span>
+            </div>
+            <div>
+              <div class="text-xs text-accent font-mono">EXERCISE 1</div>
+              <div class="font-semibold text-xl">Dashboard Creation</div>
+            </div>
+          </div>
+          <div class="text-3xl font-display text-accent mb-2">30 <span class="text-lg text-white/50">menit</span></div>
+          <p class="text-white/60 text-sm mb-4">
+            Membuat situational awareness dashboard dengan 4 widget utama.
+          </p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Threat level indicator
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Key metrics display
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Trend visualization
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              Status summary
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+              <span class="text-3xl">📈</span>
+            </div>
+            <div>
+              <div class="text-xs text-purple-400 font-mono">EXERCISE 2</div>
+              <div class="font-semibold text-xl">Infografis Creation</div>
+            </div>
+          </div>
+          <div class="text-3xl font-display text-purple-400 mb-2">30 <span class="text-lg text-white/50">menit</span></div>
+          <p class="text-white/60 text-sm mb-4">
+            Membuat intelligence infografis untuk executive summary.
+          </p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              Key finding icons
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              Threat matrix visual
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              Recommendation bullets
+            </div>
+            <div class="flex items-center gap-2 text-white/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              Confidence meter
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: DASHBOARD ANATOMY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EXERCISE 1</div>
+        <h2 class="slide-subtitle">DASHBOARD ANATOMY</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="grid grid-cols-4 gap-4 mb-4">
+          <!-- Widget 1: Threat Level -->
+          <div class="dashboard-widget p-4 bg-red-500/10 rounded-xl text-center col-span-1">
+            <div class="text-xs text-red-400 font-mono mb-2">THREAT LEVEL</div>
+            <div class="text-4xl font-display text-red-400">HIGH</div>
+            <div class="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
+              <div class="h-full w-4/5 bg-gradient-to-r from-amber-500 to-red-500 rounded-full"></div>
+            </div>
+          </div>
+          
+          <!-- Widget 2-4: Key Metrics -->
+          <div class="dashboard-widget p-4 bg-white/5 rounded-xl text-center">
+            <div class="text-xs text-white/50 mb-1">CONTACTS</div>
+            <div class="text-3xl font-display text-accent">62</div>
+            <div class="text-xs text-red-400">↑ +300%</div>
+          </div>
+          
+          <div class="dashboard-widget p-4 bg-white/5 rounded-xl text-center">
+            <div class="text-xs text-white/50 mb-1">SECTORS</div>
+            <div class="text-3xl font-display text-cyan-400">4</div>
+            <div class="text-xs text-white/40">Active</div>
+          </div>
+          
+          <div class="dashboard-widget p-4 bg-white/5 rounded-xl text-center">
+            <div class="text-xs text-white/50 mb-1">CONFIDENCE</div>
+            <div class="text-3xl font-display text-green-400">HIGH</div>
+            <div class="text-xs text-white/40">Multi-source</div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Widget 5: Trend Chart -->
+          <div class="dashboard-widget p-4 bg-white/5 rounded-xl">
+            <div class="text-xs text-white/50 mb-3">24H ACTIVITY TREND</div>
+            <div class="h-20 flex items-end gap-1">
+              <div class="flex-1 bg-blue-500/50 rounded-t" style="height: 30%;"></div>
+              <div class="flex-1 bg-blue-500/50 rounded-t" style="height: 35%;"></div>
+              <div class="flex-1 bg-blue-500/50 rounded-t" style="height: 40%;"></div>
+              <div class="flex-1 bg-amber-500/50 rounded-t" style="height: 55%;"></div>
+              <div class="flex-1 bg-amber-500/50 rounded-t" style="height: 65%;"></div>
+              <div class="flex-1 bg-red-500/50 rounded-t" style="height: 85%;"></div>
+              <div class="flex-1 bg-red-500/50 rounded-t" style="height: 100%;"></div>
+              <div class="flex-1 bg-red-500/50 rounded-t" style="height: 90%;"></div>
+            </div>
+            <div class="flex justify-between text-xs text-white/30 mt-1">
+              <span>-24h</span>
+              <span>Now</span>
+            </div>
+          </div>
+          
+          <!-- Widget 6: Status Summary -->
+          <div class="dashboard-widget p-4 bg-white/5 rounded-xl">
+            <div class="text-xs text-white/50 mb-3">STATUS SUMMARY</div>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-white/70">Air Defense</span>
+                <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">READY</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-white/70">CAP Status</span>
+                <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">STANDBY</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-white/70">Radar Coverage</span>
+                <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: DASHBOARD PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">DASHBOARD PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('dashboard-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-accent font-mono mb-4">📋 DASHBOARD CREATION PROMPT</div>
+        
+        <div class="code-block p-4" id="dashboard-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Buatkan <span class="text-accent">situational awareness dashboard</span> dalam HTML dengan komponen:
+
+DATA INPUT:
+- Threat Level: HIGH
+- Total Contacts: 62 (↑300% from baseline)
+- Active Sectors: 4 (NE-5, NE-6, NE-7, E-1)
+- Hot Sector: NE-7 (highest activity)
+- Confidence: HIGH (multi-source confirmed)
+- Period: Last 24 hours
+
+24H TREND DATA (hourly):
+[5, 6, 8, 12, 15, 24, 32, 28, ...]
+
+STATUS:
+- Air Defense: READY
+- CAP: STANDBY (2 aircraft)
+- Radar: 100% coverage
+
+DASHBOARD REQUIREMENTS:
+1. Header: Threat level large + prominent
+2. Row 1: 4 metric cards (contacts, sectors, confidence, hot sector)
+3. Row 2: Bar chart trend + status table
+4. Color scheme: Dark bg, red=threat, green=ready, amber=standby
+5. Single viewport, no scroll
+6. Responsive grid layout
+
+OUTPUT: Complete HTML with inline CSS</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: EXERCISE 1 DATA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-accent font-mono text-sm mb-4">EXERCISE 1 DATA</div>
+        <h2 class="slide-subtitle">YOUR MISSION: BUILD THIS DASHBOARD</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">📊 Data untuk Dashboard</h3>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Threat Level</div>
+              <div class="font-semibold text-red-400">MEDIUM-HIGH</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Total Contacts (48h)</div>
+              <div class="font-semibold">124 contacts</div>
+              <div class="text-xs text-amber-400">↑ 180% from baseline</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Active Sectors</div>
+              <div class="font-semibold">E-2, E-3, E-4</div>
+              <div class="text-xs text-red-400">Hot: E-3 (67 contacts)</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">48H Hourly Trend</div>
+              <div class="font-mono text-xs">3,4,5,6,8,9,12,15,18,22,24,28,32,35,38,42,...</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-accent mb-4">📋 Status Information</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <span>Maritime Patrol</span>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">DEPLOYED</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <span>Coastal Radar</span>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">100%</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <span>QRF Status</span>
+              <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">STANDBY</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <span>SIGINT Coverage</span>
+              <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">PARTIAL</span>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-accent/10 rounded-lg">
+            <div class="text-xs text-accent font-semibold">⏱️ Time Limit: 30 minutes</div>
+            <div class="text-xs text-white/50">Create complete dashboard with all widgets</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: INFOGRAFIS ANATOMY -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-purple-400 font-mono text-sm mb-4">EXERCISE 2</div>
+        <h2 class="slide-subtitle">INFOGRAFIS ANATOMY</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <!-- Header -->
+        <div class="text-center mb-6 pb-4 border-b border-white/10">
+          <div class="text-xs text-purple-400 font-mono mb-1">INTELLIGENCE SUMMARY</div>
+          <div class="text-2xl font-display">SEKTOR BRAVO ASSESSMENT</div>
+          <div class="text-xs text-white/40">121500Z APR 2026 | UNCLASS/SIMULATED</div>
+        </div>
+        
+        <!-- Key Findings -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="dashboard-widget p-4 bg-red-500/10 rounded-xl text-center">
+            <div class="text-3xl mb-2">⚠️</div>
+            <div class="font-semibold text-sm text-red-400">Threat Escalation</div>
+            <div class="text-xs text-white/50">+180% activity in 48h</div>
+          </div>
+          <div class="dashboard-widget p-4 bg-amber-500/10 rounded-xl text-center">
+            <div class="text-3xl mb-2">🎯</div>
+            <div class="font-semibold text-sm text-amber-400">Concentrated Area</div>
+            <div class="text-xs text-white/50">E-3 sector focal point</div>
+          </div>
+          <div class="dashboard-widget p-4 bg-cyan-500/10 rounded-xl text-center">
+            <div class="text-3xl mb-2">📡</div>
+            <div class="font-semibold text-sm text-cyan-400">Multi-Source Confirmed</div>
+            <div class="text-xs text-white/50">SIGINT + IMINT + HUMINT</div>
+          </div>
+        </div>
+        
+        <!-- Threat Matrix & Recommendations -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="text-xs text-purple-400 font-semibold mb-3">THREAT MATRIX</div>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <div class="w-16 h-3 bg-red-500 rounded"></div>
+                <span class="text-xs">Air Incursion: HIGH</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-12 h-3 bg-amber-500 rounded"></div>
+                <span class="text-xs">Maritime: MEDIUM</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-3 bg-green-500 rounded"></div>
+                <span class="text-xs">Ground: LOW</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-accent/10 rounded-xl">
+            <div class="text-xs text-accent font-semibold mb-3">RECOMMENDATIONS</div>
+            <div class="space-y-2 text-xs text-white/70">
+              <div class="flex items-center gap-2">
+                <span class="text-accent">→</span>
+                Deploy additional CAP to E-3
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-accent">→</span>
+                Increase SIGINT coverage
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-accent">→</span>
+                Alert QRF to ready status
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Confidence Meter -->
+        <div class="mt-4 flex items-center justify-center gap-4">
+          <span class="text-xs text-white/50">Confidence:</span>
+          <div class="flex gap-1">
+            <div class="w-4 h-4 rounded bg-green-500"></div>
+            <div class="w-4 h-4 rounded bg-green-500"></div>
+            <div class="w-4 h-4 rounded bg-green-500"></div>
+            <div class="w-4 h-4 rounded bg-green-500"></div>
+            <div class="w-4 h-4 rounded bg-white/20"></div>
+          </div>
+          <span class="text-xs text-green-400 font-semibold">HIGH (4/5)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: INFOGRAFIS PROMPT -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-purple-400 font-mono text-sm mb-4">TEMPLATE</div>
+        <h2 class="slide-subtitle">INFOGRAFIS PROMPT</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl relative" x-data="{ copied: false }">
+        <button class="copy-btn" :class="copied ? 'copied' : ''" @click="navigator.clipboard.writeText(document.getElementById('infografis-prompt').innerText); copied = true; setTimeout(() => copied = false, 2000);">
+          <span x-text="copied ? '✓ Copied' : 'Copy'"></span>
+        </button>
+        
+        <div class="text-sm text-purple-400 font-mono mb-4">📋 INFOGRAFIS CREATION PROMPT</div>
+        
+        <div class="code-block p-4" id="infografis-prompt">
+          <pre class="text-xs text-white/70 whitespace-pre-wrap">Buatkan <span class="text-purple-400">intelligence infografis</span> dalam HTML untuk executive summary:
+
+TITLE: [Assessment Name]
+DTG: [Date-Time Group]
+
+KEY FINDINGS (3 items dengan icons):
+1. [Finding 1 - e.g., Threat escalation +180%]
+2. [Finding 2 - e.g., Activity concentrated in E-3]
+3. [Finding 3 - e.g., Multi-source confirmation]
+
+THREAT MATRIX:
+- Air threat: [HIGH/MEDIUM/LOW]
+- Maritime threat: [HIGH/MEDIUM/LOW]
+- Ground threat: [HIGH/MEDIUM/LOW]
+
+RECOMMENDATIONS (3 items):
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+CONFIDENCE LEVEL: [1-5, with visual meter]
+
+DESIGN REQUIREMENTS:
+1. Clean, professional executive-style layout
+2. Icons/emojis for key findings
+3. Horizontal bar chart for threat matrix
+4. Visual confidence meter (5 dots/bars)
+5. Color: Purple accent for headers
+6. Single page, print-friendly
+7. Clear visual hierarchy
+
+OUTPUT: Complete HTML with inline CSS</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7.5: VARIANT LINTAS DOMAIN — Dashboard & Infografis -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-accent font-mono text-sm mb-3">VARIANT LINTAS DOMAIN</div>
+        <h2 class="slide-subtitle">4 DASHBOARD + 4 INFOGRAFIS KOOPSUDNAS</h2>
+        <p class="text-white/60 max-w-2xl mx-auto mt-3 text-sm">
+          Template prompt di atas (threat dashboard) adalah default untuk Operasi Pertahanan Udara.
+          Di bawah ini 3 variant lain: SAR, Bencana, dan Readiness. Framework visual sama —
+          hero metric + metric cards + chart + status — yang berubah: data, warna, stakeholder.
+        </p>
+      </div>
+
+      <div x-data="{ variant: 'threat' }">
+        <div class="flex flex-wrap justify-center gap-2 mb-6">
+          <button @click="variant = 'threat'" :class="variant === 'threat' ? 'bg-red-500/30 border-red-500 text-red-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🎯 A • THREAT</button>
+          <button @click="variant = 'sar'" :class="variant === 'sar' ? 'bg-blue-500/30 border-blue-500 text-blue-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🆘 B • SAR</button>
+          <button @click="variant = 'bencana'" :class="variant === 'bencana' ? 'bg-green-500/30 border-green-500 text-green-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🌊 C • BENCANA</button>
+          <button @click="variant = 'readiness'" :class="variant === 'readiness' ? 'bg-purple-500/30 border-purple-500 text-purple-300' : 'bg-white/5 border-white/10 text-white/60'" class="px-4 py-2 rounded-full border text-xs font-mono transition-all">🛠️ D • READINESS</button>
+        </div>
+
+        <!-- THREAT VARIANT (default, refer to existing) -->
+        <template x-if="variant === 'threat'">
+          <div class="glass-lit p-6 rounded-2xl border border-red-500/30">
+            <div class="text-red-400 font-mono text-xs mb-2">VARIANT A • OPERASI PERTAHANAN UDARA</div>
+            <h3 class="font-semibold text-lg mb-3">Situational Awareness Dashboard (default existing)</h3>
+            <p class="text-xs text-white/60 mb-3">
+              Hero metric = <strong>Threat Level</strong>. Metric cards = contacts, sectors, hot sector, confidence.
+              Chart = 24h trend kontak. Status = air defense / CAP / radar. Rujuk Slide 4 untuk prompt lengkap.
+            </p>
+            <div class="grid md:grid-cols-4 gap-2 text-xs">
+              <div class="p-2 bg-red-500/10 rounded">Hero: <strong>THREAT LEVEL</strong></div>
+              <div class="p-2 bg-white/5 rounded">Cards: contact / sector / confidence</div>
+              <div class="p-2 bg-white/5 rounded">Chart: 24h trend kontak</div>
+              <div class="p-2 bg-white/5 rounded">Status: AD / CAP / radar</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- SAR VARIANT -->
+        <template x-if="variant === 'sar'">
+          <div class="glass-lit p-6 rounded-2xl border border-blue-500/30">
+            <div class="text-blue-400 font-mono text-xs mb-2">VARIANT B • OMSP / CENDRAWASIH RESCUE</div>
+            <h3 class="font-semibold text-lg mb-3">SAR Operations Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Survivor Risk (TIME-CRITICAL / CRITICAL / STABLE) + jam sejak lost contact</div>
+                  <div><strong class="text-white">Cards:</strong> Sektor searched / debris found / last known position / pax count</div>
+                  <div><strong class="text-white">Chart:</strong> Progress pencarian per 2-jam + weather window</div>
+                  <div><strong class="text-white">Status:</strong> C-130 status / CN-235 / helikopter / koordinasi Basarnas</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan SAR Dashboard untuk
+CENDRAWASIH RESCUE (ATR-72 hilang
+Banda Sea, 68 pax).
+
+HERO: Survivor Risk Badge
+       (TIME-CRITICAL +3h35m)
+CARDS:
+  - Sektor searched: 4/12
+  - Debris found: 0
+  - Last known position
+  - Pax count: 68+4
+CHART: search progress per 2h +
+       weather window BMKG
+STATUS:
+  - C-130 on-station
+  - CN-235 enroute
+  - Heli Super Puma standby
+  - Basarnas coord active
+
+Color: biru = progress, amber =
+weather caution, merah = urgent.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- BENCANA VARIANT -->
+        <template x-if="variant === 'bencana'">
+          <div class="glass-lit p-6 rounded-2xl border border-green-500/30">
+            <div class="text-green-400 font-mono text-xs mb-2">VARIANT C • OMSP / BANJIR SULAWESI</div>
+            <h3 class="font-semibold text-lg mb-3">Disaster Relief Coordination Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Pengungsi ter-cover vs total (%) + Humanitarian Severity</div>
+                  <div><strong class="text-white">Cards:</strong> Shelter aktif / sortie terlaksana / cargo delivered / affected population</div>
+                  <div><strong class="text-white">Chart:</strong> Cargo ton per hari + shelter resupply timeline</div>
+                  <div><strong class="text-white">Status:</strong> BNPB coord / aircraft availability / pemda liaison / PMI</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan Disaster Relief Dashboard
+untuk Banjir Bandang Sulawesi
+(12,000 pengungsi, 3 kabupaten).
+
+HERO: Coverage 62% (7,440/12,000)
+      Severity: RED
+CARDS:
+  - Shelter aktif: 4
+  - Sortie today: 8/12
+  - Cargo delivered: 42 ton
+  - Affected pop: 12,000
+CHART: cargo/hari (7 hari) +
+       shelter resupply timeline
+STATUS:
+  - BNPB lead coord
+  - 2x C-130 available
+  - Pemda liaison active
+  - PMI distribusi on-ground
+
+Color: hijau = ter-cover,
+amber = scheduled, merah = urgent.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- READINESS VARIANT -->
+        <template x-if="variant === 'readiness'">
+          <div class="glass-lit p-6 rounded-2xl border border-purple-500/30">
+            <div class="text-purple-400 font-mono text-xs mb-2">VARIANT D • PEMBINAAN SATUAN / ADEX</div>
+            <h3 class="font-semibold text-lg mb-3">Unit Readiness Dashboard</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-white/70 space-y-2 mb-3">
+                  <div><strong class="text-white">Hero metric:</strong> Overall Readiness (GREEN/AMBER/RED) + hari ke D-day ADEX</div>
+                  <div><strong class="text-white">Cards:</strong> Serviceability % / crew currency / ammo stock / maintenance backlog</div>
+                  <div><strong class="text-white">Chart:</strong> Trend serviceability 90 hari + milestone completion</div>
+                  <div><strong class="text-white">Status:</strong> Per skadron (3 skadron), per kapabilitas, per tipe aset</div>
+                </div>
+              </div>
+              <div class="code-block p-3">
+                <pre class="text-xs text-white/60 whitespace-pre-wrap">Buatkan Readiness Dashboard
+Koopsud II menjelang ADEX
+(90 hari, 3 skadron).
+
+HERO: Readiness AMBER
+      D-60 menuju exercise
+CARDS:
+  - Serviceability: 68%
+  - Crew currency: 82%
+  - Ammo stock: 75%
+  - Maint backlog: 12 line
+CHART: serviceability 90h +
+       training milestone
+STATUS per skadron:
+  - Skadron 1: GREEN
+  - Skadron 2: AMBER (maint)
+  - Skadron 3: RED (crew cur.)
+
+Color: hijau/amber/merah
+sesuai standar pembinaan.</pre>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="mt-6 p-4 glass rounded-xl">
+        <div class="text-xs text-accent font-semibold mb-2 text-center">INFOGRAFIS VARIANT (EXECUTIVE SUMMARY)</div>
+        <p class="text-xs text-white/60 text-center">
+          Setiap dashboard di atas punya padanan <strong>infografis 1-halaman</strong> untuk executive summary:
+          Threat Matrix → <em>SAR Progress Matrix</em> → <em>Bencana Impact Matrix</em> → <em>Doctrine Compliance Trend</em>.
+          Struktur infografis (header + 3 key findings + matrix + recommendations + confidence meter) tetap sama.
+          Ganti data & icon, warna mengikuti domain (merah/biru/hijau/ungu).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: EXERCISE 2 DATA -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-purple-400 font-mono text-sm mb-4">EXERCISE 2 DATA</div>
+        <h2 class="slide-subtitle">YOUR MISSION: BUILD THIS INFOGRAFIS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 mb-4">📈 Intelligence Data</h3>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Assessment Title</div>
+              <div class="font-semibold">Operation CORAL SHIELD - Weekly Summary</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Key Finding 1</div>
+              <div class="font-semibold text-red-400">Naval exercise activity detected</div>
+              <div class="text-xs text-white/50">3 frigates + 1 supply ship confirmed</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Key Finding 2</div>
+              <div class="font-semibold text-amber-400">Communications surge</div>
+              <div class="text-xs text-white/50">4x normal traffic on military frequencies</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Key Finding 3</div>
+              <div class="font-semibold text-green-400">Exercise duration: 5 days</div>
+              <div class="text-xs text-white/50">Per HUMINT source (B-2 reliability)</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-purple-400 mb-4">📋 Assessment Details</h3>
+          <div class="space-y-3 text-sm">
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-2">Threat Matrix</div>
+              <div class="space-y-1">
+                <div class="flex justify-between"><span>Maritime:</span><span class="text-amber-400">MEDIUM</span></div>
+                <div class="flex justify-between"><span>Air:</span><span class="text-green-400">LOW</span></div>
+                <div class="flex justify-between"><span>Cyber:</span><span class="text-green-400">LOW</span></div>
+              </div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-2">Recommendations</div>
+              <ol class="space-y-1 text-xs text-white/70">
+                <li>1. Continue monitoring for 5 days</li>
+                <li>2. Maintain current alert level</li>
+                <li>3. Coordinate with regional partners</li>
+              </ol>
+            </div>
+            <div class="p-3 bg-white/5 rounded-lg">
+              <div class="text-xs text-white/50 mb-1">Confidence Level</div>
+              <div class="font-semibold text-green-400">HIGH (4/5)</div>
+              <div class="text-xs text-white/50">Multi-source corroboration</div>
+            </div>
+          </div>
+          
+          <div class="mt-4 p-3 bg-purple-500/10 rounded-lg">
+            <div class="text-xs text-purple-400 font-semibold">⏱️ Time Limit: 30 minutes</div>
+            <div class="text-xs text-white/50">Create complete infografis with all elements</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: EVALUATION CRITERIA -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">RUBRIK</div>
+        <h2 class="slide-subtitle">EVALUATION CRITERIA</h2>
+      </div>
+      
+      <div class="glass-lit p-6 rounded-2xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Visual Hierarchy</div>
+              <div class="text-xs text-white/50">Most important info paling prominent</div>
+            </div>
+            <div class="text-2xl font-display text-accent">25%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Color Coding Consistency</div>
+              <div class="text-xs text-white/50">Red=threat, Blue=friendly, standard colors</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">3-Second Rule Compliance</div>
+              <div class="text-xs text-white/50">Key message instantly visible</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Information Completeness</div>
+              <div class="text-xs text-white/50">All required elements present</div>
+            </div>
+            <div class="text-2xl font-display text-accent">20%</div>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+            <div>
+              <div class="font-semibold">Actionability</div>
+              <div class="text-xs text-white/50">Clear recommendations / next steps</div>
+            </div>
+            <div class="text-2xl font-display text-accent">15%</div>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-accent/20 rounded-xl text-center">
+          <span class="text-accent font-semibold text-lg">Passing Score: 70%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: ITERATION WORKFLOW -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WORKFLOW</div>
+        <h2 class="slide-subtitle">ITERATIVE CREATION PROCESS</h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-navy-900 font-bold flex-shrink-0">1</div>
+            <div>
+              <div class="font-semibold text-accent mb-1">Generate Basic Structure</div>
+              <div class="text-sm text-white/60">"Create dashboard layout with header and 4 widget placeholders"</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center text-navy-900 font-bold flex-shrink-0">2</div>
+            <div>
+              <div class="font-semibold text-cyan-400 mb-1">Add Visual Elements</div>
+              <div class="text-sm text-white/60">"Make threat level widget larger with color gradient bar"</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-navy-900 font-bold flex-shrink-0">3</div>
+            <div>
+              <div class="font-semibold text-amber-400 mb-1">Populate with Data</div>
+              <div class="text-sm text-white/60">"Replace placeholders with: [paste actual data]"</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center text-navy-900 font-bold flex-shrink-0">4</div>
+            <div>
+              <div class="font-semibold text-purple-400 mb-1">Add Chart/Visualization</div>
+              <div class="text-sm text-white/60">"Add bar chart showing 24h trend with this data: [...]"</div>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center text-navy-900 font-bold flex-shrink-0">5</div>
+            <div>
+              <div class="font-semibold text-green-400 mb-1">Review & Polish</div>
+              <div class="text-sm text-white/60">"Ensure 3-second rule, check color consistency, add timestamp"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: PRO TIPS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PRO TIPS</div>
+        <h2 class="slide-subtitle">VISUAL CREATION TIPS</h2>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-green-400 mb-4">✓ Best Practices</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Start with Template</div>
+              <div class="text-xs text-white/50">Use provided prompts as starting point, then customize</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Iterate in Small Steps</div>
+              <div class="text-xs text-white/50">Change one thing at a time, review, then proceed</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Test 3-Second Rule</div>
+              <div class="text-xs text-white/50">Show to colleague, ask "what's the message?"</div>
+            </div>
+            <div class="p-3 bg-green-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Save Working Versions</div>
+              <div class="text-xs text-white/50">Keep snapshots before major changes</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass-lit p-6 rounded-2xl">
+          <h3 class="font-semibold text-red-400 mb-4">✕ Common Mistakes</h3>
+          <div class="space-y-3">
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Too Much at Once</div>
+              <div class="text-xs text-white/50">Don't try to generate perfect output in one prompt</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Ignoring Mobile</div>
+              <div class="text-xs text-white/50">Dashboard should work on tablet at minimum</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Decorative Graphics</div>
+              <div class="text-xs text-white/50">Every element should convey information</div>
+            </div>
+            <div class="p-3 bg-red-500/10 rounded-lg">
+              <div class="font-semibold text-sm mb-1">Missing Context</div>
+              <div class="text-xs text-white/50">Always include DTG, period, data source</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: KEY TAKEAWAYS -->
+  <section class="slide-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title">
+          <span class="text-accent">KEY TAKEAWAYS</span><br>
+          SESI 3.3
+        </h2>
+      </div>
+      
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">1</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Dashboard = At-a-Glance</div>
+              <div class="text-sm text-white/60">All critical metrics visible without scrolling</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">2</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Infografis = Executive Story</div>
+              <div class="text-sm text-white/60">Key findings + recommendations in visual format</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">3</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Iterate, Don't Perfect</div>
+              <div class="text-sm text-white/60">Build incrementally: structure → style → data</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
+            <span class="text-accent font-bold text-xl">4</span>
+            <div>
+              <div class="font-semibold text-white mb-1">Test with Audience</div>
+              <div class="text-sm text-white/60">3-second rule is the ultimate test</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-03-02-sitrep-visual.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">
+          ← Sesi 3.2: SITREP & Maps
+        </a>
+        <a href="sesi-03-04-command-briefing.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-navy-900 font-semibold hover:bg-accent-light transition-colors">
+          Lanjut ke Sesi 3.4 →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- GEMINI WORKFLOWS — EMBEDDED TUTORIAL UNTUK TASK SESI INI -->
+  <!-- ========================================================== -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">ALTERNATIVE WORKFLOWS • GEMINI</div>
+        <h2 class="text-3xl font-bold mb-3">Workflow Gemini untuk Dashboard & Infografis</h2>
+        <p class="text-white/60 max-w-2xl mx-auto text-sm">Dashboard dan infografis butuh dua hal: (1) <strong class="text-white">layout interaktif dokumen</strong> dengan chart placeholder yang bisa di-iterate, dan (2) <strong class="text-white">visual elements</strong> — icon, ilustrasi, infografis background. Canvas untuk layout, Create Image untuk visual. Kombinasi keduanya = dashboard siap briefing.</p>
+      </div>
+
+      <!-- EMBED 1: CANVAS (SESI 6.3) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group mb-6">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">📋</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.3 CANVAS</div>
+              <h3 class="text-lg font-semibold">Dashboard Layout + Live Iterate Chart Sections</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DASHBOARD</div>
+            <p class="text-sm text-white/70">Saat Anda butuh <strong class="text-white">dokumen dashboard yang kompleks</strong> — multiple section dengan chart placeholder, tabel data, ringkasan executive, dan narative — dan butuh iterate per section tanpa rewrite keseluruhan. Canvas ideal untuk dashboard DOCUMENT (bukan dashboard interactive app) karena fokusnya di text/visual layout, dengan direct export ke Google Docs/Slides. Perfect untuk briefing status alutsista Koopsudnas ke Pangkoopsudnas.</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Build Dashboard Document di Canvas</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Minta Canvas buat dashboard skeleton</strong> — 6-8 section: Header, Executive Summary, Key Metrics Grid, Trend Section, Pattern Section, Alert Section, Recommendations, Appendix.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Isi Key Metrics Grid</strong> — markdown table dengan 4-6 KPI (value + trend arrow + confidence).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Insert chart placeholders</strong> — "[CHART 1: TREND OVER TIME]", "[CHART 2: PATTERN BREAKDOWN]", [CHART 3: GEOGRAPHIC DIST]". Chart akan di-generate terpisah (via Create Image atau Google Sheets embed).</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Iterate section saat data update</strong> — highlight Trend Section, instruksi "refresh dengan data minggu ini, preserve format markdown".</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Executive Summary terakhir</strong> — revisi setelah semua section stabil. 3-5 bullet BLUF.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">6</span><div class="text-white/70"><strong class="text-white">Export ke Google Slides</strong> — Canvas bisa langsung convert ke slide deck dengan 1 klik, section → slide mapping otomatis.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Dashboard Skeleton</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">Buat Canvas Dashboard Document untuk Weekly Intel Summary.
+
+Judul: Weekly Intelligence Dashboard — [PERIOD]
+Audience: Pangkoopsud dan staf operasi
+Klasifikasi: UNCLASSIFIED // FOR TRAINING ONLY
+
+Struktur:
+
+1. HEADER BANNER
+   - Judul, period, prepared by [PLACEHOLDER]
+   - Total sources dianalisis: [N]
+   - Date range coverage: [D]
+
+2. EXECUTIVE SUMMARY (5 bullet BLUF)
+   - Threat level overall
+   - Biggest change from last week
+   - Top recommendation
+
+3. KEY METRICS GRID (tabel 2x3 atau 3x2)
+   | Metric | Current | vs Last Week | Trend | Confidence |
+   |---|---|---|---|---|
+   | Activity Level | [N] | +/-% | ↑/↓ | H/M/L |
+   | Anomaly Count | [N] | +/-% | ↑/↓ | H/M/L |
+   | Contact Frequency | [N] | +/-% | ↑/↓ | H/M/L |
+
+4. TREND ANALYSIS
+   [CHART 1 PLACEHOLDER: Line chart showing 7-day activity trend]
+   - Narrative: 2-3 kalimat interpretasi trend
+   - Inflection points: tanggal dan driving factors
+
+5. PATTERN BREAKDOWN
+   [CHART 2 PLACEHOLDER: Bar chart by category]
+   - Top 3 patterns that emerged this week
+   - Patterns that disappeared from baseline
+
+6. ALERTS & ANOMALIES
+   - List 3-5 alerts paling kritis
+   - Per alert: description, confidence, time window, recommended action
+
+7. RECOMMENDATIONS
+   - 3 tindakan prioritas
+   - Collection requirements untuk next week
+   - Escalation criteria
+
+8. APPENDIX
+   - Methodology note
+   - Sources used (generic, tanpa detail sensitif)
+   - Data gaps
+
+Format: layout markdown dengan heading hierarchical, tabel untuk metrics, bullet untuk list. Siap export ke Google Slides sebagai presentation deck.</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Dashboard di Canvas</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Chart placeholder, bukan chart langsung</strong> — Canvas lemah render chart real. Placeholder → insert manual dari Google Sheets/Create Image.</li>
+              <li>• <strong class="text-white">Markdown tabel untuk KPI</strong> — renders cleanly di Canvas dan di Google Docs/Slides export.</li>
+              <li>• <strong class="text-white">One-click slide export</strong> — setiap major heading di Canvas akan jadi slide di Google Slides. Atur heading hierarchy dari awal.</li>
+              <li>• <strong class="text-white">Section-level iteration</strong> — saat data refresh weekly, hanya update section yang berubah — section lain tetap stabil.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-03-canvas.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.3 — Canvas →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- EMBED 2: CREATE IMAGE (SESI 6.2) -->
+      <details class="glass-lit rounded-2xl overflow-hidden border border-indigo-500/30 group">
+        <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none hover:bg-indigo-500/5 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-2xl">🖼️</div>
+            <div>
+              <div class="font-mono text-xs text-indigo-400 mb-1">GEMINI WORKFLOW • SESI 6.2 CREATE IMAGE</div>
+              <h3 class="text-lg font-semibold">Generate Infografis Background dan Visual Elements</h3>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 pb-6 pt-2 border-t border-indigo-500/20 space-y-5">
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">KAPAN PAKAI UNTUK DASHBOARD INFOGRAFIS</div>
+            <p class="text-sm text-white/70">Setelah layout dashboard siap di Canvas, Anda butuh <strong class="text-white">visual assets</strong> untuk hero image, section dividers, icon set, atau background infografis. Create Image efektif untuk generate <em>infographic-style illustration</em> yang melengkapi data tabel — BUKAN untuk generate chart data (chart pakai Google Sheets atau Python).</p>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">STEP-BY-STEP — Visual Assets untuk Dashboard</div>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</span><div class="text-white/70"><strong class="text-white">Identifikasi visual needs</strong> — hero banner, section divider illustration, icon set, atau background pattern. List semuanya dulu.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">2</span><div class="text-white/70"><strong class="text-white">Set gaya visual konsisten</strong> di semua prompt — "flat infographic style, navy + indigo palette, minimalist". Konsistensi = professional.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">3</span><div class="text-white/70"><strong class="text-white">Generate hero banner dulu</strong> — ini set tone untuk dashboard. Iterate sampai puas.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">4</span><div class="text-white/70"><strong class="text-white">Icon set di satu prompt</strong> — minta 6 icon related themes (radar, aircraft, shield, alert, chart, map) dalam 1 image, lalu crop manual per icon.</div></li>
+              <li class="flex gap-3 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">5</span><div class="text-white/70"><strong class="text-white">Insert ke Canvas dashboard</strong> di placeholder yang sesuai. Tambahkan watermark "AI GENERATED" di footer.</div></li>
+            </ol>
+          </div>
+
+          <div>
+            <div class="font-mono text-xs text-indigo-400 mb-2">PROMPT SIAP PAKAI — Dashboard Hero Banner</div>
+            <pre class="bg-navy-900 border border-indigo-500/20 rounded-xl p-4 text-xs text-white/80 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">SUBJECT:
+Abstract infographic hero banner illustration for weekly intelligence dashboard. Features subtle hexagonal grid pattern overlay, radial data visualization elements (concentric circles, dotted arcs), minimal wireframe globe silhouette on right side.
+
+STYLE:
+Flat vector infographic style (NOT photorealistic). Dark navy background (#050810) with indigo glow accents (#6366f1), subtle cyan highlights (#22d3ee). Minimalist corporate-military briefing aesthetic. Clean professional look, no clutter.
+
+COMPOSITION:
+Wide banner aspect ratio (5:1 or similar). Left two-thirds: abstract data visualization elements (grid, dots, lines). Right one-third: subtle globe wireframe as anchor. Plenty of negative space for title text to be added later.
+
+CONSTRAINT:
+- NO specific country names, NO real geographic accuracy
+- NO realistic aircraft, NO identifiable unit insignia
+- NO text (will be added manually)
+- Purely abstract visual — evokes "intelligence briefing" without specifics
+- Safe for training/internal use
+- Watermark-friendly bottom strip
+
+Purpose: header banner for weekly intel dashboard document</pre>
+          </div>
+
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-indigo-400 mb-2">💡 Tips Visual Assets</div>
+            <ul class="text-sm text-white/70 space-y-1.5">
+              <li>• <strong class="text-white">Abstract lebih aman dari concrete</strong> — "abstract data visualization" melewati filter, "military operation center" mungkin kena.</li>
+              <li>• <strong class="text-white">Consistency via shared style block</strong> — copy-paste blok STYLE yang sama di semua prompt dashboard asset.</li>
+              <li>• <strong class="text-white">Chart masih manual</strong> — chart data real pakai Google Sheets/Looker Studio, Create Image hanya untuk illustrative elements.</li>
+              <li>• <strong class="text-white">Text manual di Slides</strong> — insert image di Slides, add title/label dengan text boxes biasa.</li>
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <a href="sesi-06-02-create-image.html" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold">
+              Deep dive lengkap: Sesi 6.2 — Create Image →
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <!-- PIPELINE -->
+      <div class="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+        <div class="font-semibold text-indigo-400 mb-3">🔗 Dashboard Production Pipeline</div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 text-xs">
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-teal-400 mb-1">1. CLAUDE (sesi ini)</div><div class="text-white/70">Analysis + insight narrative</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">2. CANVAS</div><div class="text-white/70">Dashboard layout + sections</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-indigo-400 mb-1">3. CREATE IMAGE</div><div class="text-white/70">Visual assets + hero banner</div></div>
+          <div class="text-indigo-400 font-mono">→</div>
+          <div class="flex-1 p-3 bg-navy-900/50 rounded-lg text-center"><div class="font-mono text-white mb-1">4. SLIDES</div><div class="text-white/70">Assembly + distribusi</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>

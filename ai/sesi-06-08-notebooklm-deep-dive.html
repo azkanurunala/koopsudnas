@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesi 6.8 | NotebookLM Deep Dive — Intel Synthesis</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'navy': { 900: '#050810', 800: '#0a0f1a', 700: '#0f1628', 600: '#1a2642' },
+            'accent': '#8b5cf6',
+            'accent-light': '#a78bfa',
+          },
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { --color-bg: #050810; --color-surface: rgba(255,255,255,0.03); --color-border: rgba(255,255,255,0.08); --accent: #8b5cf6; --accent-glow: rgba(139,92,246,0.3); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--color-bg); color: rgba(255,255,255,0.92); overflow-x: hidden; }
+
+    .scene-bg { position: fixed; inset: 0; z-index: 0; background: var(--color-bg); overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); opacity: 0.12; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -50px; background: #6366f1; opacity: 0.1; animation-delay: -3s; }
+    @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-20px) scale(1.05); } }
+
+    .grid-pattern { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+    .glass { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-radius: 16px; }
+    .glass-lit { background: var(--color-surface); backdrop-filter: blur(20px); border: 1px solid var(--color-border); border-top-color: rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -16px rgba(0,0,0,0.5); }
+
+    .slide-section { min-height: 100vh; display: flex; align-items: center; padding: 100px 24px; position: relative; }
+    .slide-section:nth-child(even) { background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.03) 50%, transparent 100%); }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #a78bfa); z-index: 100; transition: width 0.3s ease; }
+
+    .slide-nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .slide-nav-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid transparent; cursor: pointer; transition: all 0.3s ease; }
+    .slide-nav-dot:hover { background: rgba(255,255,255,0.4); }
+    .slide-nav-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+    .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,6vw,4rem); letter-spacing: 0.03em; line-height: 1.1; }
+    .slide-subtitle { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem,3vw,2rem); letter-spacing: 0.05em; }
+
+    .step-card { position: relative; padding-left: 32px; border-left: 2px solid rgba(139,92,246,0.3); }
+    .step-card::before { content: ''; position: absolute; left: -8px; top: 12px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
+    .feature-card { transition: all 0.3s ease; }
+    .feature-card:hover { transform: translateY(-4px); border-color: rgba(139,92,246,0.4); }
+
+    .prompt-block { background: #0a0f1a; border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.8); position: relative; }
+    .prompt-block .label { color: #a78bfa; font-weight: 600; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 4px 10px; background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); border-radius: 6px; font-size: 0.65rem; color: #a78bfa; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .copy-btn:hover { background: rgba(139,92,246,0.4); }
+
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .accordion-content.open { max-height: 1000px; }
+
+    @media (max-width: 768px) { .slide-nav { display: none; } }
+  </style>
+</head>
+<body x-data="{ currentSlide: 0, totalSlides: 12, progress: 0, copied: null, init() { this.updateProgress(); window.addEventListener('scroll', () => this.updateProgress()); }, updateProgress() { const scrollTop = window.scrollY; const docHeight = document.documentElement.scrollHeight - window.innerHeight; this.progress = (scrollTop / docHeight) * 100; const slides = document.querySelectorAll('.slide-section'); slides.forEach((slide, index) => { const rect = slide.getBoundingClientRect(); if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) { this.currentSlide = index; } }); }, scrollToSlide(index) { const slides = document.querySelectorAll('.slide-section'); if (slides[index]) slides[index].scrollIntoView({ behavior: 'smooth' }); }, copyText(id) { const el = document.getElementById(id); navigator.clipboard.writeText(el.innerText); this.copied = id; setTimeout(() => this.copied = null, 2000); } }">
+
+  <div class="scene-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+  <div class="grid-pattern"></div>
+  <div class="progress-bar" :style="'width: ' + progress + '%'"></div>
+
+  <div class="slide-nav">
+    <template x-for="i in totalSlides" :key="i">
+      <div class="slide-nav-dot" :class="currentSlide === i-1 ? 'active' : ''" @click="scrollToSlide(i-1)"></div>
+    </template>
+  </div>
+
+  <nav class="fixed top-0 w-full z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="modul-06-multi-tool-operations.html" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span class="text-sm">Modul 06</span>
+        </a>
+        <div class="h-4 w-px bg-white/20"></div>
+        <div class="text-sm">
+          <span class="text-accent font-mono">SESI 6.8</span>
+          <span class="text-white/40 mx-2">•</span>
+          <span class="text-white/60">60 Menit</span>
+          <span class="ml-2 px-2 py-0.5 bg-accent/20 text-accent text-xs rounded-full">HANDS-ON</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="sesi-06-07-guided-learning.html" class="text-xs text-white/40 hover:text-white/60">← Sesi 6.7</a>
+        <span class="text-white/20">|</span>
+        <a href="sesi-06-09-multi-tool-workflow.html" class="text-xs text-white/40 hover:text-white/60">Sesi 6.9 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/30 rounded-full mb-8">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-accent font-mono text-sm">MODUL 06 • SESI 8 • NOTEBOOKLM DEEP DIVE</span>
+      </div>
+      <h1 class="slide-title mb-6">NOTEBOOKLM<br><span class="text-accent">INTEL SYNTHESIS</span></h1>
+      <p class="text-xl text-white/60 max-w-2xl mx-auto mb-12">
+        Transform 50+ dokumen intel menjadi <strong class="text-white">sourced briefing</strong>, <strong class="text-white">audio overview</strong>, dan <strong class="text-white">mind map visual</strong> — tanpa halusinasi, dengan citation wajib. Plus source rating framework dan query template library.
+      </p>
+      <div class="p-6 glass-lit rounded-2xl max-w-3xl mx-auto">
+        <div class="flex items-center justify-center gap-8 text-center">
+          <div><div class="font-display text-3xl text-accent">300</div><div class="text-xs text-white/60 font-mono">SOURCES / NOTEBOOK</div></div>
+          <div class="w-px h-12 bg-white/20"></div>
+          <div><div class="font-display text-3xl text-accent">25M</div><div class="text-xs text-white/60 font-mono">KATA / NOTEBOOK</div></div>
+          <div class="w-px h-12 bg-white/20"></div>
+          <div><div class="font-display text-3xl text-accent">0%</div><div class="text-xs text-white/60 font-mono">HALUSINASI</div></div>
+          <div class="w-px h-12 bg-white/20"></div>
+          <div><div class="font-display text-3xl text-accent">6</div><div class="text-xs text-white/60 font-mono">OUTPUT TYPES</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: KENAPA NOTEBOOKLM BEDA -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WHAT MAKES IT DIFFERENT</div>
+        <h2 class="slide-title">BUKAN <span class="text-accent">SEKADAR CHATBOT</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-red-500">
+          <div class="text-red-400 font-mono text-xs mb-2">❌ CHATBOT BIASA</div>
+          <h3 class="text-lg font-semibold mb-3">LLM Tanpa Dokumen (mode chat biasa)</h3>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Bisa hallucinate fakta dari training data</li>
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Training data statis (knowledge cutoff)</li>
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Context limit: tiap sesi harus upload ulang</li>
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Tidak ada audio/podcast output</li>
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Citation manual (kalau diminta, sering miss)</li>
+            <li class="flex items-start gap-2"><span class="text-red-400">•</span> Tidak bisa refuse kalau tidak tahu</li>
+          </ul>
+        </div>
+        <div class="glass-lit p-6 rounded-2xl border-l-4 border-accent">
+          <div class="text-accent font-mono text-xs mb-2">✓ NOTEBOOKLM</div>
+          <h3 class="text-lg font-semibold mb-3">Source-Grounded Research Tool</h3>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Grounded</strong> ke sumber — tidak akan menjawab di luar dokumen yang Anda upload</li>
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Citation wajib</strong> — setiap klaim linked ke dokumen asli (klik untuk verify)</li>
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Persistent notebook</strong> — upload sekali, pakai berulang, share ke tim</li>
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Audio overview</strong> auto-generate podcast 2-host 10-20 menit</li>
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">6 Studio outputs</strong>: mind map, briefing doc, FAQ, timeline, study guide, audio</li>
+            <li class="flex items-start gap-2"><span class="text-accent">•</span> <strong class="text-white">Refuse out-of-scope</strong> — kalau dokumen tidak ada, tidak akan karang</li>
+          </ul>
+        </div>
+      </div>
+      <div class="p-5 glass rounded-xl border border-accent/30">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl">🎯</div>
+          <div>
+            <div class="font-semibold text-white mb-1">Tagline filosofis NotebookLM</div>
+            <div class="text-sm text-white/70 italic">"NotebookLM tidak tahu apapun di luar dokumen yang Anda beri. Itu kelemahannya <strong class="text-white not-italic">— dan juga kekuatannya</strong>."</div>
+            <div class="text-xs text-white/50 mt-2">Untuk intel ops, grounding ke sumber yang Anda kontrol adalah fitur, bukan bug. Anda tahu persis dari mana setiap klaim berasal.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: USE CASES KOOPSUDNAS -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">OPS USE CASES</div>
+        <h2 class="slide-title">UNTUK <span class="text-accent">KOOPSUDNAS</span></h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">📚</div><h3 class="text-lg font-semibold">Doktrin Digest</h3></div>
+          <p class="text-sm text-white/60 mb-3">Upload PDF doktrin TNI AU + NATO doctrine + historical operations reports → query: "summarize doctrinal stance on air-ground coordination 2020-2025"</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: sourced summary dengan page-level citation</div>
+          <div class="text-xs text-white/40">Benefit: Tidak perlu baca ratusan halaman manual — NotebookLM synthesize dan Anda verify spot-check</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">🌏</div><h3 class="text-lg font-semibold">Regional Intel Baseline</h3></div>
+          <p class="text-sm text-white/60 mb-3">Upload 30+ OSINT reports regional (Jane's, IISS, CSIS) → "extract force posture indicators for South China Sea, last 12 months"</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: timeline indicators dengan source attribution</div>
+          <div class="text-xs text-white/40">Benefit: Cross-document pattern yang tidak terlihat kalau baca satu per satu</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">📋</div><h3 class="text-lg font-semibold">After Action Review (AAR)</h3></div>
+          <p class="text-sm text-white/60 mb-3">Upload SITREP serial dari latihan gabungan + debrief notes → "identify recurring coordination gaps across all exercises"</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: pattern cross-document, traceable ke SITREP asli</div>
+          <div class="text-xs text-white/40">Benefit: Lessons learned lintas tahun yang terdokumentasi dengan citation</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">⚖️</div><h3 class="text-lg font-semibold">Regulasi & ROE Check</h3></div>
+          <p class="text-sm text-white/60 mb-3">Upload Perpres, Permenhan, ROE, MOU bilateral → "cek apakah operasi X consistent dengan ROE yang berlaku"</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: compliance check dengan rujukan pasal</div>
+          <div class="text-xs text-white/40">Benefit: Legal review cepat dengan citation ke pasal yang tepat</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">🎙️</div><h3 class="text-lg font-semibold">Commander's Briefing Audio</h3></div>
+          <p class="text-sm text-white/60 mb-3">Generate audio overview 15-20 menit dari bundle intel → komandan dengarkan di kendaraan saat bergerak ke posko atau dalam penerbangan</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: podcast MP3 bisa share via secure channel</div>
+          <div class="text-xs text-white/40">Benefit: Konsumsi intel saat multitasking — mobile, commute, perjalanan dinas</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">🗺️</div><h3 class="text-lg font-semibold">Situational Awareness Map</h3></div>
+          <p class="text-sm text-white/60 mb-3">Generate mind map otomatis dari semua sumber → dapat visual hierarki topik untuk orient tim baru atau brief di command center</p>
+          <div class="text-xs text-accent font-mono mb-2">OUTPUT: mind map hierarkis, exportable sebagai image</div>
+          <div class="text-xs text-white/40">Benefit: Visualisasi cepat dari landscape intel yang kompleks</div>
+        </div>
+        <div class="feature-card glass-lit p-6 rounded-2xl border border-green-500/20">
+          <div class="flex items-center gap-3 mb-3"><div class="text-3xl">🚁</div><h3 class="text-lg font-semibold">OMSP / SAR Best-Practice Compile</h3></div>
+          <p class="text-sm text-white/60 mb-3">Upload lessons learned SAR lintas regional (CENDRAWASIH RESCUE, banjir Sulawesi, karhutla Riau) + SOP BASARNAS + laporan AAR multi-agency → "ekstrak best practice koordinasi SAR multi-agency &amp; rekomendasi perbaikan"</p>
+          <div class="text-xs text-green-400 font-mono mb-2">OUTPUT: playbook SAR dengan citation per-insiden</div>
+          <div class="text-xs text-white/40">Benefit: Knowledge base OMSP tergabung — tidak perlu reinvent wheel tiap ops SAR baru</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: SOURCE RELIABILITY FRAMEWORK -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">CRITICAL SKILL</div>
+        <h2 class="slide-title">SOURCE RELIABILITY <span class="text-accent">FRAMEWORK</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">NotebookLM <strong class="text-white">tidak otomatis membedakan</strong> sumber berkualitas tinggi dan rendah — tanggung jawab ada di operator</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <p class="text-white/70 mb-6">Sebelum upload ke NotebookLM, rate tiap sumber menggunakan adaptasi dari <strong class="text-accent">NATO Intelligence Source Evaluation</strong> (modifikasi untuk OSINT):</p>
+        <div class="overflow-x-auto mb-6">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-2 pr-4 text-accent font-mono text-xs">KODE</th>
+                <th class="text-left py-2 pr-4 text-white/50 font-normal">SOURCE CREDIBILITY</th>
+                <th class="text-left py-2 pr-4 text-white/50 font-normal">CONTOH</th>
+                <th class="text-left py-2 text-white/50 font-normal">AKSI DI NOTEBOOKLM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs font-mono">A1</span></td><td class="py-2 pr-4 text-white">Sangat reliabel, terverifikasi</td><td class="py-2 pr-4 text-white/60">Official gov docs, peer-reviewed, primary source</td><td class="py-2 text-green-400 text-xs">Include sebagai core source</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4"><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs font-mono">B2</span></td><td class="py-2 pr-4 text-white">Reliabel, track record bagus</td><td class="py-2 pr-4 text-white/60">Jane's, IISS, CSIS, War on the Rocks</td><td class="py-2 text-blue-400 text-xs">Include, mention di nama file</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4"><span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded text-xs font-mono">C3</span></td><td class="py-2 pr-4 text-white">Cukup reliabel, perlu corroborate</td><td class="py-2 pr-4 text-white/60">Defense News, The Diplomat, think tanks kecil</td><td class="py-2 text-amber-400 text-xs">Include, flag di nama file [C3]</td></tr>
+              <tr class="border-b border-white/5"><td class="py-2 pr-4"><span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs font-mono">D4</span></td><td class="py-2 pr-4 text-white">Tidak pasti, unverified</td><td class="py-2 pr-4 text-white/60">Blog defense, forum militer, media belum dikenal</td><td class="py-2 text-orange-400 text-xs">Pisahkan ke notebook terpisah</td></tr>
+              <tr><td class="py-2 pr-4"><span class="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs font-mono">F6</span></td><td class="py-2 pr-4 text-white">Tidak dapat dipercaya</td><td class="py-2 pr-4 text-white/60">Anonimous, propaganda, social media unverified</td><td class="py-2 text-red-400 text-xs">Jangan upload ke notebook intel</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div class="font-semibold text-accent mb-2">💡 Naming Convention yang Disarankan</div>
+            <div class="text-xs font-mono text-white/70 space-y-1">
+              <div>✓ <span class="text-green-400">JANES_UAV_2025_A1.pdf</span></div>
+              <div>✓ <span class="text-blue-400">CSIS_INDOPASIFIK_Q3_B2.pdf</span></div>
+              <div>✓ <span class="text-amber-400">BLOG_DEFENSE_ANALYSIS_C3.pdf</span></div>
+              <div class="mt-2 text-white/40">Format: [SOURCE]_[TOPIK]_[PERIODE]_[RATING].pdf</div>
+            </div>
+          </div>
+          <div class="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+            <div class="font-semibold text-red-400 mb-2">⚠ Bahaya Mix Source Tanpa Rating</div>
+            <div class="text-xs text-white/70">Kalau upload A1 dan F6 bersama, NotebookLM treat keduanya sama. Klaim dari F6 bisa masuk ke briefing komandan dengan citation seolah valid. <strong class="text-white">Ini yang paling sering menyebabkan intel error dalam konteks AI-assisted analysis.</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="glass-lit p-6 rounded-2xl">
+        <h3 class="font-semibold text-accent mb-4">🗂️ Strategi Notebook Tiering</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+            <div class="text-green-400 font-mono text-xs mb-2">TIER 1 — HIGH CONFIDENCE</div>
+            <div class="text-sm text-white/70">Hanya sumber A1 + B2. Untuk briefing komandan dan produk intel formal.</div>
+          </div>
+          <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+            <div class="text-amber-400 font-mono text-xs mb-2">TIER 2 — WORKING ANALYSIS</div>
+            <div class="text-sm text-white/70">A1 + B2 + C3. Untuk analisis kerja, bukan final product. Tandai "DRAFT — PENDING VERIFICATION".</div>
+          </div>
+          <div class="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
+            <div class="text-orange-400 font-mono text-xs mb-2">TIER 3 — EXPLORATORY</div>
+            <div class="text-sm text-white/70">Semua sources termasuk D4. Untuk early scan, pattern detection. Jangan jadikan basis keputusan tanpa verify.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: WORKFLOW STEP BY STEP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STEP BY STEP</div>
+        <h2 class="slide-title">WORKFLOW <span class="text-accent">END-TO-END</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="space-y-6">
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 01 • 5 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Create Notebook & Upload Sources</h3>
+            <p class="text-sm text-white/70 mb-2">Buka <code class="text-accent font-mono text-xs">notebooklm.google.com</code> → "Create new notebook" → upload PDF, Google Docs, Slides, website URL, YouTube link, atau teks tempel. Rate sumber terlebih dahulu (framework slide sebelumnya).</p>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs text-white/60">💡 <strong class="text-white">Tip Pamen:</strong> Gunakan nama notebook yang informatif — "INTEL_LATGAB_INDOPASIFIK_2026_Q1_TIER1". OPSEC: classification level harus jelas. Jangan mix notebook Tier 1 dan Tier 3.</div>
+          </div>
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 02 • 2 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Review Auto-Generated Overview</h3>
+            <p class="text-sm text-white/70 mb-2">NotebookLM otomatis generate summary semua sources. Review untuk pastikan coverage lengkap — jika ada dokumen penting yang tidak ter-reference, upload ulang atau re-process.</p>
+            <div class="p-3 bg-navy-900/50 rounded-lg text-xs text-white/60">💡 Kalau overview-nya terlalu generik, itu tanda sources Anda terlalu beragam topiknya. Pertimbangkan untuk split ke beberapa notebook fokus.</div>
+          </div>
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 03 • 10 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Ask Focused Questions (Chat Panel)</h3>
+            <p class="text-sm text-white/70 mb-3">Gunakan RISEN framework (Modul 01) dengan mindset: "jawaban harus grounded di dokumen yang sudah saya upload". NotebookLM akan <strong class="text-white">refuse atau caveate</strong> kalau tidak ada data.</p>
+            <div class="p-3 bg-accent/10 rounded-lg text-xs">
+              <div class="text-accent font-mono mb-2">CONTOH QUERY RISEN (copy-adaptasi):</div>
+              <div class="text-white/70 leading-relaxed">
+                <strong class="text-white">Role:</strong> Senior analyst Koopsudnas<br>
+                <strong class="text-white">Input:</strong> [otomatis: semua dokumen di notebook]<br>
+                <strong class="text-white">Steps:</strong> Extract force posture indicators → cross-reference ke historical baseline → flag deviations<br>
+                <strong class="text-white">Expectation:</strong> Tabel indicators: Indikator | Current | Baseline | Deviation | Source citation<br>
+                <strong class="text-white">Narrowing:</strong> Hanya periode 2025-2026, hanya sumber rated reliable (A1/B2)
+              </div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 04 • 5 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Generate Studio Outputs</h3>
+            <p class="text-sm text-white/70 mb-3">Di panel "Studio" kanan, pilih output format yang sesuai kebutuhan:</p>
+            <div class="grid sm:grid-cols-3 gap-3">
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">🎙️ Audio Overview</strong><br><span class="text-white/60">Podcast 2-host 10-20 menit. Customizable focus.</span></div>
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">🗺️ Mind Map</strong><br><span class="text-white/60">Visual hierarki otomatis semua topik.</span></div>
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">📋 Briefing Doc</strong><br><span class="text-white/60">Executive summary multi-section.</span></div>
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">❓ FAQ</strong><br><span class="text-white/60">Anticipated questions + jawaban sourced.</span></div>
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">📅 Timeline</strong><br><span class="text-white/60">Chronological events dari semua sources.</span></div>
+              <div class="p-3 bg-white/5 rounded-lg text-xs"><strong class="text-accent">📊 Study Guide</strong><br><span class="text-white/60">Key concepts + quiz dari materi.</span></div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 05 • 3 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Validate Citations (Wajib)</h3>
+            <p class="text-sm text-white/70 mb-2">Setiap klaim NotebookLM punya inline citation <code class="text-accent font-mono text-xs">[1]</code>, <code class="text-accent font-mono text-xs">[2]</code>. Klik untuk lompat ke paragraf asli di source. <strong class="text-white">Wajib spot-check 3-5 citation acak</strong> sebelum forward ke komandan.</p>
+            <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-white/70"><strong class="text-red-400">⚠ OPSEC:</strong> NotebookLM tidak train model pada data Anda (policy Google), TAPI jangan upload material classified di akun personal. Gunakan akun Workspace Enterprise untuk data sensitif. Hapus notebook setelah ops selesai.</div>
+          </div>
+          <div class="step-card">
+            <div class="font-mono text-xs text-accent mb-1">STEP 06 • 2 MENIT</div>
+            <h3 class="text-xl font-semibold mb-2">Share & Collaborate</h3>
+            <p class="text-sm text-white/70">Share notebook ke tim (read-only atau edit). Tim lain bisa tanya question sendiri ke notebook yang sama → konsistensi baseline intel antar analyst. Sangat berguna untuk distributed analysis team.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: AUDIO OVERVIEW DEEP DIVE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KILLER FEATURE</div>
+        <h2 class="slide-title">AUDIO <span class="text-accent">OVERVIEW</span></h2>
+        <p class="text-white/60 mt-4">Fitur paling unik NotebookLM — podcast auto-generate dari dokumen Anda</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center text-4xl">🎙️</div>
+          <div><h3 class="text-xl font-semibold">Two-Host Podcast Generation</h3><p class="text-sm text-white/60">Dua host AI berbeda voice berdiskusi konten notebook Anda, 10-20 menit, berformat natural conversation</p></div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-accent mb-2">✓ Yang bagus</div>
+            <ul class="text-xs text-white/70 space-y-1">
+              <li>• Natural conversational tone, mudah dicerna</li>
+              <li>• Highlight key insights otomatis</li>
+              <li>• Bisa dengarkan sambil commute / di kendaraan</li>
+              <li>• Customizable focus via instruction</li>
+              <li>• Format MP3, mudah di-share</li>
+              <li>• Bahasa Indonesia tersedia</li>
+              <li>• Interactive mode — bisa join dan tanya pertanyaan ke host AI</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-white/5 rounded-xl">
+            <div class="font-semibold text-amber-400 mb-2">⚠ Yang perlu dipikirkan</div>
+            <ul class="text-xs text-white/70 space-y-1">
+              <li>• Generation butuh 5-10 menit</li>
+              <li>• Tone kadang terlalu "enthusiast" — perlu custom instruction</li>
+              <li>• Tidak bisa di-edit setelah generate (harus regenerate)</li>
+              <li>• Hindari upload data classified ke akun personal</li>
+              <li>• Validate accuracy sebelum komandan dengar</li>
+              <li>• Durasi tidak bisa dikontrol presisi</li>
+            </ul>
+          </div>
+        </div>
+        <div class="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+          <div class="font-semibold text-accent mb-2">🎯 Custom Instruction untuk Konteks Militer (copy-paste)</div>
+          <div class="prompt-block" id="audio-instruction">
+            <button class="copy-btn" @click="copyText('audio-instruction')" x-text="copied === 'audio-instruction' ? '✓ Copied!' : 'Copy'"></button>
+            Focus on operational implications for Indonesian Air Force. Use formal military terminology — avoid casual language. Highlight these elements in order of priority: (1) threat indicators and force posture changes, (2) capability developments, (3) ROE considerations, (4) implications for Indonesian air defense. Skip commercial or economic angles unless directly relevant to military capability. Keep tone professional and analytical, not enthusiastic. Use Bahasa Indonesia for the conversation. Duration: approximately 12-15 minutes.
+          </div>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-4 glass rounded-xl text-center"><div class="text-3xl mb-2">⏱️</div><div class="font-semibold mb-1 text-sm">10-20 menit</div><div class="text-xs text-white/50">Durasi rata-rata</div></div>
+        <div class="p-4 glass rounded-xl text-center"><div class="text-3xl mb-2">🌐</div><div class="font-semibold mb-1 text-sm">50+ bahasa</div><div class="text-xs text-white/50">Termasuk Bahasa Indonesia</div></div>
+        <div class="p-4 glass rounded-xl text-center"><div class="text-3xl mb-2">🎧</div><div class="font-semibold mb-1 text-sm">Interactive Mode</div><div class="text-xs text-white/50">Join live dan tanya ke host AI</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: STUDIO OUTPUTS DEEP DIVE -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">STUDIO PANEL</div>
+        <h2 class="slide-title">6 OUTPUT TYPES <span class="text-accent">DEEP DIVE</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">Setiap output punya use case spesifik — pilih yang tepat untuk kebutuhan briefing Anda</p>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-4"><span class="text-2xl">🎙️</span><div class="text-left"><div class="font-semibold">Audio Overview</div><div class="text-xs text-white/50 font-mono">UNTUK: mobile consumption, komandan busy</div></div></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5 pt-4">
+              <p class="text-sm text-white/70 mb-3">Podcast 2-host otomatis. Customizable dengan instruction. Export MP3. Interactive mode tersedia (bisa tanya pertanyaan ke host real-time). Durasi 10-20 menit tergantung kompleksitas dokumen.</p>
+              <p class="text-xs text-accent">Best for: Komandan yang perlu consume intel dalam perjalanan. Tim yang perlu onboarding cepat ke topik baru.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-4"><span class="text-2xl">🗺️</span><div class="text-left"><div class="font-semibold">Mind Map</div><div class="text-xs text-white/50 font-mono">UNTUK: visual overview, orientasi topik kompleks</div></div></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5 pt-4">
+              <p class="text-sm text-white/70 mb-3">Visualisasi hierarkis otomatis dari semua topik dalam sources. Node-node bisa di-click untuk lihat detail. Export sebagai gambar. Tidak bisa di-edit manual (hanya generate otomatis).</p>
+              <p class="text-xs text-accent">Best for: Orientasi cepat ke topik baru, brief visual di command center, onboarding analyst baru ke area of interest.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-4"><span class="text-2xl">📋</span><div class="text-left"><div class="font-semibold">Briefing Document</div><div class="text-xs text-white/50 font-mono">UNTUK: executive summary, formal products</div></div></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5 pt-4">
+              <p class="text-sm text-white/70 mb-3">Multi-section executive summary dengan inline citations. Export ke Google Docs untuk editing lebih lanjut. Bisa customize fokus dengan instruction. Semua klaim punya citation yang bisa di-verify.</p>
+              <p class="text-xs text-accent">Best for: Draft awal laporan intel, executive summary untuk komandan, base document untuk Gemini 2.5 Pro deep analysis di Sesi 6.4.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-4"><span class="text-2xl">📅</span><div class="text-left"><div class="font-semibold">Timeline</div><div class="text-xs text-white/50 font-mono">UNTUK: chronological analysis, escalation tracking</div></div></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5 pt-4">
+              <p class="text-sm text-white/70 mb-3">Ekstrak semua events chronological dari sources, disusun per tanggal. Sangat kuat untuk analisis eskalasi, pattern temporal, dan trend jangka panjang. Masing-masing event punya citation.</p>
+              <p class="text-xs text-accent">Best for: Tracking pola insiden, menyusun historical timeline untuk AAR, analisis eskalasi sebelum operasi.</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-4"><span class="text-2xl">❓</span><div class="text-left"><div class="font-semibold">FAQ (Frequently Asked Questions)</div><div class="text-xs text-white/50 font-mono">UNTUK: persiapan briefing, Q&A prep</div></div></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5 pt-4">
+              <p class="text-sm text-white/70 mb-3">Generate daftar pertanyaan yang paling mungkin ditanyakan tentang topik, beserta jawaban sourced. Sangat berguna untuk prep sebelum briefing komandan senior yang kemungkinan tanya banyak hal.</p>
+              <p class="text-xs text-accent">Best for: Persiapan briefing — antisipasi pertanyaan komandan, press Q&A prep, studi materi baru.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: QUERY TEMPLATE LIBRARY -->
+  <section class="slide-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">QUERY LIBRARY</div>
+        <h2 class="slide-title">5 QUERY TEMPLATE <span class="text-accent">SIAP PAKAI</span></h2>
+        <p class="text-white/60 mt-4 max-w-2xl mx-auto">RISEN-structured queries dioptimalkan untuk NotebookLM — copy, adaptasi nama topik, paste</p>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">Q-01</span><span class="font-semibold">Force Posture Indicator Extraction</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="nq1">
+                <button class="copy-btn" @click="copyText('nq1')" x-text="copied === 'nq1' ? '✓ Copied!' : 'Copy'"></button>
+                Role: Senior intelligence analyst Koopsudnas<br><br>
+                Based ONLY on the documents in this notebook, extract all force posture indicators for [NEGARA/KAWASAN].<br><br>
+                For each indicator, provide:<br>
+                - Indicator description<br>
+                - Current status / value<br>
+                - Historical baseline (if mentioned in sources)<br>
+                - Deviation direction: INCREASING / STABLE / DECREASING<br>
+                - Source citation (document name + page/section if available)<br>
+                - Confidence level: HIGH / MEDIUM / LOW<br><br>
+                Format: table with columns above.<br>
+                Narrowing: Focus on period [PERIODE]. Only include indicators explicitly stated in sources — do NOT infer or extrapolate beyond what is written.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">Q-02</span><span class="font-semibold">Cross-Document Pattern Analysis</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="nq2">
+                <button class="copy-btn" @click="copyText('nq2')" x-text="copied === 'nq2' ? '✓ Copied!' : 'Copy'"></button>
+                Role: Senior intelligence analyst<br><br>
+                Analyze ALL documents in this notebook to identify recurring patterns related to [TOPIK/FENOMENA].<br><br>
+                Steps:<br>
+                1. List all mentions of [TOPIK] across sources, with date and source name<br>
+                2. Identify any temporal pattern (is this increasing, decreasing, cyclical?)<br>
+                3. Identify any geographic pattern (where does this cluster?)<br>
+                4. Note any source disagreements or conflicting information<br>
+                5. Flag what is most significant for Indonesian air defense consideration<br><br>
+                Expectation: Structured analysis with pattern statement → supporting evidence → confidence level → caveat.<br>
+                Important: Clearly state when a pattern is inferred vs explicitly stated in sources.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">Q-03</span><span class="font-semibold">Capability Gap Assessment</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="nq3">
+                <button class="copy-btn" @click="copyText('nq3')" x-text="copied === 'nq3' ? '✓ Copied!' : 'Copy'"></button>
+                Role: Military capability analyst<br><br>
+                Based on documents in this notebook, assess the capability profile of [NEGARA/UNIT] in the domain of [DOMAIN: e.g., air defense, ISR, strike].<br><br>
+                Structure your assessment:<br>
+                1. CURRENT CAPABILITIES: What capabilities are explicitly confirmed in sources?<br>
+                2. ASSESSED INTENT: What does stated doctrine/procurement suggest about future direction?<br>
+                3. IDENTIFIED GAPS: What capabilities appear to be missing based on stated ambitions?<br>
+                4. TIMELINE: Any acquisition or development timelines mentioned?<br>
+                5. COMPARISON: How does this compare to [BENCHMARK NEGARA] if mentioned in sources?<br><br>
+                Confidence level for each section. Cite sources for all claims. If sources are silent on a topic, say so explicitly.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">Q-04</span><span class="font-semibold">Compliance & ROE Check</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="nq4">
+                <button class="copy-btn" @click="copyText('nq4')" x-text="copied === 'nq4' ? '✓ Copied!' : 'Copy'"></button>
+                Role: Legal-intelligence analyst<br><br>
+                Review the documents in this notebook to assess the compliance posture for the following operational scenario:<br><br>
+                Scenario: [DESKRIPSIKAN SKENARIO OPERASI SECARA UMUM]<br><br>
+                Check against:<br>
+                1. Relevant national regulations (Perpres/Permenhan if in sources)<br>
+                2. Applicable ROE provisions<br>
+                3. Bilateral/multilateral MOU or agreements<br>
+                4. International law considerations if mentioned in sources<br><br>
+                Output:<br>
+                - CONSISTENT: provisions that support the operation<br>
+                - CONSTRAINING: provisions that limit or require caution<br>
+                - GAPS: areas where no clear guidance exists in provided documents<br>
+                - RECOMMENDATION: flag items requiring legal review before execution<br><br>
+                Important: Only cite what is actually in the notebook documents.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-lit rounded-2xl overflow-hidden" x-data="{ open: false }">
+          <button @click="open = !open" class="w-full p-5 flex items-center justify-between gap-4 cursor-pointer">
+            <div class="flex items-center gap-3"><span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded font-mono">Q-05</span><span class="font-semibold">AAR Lessons Learned Extraction</span></div>
+            <svg class="w-5 h-5 text-white/40 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="accordion-content" :class="open ? 'open' : ''">
+            <div class="px-5 pb-5 border-t border-white/5">
+              <div class="prompt-block mt-4" id="nq5">
+                <button class="copy-btn" @click="copyText('nq5')" x-text="copied === 'nq5' ? '✓ Copied!' : 'Copy'"></button>
+                Role: After-Action Review analyst<br><br>
+                Analyze all SITREP, debrief notes, and exercise reports in this notebook.<br><br>
+                Extract and categorize findings:<br>
+                1. SUCCESSES: What worked well? (explicit positive mentions)<br>
+                2. GAPS: What recurring coordination failures or shortfalls appear?<br>
+                3. NEAR-MISSES: Any incidents flagged as requiring procedure review?<br>
+                4. RECOMMENDATIONS: Explicit recommendations from after-action reports<br>
+                5. FREQUENCY: Which issues appear in multiple exercises/operations?<br><br>
+                Output: Priority-ranked issues list (HIGH/MEDIUM/LOW) with:<br>
+                - Issue description<br>
+                - Frequency of occurrence<br>
+                - Supporting citations (which exercises/dates)<br>
+                - Status if mentioned (open/resolved/in-progress)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: PITFALLS -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">PITFALLS</div>
+        <h2 class="slide-title">HAL YANG <span class="text-red-400">HARUS DIHINDARI</span></h2>
+      </div>
+      <div class="space-y-4">
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-start gap-4"><div class="text-2xl">🚫</div><div><h3 class="font-semibold text-white mb-1">Upload material classified ke akun personal</h3><p class="text-sm text-white/60">Walaupun Google claim tidak train model pada data user, compliance regulasi TNI tidak mengizinkan data classified di cloud third-party tanpa izin. <strong class="text-white">Selalu</strong> pakai akun Workspace Enterprise yang sudah di-vet dan mendapat clearance.</p></div></div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-start gap-4"><div class="text-2xl">🚫</div><div><h3 class="font-semibold text-white mb-1">Trust audio overview tanpa validate source</h3><p class="text-sm text-white/60">Audio overview tone-nya persuasif dan natural — komandan bisa menerima insight tanpa tanya sumber. Berbahaya kalau ada dokumen low-reliability di notebook. <strong class="text-white">Rate dan filter source sebelum upload</strong> (gunakan framework di Slide 4).</p></div></div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-start gap-4"><div class="text-2xl">🚫</div><div><h3 class="font-semibold text-white mb-1">Tanya hal di luar sources</h3><p class="text-sm text-white/60">NotebookLM akan jawab "tidak ada informasi di sources" — tapi kadang dia <em>stretch</em> dari knowledge umum tanpa sadar. Query harus <strong class="text-white">tightly scoped</strong>: "berdasarkan dokumen di notebook ini..." selalu lebih aman.</p></div></div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-start gap-4"><div class="text-2xl">🚫</div><div><h3 class="font-semibold text-white mb-1">Mix sources dengan reliability sangat berbeda tanpa tiering</h3><p class="text-sm text-white/60">Kalau upload A1 bersama F6, NotebookLM tidak otomatis membedakan. Klaim dari F6 bisa muncul di briefing dengan bobot sama seperti A1. <strong class="text-white">Gunakan tiering notebook</strong> — pisahkan High Confidence dari Exploratory.</p></div></div>
+        </div>
+        <div class="glass-lit p-5 rounded-2xl border-l-4 border-red-500">
+          <div class="flex items-start gap-4"><div class="text-2xl">🚫</div><div><h3 class="font-semibold text-white mb-1">Lupa cleanup notebook setelah ops selesai</h3><p class="text-sm text-white/60">Notebook persistent — kalau ops sudah selesai dan datanya tidak lagi relevan, <strong class="text-white">delete atau archive</strong> untuk reduce data surface area. Buat log retention notebook seperti log dokumen klasifikasi.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: EXERCISE -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">EXERCISE</div>
+        <h2 class="slide-title">HANDS-ON <span class="text-accent">25 MENIT</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <div class="p-4 bg-accent/10 rounded-xl mb-6">
+          <div class="font-semibold text-accent mb-2">🎯 Skenario</div>
+          <p class="text-sm text-white/70">Anda adalah analis di Pusintelsudnas. Komandan minta <strong class="text-white">"briefing singkat + audio 10 menit"</strong> tentang perkembangan latihan udara gabungan di Indo-Pasifik 6 bulan terakhir. Waktu persiapan: 25 menit. Source: OSINT publicly available.</p>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">1</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Rate & Collect Sources (7 min)</div>
+              <p class="text-sm text-white/60">Cari 8-10 artikel OSINT publicly-available (Jane's, The Diplomat, War on the Rocks, Defense News) tentang latihan udara Asia-Pacific 6 bulan terakhir. Rate setiap sumber (A1/B2/C3) sebelum upload. Buat notebook "LATGAB_INDOPASIFIK_2026_TIER1" dan upload sumber rating A1/B2 saja dahulu.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">2</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Structured Query dengan RISEN (5 min)</div>
+              <p class="text-sm text-white/60">Gunakan Query Template Q-01 (Force Posture Indicators) — adaptasi untuk topik latihan udara. Kirim ke Chat panel. Review output, klik 3 citation acak untuk verify apakah benar ada di sumber aslinya.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">3</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Generate Briefing Doc (3 min)</div>
+              <p class="text-sm text-white/60">Di Studio panel, klik "Briefing Doc". Tambahkan custom instruction: "Focus on operational implications for Indonesian Air Force. Use formal structure: Executive Summary → Key Findings → Implications." Download atau copy ke Google Docs.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">4</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Generate Audio Overview (7 min)</div>
+              <p class="text-sm text-white/60">Customize dengan instruction dari Slide 6 (copy dari prompt block). Generate → tunggu selesai → download MP3 → dengarkan 3 menit pertama untuk quality check: tone sesuai? Tidak sensasional? Akurat vs apa yang Anda baca?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">5</div>
+            <div class="flex-1">
+              <div class="font-semibold text-white mb-1">Reflect & Debrief (3 min)</div>
+              <p class="text-sm text-white/60">Jawab di kertas: (a) Berapa lama ini vs cara lama Anda? (b) Apa 1 batasan NotebookLM yang paling perlu Anda waspadai? (c) Untuk jenis task apa lagi ini applicable di ops sehari-hari Anda? (d) Apa yang perlu di-improve di workflow ini sebelum dipakai secara rutin?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: QUIZ -->
+  <section class="slide-section" x-data="{
+    answers: {},
+    submitted: false,
+    score: 0,
+    submit() {
+      this.score = 0;
+      if (this.answers.q1 === 'b') this.score++;
+      if (this.answers.q2 === 'c') this.score++;
+      if (this.answers.q3 === 'd') this.score++;
+      if (this.answers.q4 === 'a') this.score++;
+      this.submitted = true;
+    }
+  }">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">KNOWLEDGE CHECK</div>
+        <h2 class="slide-title">QUIZ <span class="text-accent">SESI 6.8</span></h2>
+        <p class="text-white/60 mt-4">4 pertanyaan — validasi sebelum lanjut ke Visual Generation</p>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl">
+        <template x-if="!submitted">
+          <div class="space-y-8">
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 1 / 4</div>
+              <p class="font-semibold text-white mb-4">Apa perbedaan fundamental antara NotebookLM dan Gemini (mode chat biasa) untuk intel analysis?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="a" x-model="answers.q1" class="accent-purple-500"><span class="text-sm text-white/80">NotebookLM lebih cepat dalam generate output</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="b" x-model="answers.q1" class="accent-purple-500"><span class="text-sm text-white/80">NotebookLM hanya menjawab berdasarkan dokumen yang diupload — tidak bisa hallucinate di luar sumber</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="c" x-model="answers.q1" class="accent-purple-500"><span class="text-sm text-white/80">NotebookLM bisa akses internet real-time</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q1 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q1" value="d" x-model="answers.q1" class="accent-purple-500"><span class="text-sm text-white/80">NotebookLM bisa generate konten di luar dokumen yang diupload</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 2 / 4</div>
+              <p class="font-semibold text-white mb-4">Sumber mana yang SEBAIKNYA TIDAK dimasukkan ke notebook Tier 1 (untuk briefing komandan)?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="a" x-model="answers.q2" class="accent-purple-500"><span class="text-sm text-white/80">Laporan IISS (International Institute for Strategic Studies)</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="b" x-model="answers.q2" class="accent-purple-500"><span class="text-sm text-white/80">Dokumen resmi Kementerian Pertahanan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="c" x-model="answers.q2" class="accent-purple-500"><span class="text-sm text-white/80">Blog defense forum anonim tanpa track record yang jelas</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q2 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q2" value="d" x-model="answers.q2" class="accent-purple-500"><span class="text-sm text-white/80">Artikel War on the Rocks dari penulis beridentitas</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 3 / 4</div>
+              <p class="font-semibold text-white mb-4">Anda ingin komandan bisa dengarkan intel brief tentang perkembangan UAV regional selama 15 menit dalam perjalanan ke posko. Output Studio NotebookLM mana yang paling tepat?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="a" x-model="answers.q3" class="accent-purple-500"><span class="text-sm text-white/80">Briefing Document — paling komprehensif</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="b" x-model="answers.q3" class="accent-purple-500"><span class="text-sm text-white/80">Mind Map — visual paling mudah dipahami</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="c" x-model="answers.q3" class="accent-purple-500"><span class="text-sm text-white/80">FAQ — antisipasi pertanyaan komandan</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q3 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q3" value="d" x-model="answers.q3" class="accent-purple-500"><span class="text-sm text-white/80">Audio Overview — podcast 2-host yang bisa didengar tanpa perlu baca</span></label>
+              </div>
+            </div>
+            <div>
+              <div class="text-accent font-mono text-xs mb-2">PERTANYAAN 4 / 4</div>
+              <p class="font-semibold text-white mb-4">Setelah operasi selesai dan notebook intel tidak lagi dibutuhkan, apa yang harus dilakukan?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'a' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="a" x-model="answers.q4" class="accent-purple-500"><span class="text-sm text-white/80">Delete atau archive notebook untuk mengurangi data surface area</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'b' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="b" x-model="answers.q4" class="accent-purple-500"><span class="text-sm text-white/80">Biarkan saja — NotebookLM sudah enkripsi semua data</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'c' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="c" x-model="answers.q4" class="accent-purple-500"><span class="text-sm text-white/80">Tambahkan label "ARCHIVE" tapi tetap biarkan aktif</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors" :class="answers.q4 === 'd' ? 'bg-accent/10 border border-accent/30' : ''"><input type="radio" name="q4" value="d" x-model="answers.q4" class="accent-purple-500"><span class="text-sm text-white/80">Share ke seluruh tim agar semua orang bisa akses historis</span></label>
+              </div>
+            </div>
+            <button @click="submit()" :disabled="Object.keys(answers).length < 4" class="w-full py-3 px-6 bg-accent rounded-xl text-white font-semibold hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Submit Jawaban</button>
+          </div>
+        </template>
+        <template x-if="submitted">
+          <div class="text-center">
+            <div class="text-6xl mb-4" x-text="score === 4 ? '🎯' : score >= 3 ? '✅' : score >= 2 ? '📚' : '🔄'"></div>
+            <div class="text-4xl font-display text-accent mb-2" x-text="score + ' / 4'"></div>
+            <div class="text-lg text-white/80 mb-6" x-text="score === 4 ? 'Sempurna! Siap untuk Visual Generation.' : score >= 3 ? 'Hampir sempurna! Review satu topik sebelum lanjut.' : 'Ulang baca slide Source Reliability dan Audio Overview.'"></div>
+            <div class="space-y-3 text-left mb-6">
+              <div class="p-3 rounded-xl text-sm" :class="answers.q1 === 'b' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q1 === 'b' ? 'text-green-400' : 'text-red-400'" x-text="answers.q1 === 'b' ? '✓ Q1 Benar' : '✗ Q1 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Source-grounded: hanya jawab dari dokumen yang diupload, tidak hallucinate</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q2 === 'c' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q2 === 'c' ? 'text-green-400' : 'text-red-400'" x-text="answers.q2 === 'c' ? '✓ Q2 Benar' : '✗ Q2 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Blog anonim = F6, tidak masuk Tier 1. Pisahkan ke notebook Exploratory.</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q3 === 'd' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q3 === 'd' ? 'text-green-400' : 'text-red-400'" x-text="answers.q3 === 'd' ? '✓ Q3 Benar' : '✗ Q3 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Audio Overview: satu-satunya output yang bisa dikonsumsi tanpa membaca, cocok untuk mobile</span>
+              </div>
+              <div class="p-3 rounded-xl text-sm" :class="answers.q4 === 'a' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'">
+                <strong :class="answers.q4 === 'a' ? 'text-green-400' : 'text-red-400'" x-text="answers.q4 === 'a' ? '✓ Q4 Benar' : '✗ Q4 Salah'"></strong>
+                <span class="text-white/60 ml-2">— Hapus/archive setelah ops selesai untuk data minimization dan OPSEC</span>
+              </div>
+            </div>
+            <button @click="submitted = false; answers = {}" class="py-2 px-6 glass rounded-xl text-sm text-white/60 hover:text-white">Ulangi Quiz</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: WRAP UP -->
+  <section class="slide-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="text-accent font-mono text-sm mb-4">WRAP UP</div>
+        <h2 class="slide-title"><span class="text-accent">KEY TAKEAWAYS</span></h2>
+      </div>
+      <div class="glass-lit p-8 rounded-2xl mb-8">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">1</span><div><div class="font-semibold text-white mb-1">Source-Grounded</div><div class="text-sm text-white/60">Zero halusinasi — semua jawaban linked ke dokumen yang Anda upload. Strength dan limitation sekaligus.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">2</span><div><div class="font-semibold text-white mb-1">Source Reliability Framework</div><div class="text-sm text-white/60">Rate setiap sumber (A1 → F6) sebelum upload. Gunakan tiering notebook: Tier 1 hanya A1/B2 untuk briefing komandan.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">3</span><div><div class="font-semibold text-white mb-1">6 Studio Outputs</div><div class="text-sm text-white/60">Audio (mobile), Mind Map (visual), Briefing Doc (formal), Timeline (chronological), FAQ (Q&A prep), Study Guide.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">4</span><div><div class="font-semibold text-white mb-1">Audio Overview Mastery</div><div class="text-sm text-white/60">Customize dengan instruction militer profesional. Validate sebelum komandan dengar. Hapus notebook setelah ops.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">5</span><div><div class="font-semibold text-white mb-1">Query Library</div><div class="text-sm text-white/60">5 RISEN template siap pakai: Force Posture, Pattern Analysis, Capability Gap, ROE Check, AAR Extraction.</div></div></div>
+          <div class="flex items-start gap-3 p-4 bg-white/5 rounded-xl"><span class="text-accent font-bold text-xl">6</span><div><div class="font-semibold text-white mb-1">OPSEC Critical</div><div class="text-sm text-white/60">Akun Workspace Enterprise untuk data sensitif. Rate sources, validate citations, delete/archive setelah ops.</div></div></div>
+        </div>
+        <div class="p-4 bg-accent/20 border border-accent/30 rounded-xl text-center">
+          <div class="text-accent font-semibold mb-1">🎯 Sesi Selanjutnya</div>
+          <div class="text-sm text-white/60">Capstone: <strong class="text-white">Multi-Tool Workflow</strong> — gabungkan NotebookLM + Gemini 2.5 Pro + Imagen/Canvas dalam satu pipeline end-to-end intel production Koopsudnas</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="sesi-06-07-guided-learning.html" class="flex-1 py-3 px-6 glass rounded-xl text-center hover:bg-white/10 transition-colors">← Sesi 6.7: Guided Learning</a>
+        <a href="sesi-06-09-multi-tool-workflow.html" class="flex-1 py-3 px-6 bg-accent rounded-xl text-center text-white font-semibold hover:bg-accent-light transition-colors">Sesi 6.9: Multi-Tool Workflow →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GEMINI TOOLKIT — 6 TOOLS -->
+  <section class="relative py-16 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="font-mono text-xs text-indigo-400 mb-2">GEMINI TOOLKIT • 6 TOOLS</div>
+        <h3 class="text-2xl font-semibold">Semua Tools Gemini untuk Pamen Koopsudnas</h3>
+        <p class="text-sm text-white/50 max-w-2xl mx-auto mt-2">
+          Akses via <strong class="text-white/70">gemini.google.com</strong> → sidebar "Tools". Enam tools di bawah ini relevan untuk tugas pokok Koopsudnas — lintas Hanud, OMSP, Pembinaan, Doktrin, dan Gakkum Udara.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🖼️</span>
+            <div class="font-semibold text-indigo-300">Create Image</div>
+          </div>
+          <div class="text-xs text-white/60">Generate infografis, sketsa situasional, ilustrasi briefing via <strong class="text-white/70">Imagen 4</strong>. OPSEC: pakai generic imagery, no callsign/lokasi nyata.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📋</span>
+            <div class="font-semibold text-indigo-300">Canvas</div>
+          </div>
+          <div class="text-xs text-white/60">Workspace interaktif untuk draft dokumen, dashboard, SITREP, prompt builder — editable side-by-side dengan output.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔎</span>
+            <div class="font-semibold text-indigo-300">Deep Research</div>
+          </div>
+          <div class="text-xs text-white/60">Riset multi-source OSINT otomatis (lintas puluhan halaman) dengan citation grounding — untuk background brief, doktrin review, lessons learned.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎬</span>
+            <div class="font-semibold text-indigo-300">Create Video</div>
+          </div>
+          <div class="text-xs text-white/60">Video brief singkat via <strong class="text-white/70">Veo</strong> — animasi skenario exercise, visualisasi timeline operasi, briefing package ke stakeholder.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🎵</span>
+            <div class="font-semibold text-indigo-300">Create Music</div>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-mono">NEW</span>
+          </div>
+          <div class="text-xs text-white/60">Audio cue / scoring untuk video brief, simulator training, atau presentasi ceremonial. Tool baru Gemini.</div>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-indigo-500/20" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">📖</span>
+            <div class="font-semibold text-indigo-300">Guided Learning</div>
+          </div>
+          <div class="text-xs text-white/60">Self-paced walkthrough interaktif — untuk onboarding doktrin baru, prosedur SOP, atau training personel satuan.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-white/60 text-center">
+        <strong class="text-indigo-300">Cross-reference:</strong> untuk deep dive setiap tool lihat <a href="modul-06-multi-tool-operations.html" class="text-indigo-300 underline hover:text-indigo-200">Modul 06 — Multi-Tool Operations</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative py-8 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-white/30 text-sm">© 2026 Velo CT — AI-OPINT Training Program untuk Koopsudnas</p>
+    </div>
+  </footer>
+
+</body>
+</html>
